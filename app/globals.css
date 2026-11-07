@@ -1,0 +1,183 @@
+@import url('https://api.fontshare.com/v2/css?f[]=boska@300,400&f[]=satoshi@300,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Local & System Typeface Fallback for PP Editorial New & PP Neue Montreal */
+@font-face {
+  font-family: 'PP Editorial New';
+  src: local('PP Editorial New Regular'), local('PPEditorialNew-Regular'), local('PP Editorial New'), local('Editorial New');
+  font-weight: 300 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Editorial New';
+  src: local('PP Editorial New Italic'), local('PPEditorialNew-Italic'), local('Editorial New Italic');
+  font-weight: 300 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: local('PP Neue Montreal Regular'), local('PPNeueMontreal-Regular'), local('PP Neue Montreal'), local('Neue Montreal');
+  font-weight: 300 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Warm, quiet luxury palette */
+  --ink:        #0B0A09;   /* warm near-black */
+  --surface:    #131110;   /* raised panels */
+  --glass:      rgba(255, 252, 248, 0.05);
+  --bone:       #F4F0EA;   /* primary text */
+  --bone-dim:   rgba(244, 240, 234, 0.50);
+  --bone-ghost: rgba(244, 240, 234, 0.14);
+  --hairline:   rgba(244, 240, 234, 0.08);
+  --champagne:  #C9AE86;
+  --panatta:    #B8323F;
+
+  /* Typography: PP Editorial New for high-contrast serif display, PP Neue Montreal for body */
+  --font-display: 'PP Editorial New', 'Editorial New', 'Boska', Georgia, serif;
+  --font-body:    'PP Neue Montreal', 'Neue Montreal', 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Rescaled quiet luxury fluid scale */
+  --step--1:    clamp(0.75rem, 0.73rem + 0.1vw, 0.8rem);
+  --step-0:     clamp(0.95rem, 0.92rem + 0.15vw, 1rem);
+  --step-1:     clamp(1.1rem, 1.05rem + 0.3vw, 1.3rem);
+  --step-2:     clamp(1.4rem, 1.25rem + 0.7vw, 1.9rem);
+  --step-3:     clamp(1.7rem, 1.45rem + 1.2vw, 2.6rem);
+  --statement:  clamp(1.8rem, 1.4rem + 1.9vw, 3.2rem);
+  --hero:       clamp(2.2rem, 1.6rem + 2.8vw, 4.2rem);
+
+  /* Spacing rhythm */
+  --pad-x:      clamp(1.5rem, 6vw, 7rem);
+  --section-y:  clamp(6rem, 16vh, 14rem);
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    border-color: var(--hairline);
+  }
+
+  html {
+    background-color: var(--ink);
+    color: var(--bone);
+    font-family: var(--font-body);
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--ink);
+    color: var(--bone);
+    font-family: var(--font-body);
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Display — PP Editorial New, line-height 1.08, letter-spacing -0.01em, sentence case */
+  h1, h2, h3, h4, h5, h6, .type-display {
+    font-family: var(--font-display);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    font-weight: 300;
+    color: var(--bone);
+  }
+
+  /* Body — PP Neue Montreal, max-width 60ch */
+  p, .type-body {
+    font-family: var(--font-body);
+    line-height: 1.7;
+    letter-spacing: 0;
+    max-width: 60ch;
+    text-wrap: pretty;
+    font-weight: 300;
+    color: var(--bone);
+  }
+
+  /* Label — 0.7rem, uppercase, letter-spacing 0.22em, weight 400, colour --bone-dim */
+  .type-label, label, [data-label] {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 400;
+    color: var(--bone-dim);
+    line-height: 1;
+  }
+
+  .tabular-nums, [data-stat], [data-time], .stat, .countdown {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Soft, hazy luxury photo grade */
+  img:not(.no-grade), .photo-grade {
+    filter: grayscale(0.25) contrast(0.92) brightness(1.04) saturate(0.85);
+    transition: filter 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .group:hover img:not(.no-grade),
+  img:not(.no-grade):hover,
+  .photo-grade:hover {
+    filter: grayscale(0.08) contrast(0.95) brightness(1.05) saturate(0.95);
+  }
+
+  ::selection {
+    background: var(--champagne);
+    color: var(--ink);
+  }
+}
+
+/* Liquid Glass utility */
+.liquid-glass {
+  background: linear-gradient(135deg, rgba(255, 252, 248, 0.08) 0%, rgba(255, 252, 248, 0.02) 100%);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Light-sweep gradient animation utility */
+.light-sweep {
+  background-image: linear-gradient(
+    100deg,
+    var(--bone-ghost) 0%,
+    var(--bone-ghost) 38%,
+    var(--bone) 48%,
+    #FFFFFF 50%,
+    var(--bone) 52%,
+    var(--bone-ghost) 62%,
+    var(--bone-ghost) 100%
+  );
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-bottom: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .light-sweep {
+    background-image: none !important;
+    color: var(--bone) !important;
+  }
+}
