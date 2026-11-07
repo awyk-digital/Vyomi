@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import AssetSlot from '@/components/AssetSlot';
 import AccentRule from '@/components/AccentRule';
 import Iridescent from '@/components/Iridescent';
@@ -9,24 +9,8 @@ import { AREAS } from '@/data/club';
 import { prefersReducedMotion } from '@/lib/motion';
 
 /**
- * Horizontal architectural gallery, running continuously.
- *
- * The strip advances on its own at a constant slow speed rather than waiting
- * to be dragged — a static row of cropped cards reads as broken on a landing
- * page, where nothing has told the visitor it is scrollable.
- *
- * How it loops: the card set is rendered twice and the track is translated by
- * exactly -50%, so the moment the first copy has fully passed, the second
- * copy is sitting in precisely the position the first started from and the
- * animation restarts invisibly. The duplicate is `aria-hidden`, so assistive
- * tech and crawlers see each area once.
- *
- * Speed is derived from the measured track width, not hard-coded, so the pace
- * is identical whether there are five cards or fifteen, and on every viewport.
- *
- * It pauses on hover and on keyboard focus, so nothing slides away from
- * someone who is actually looking at it. Reduced-motion visitors get a plain,
- * manually scrollable row (see globals.css).
+ * Horizontal architectural gallery, running continuously in loop mode,
+ * with an interactive small navigation bar (right arrow type) for exploration.
  */
 
 /** Coordinated card geometry — desktop width × height, inside the brief's range. */
@@ -41,30 +25,82 @@ const GEOMETRY = [
 
 /** Constant travel speed in CSS pixels per second. */
 const SPEED = 26;
+/** Step distance when clicking navigation arrows (~average card width + margin). */
+const STEP_DISTANCE = 410;
 
 export default function ExploreGallery() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(false);
 
-  // Derive the loop duration from the real rendered width so the perceived
-  // speed never changes with card count or viewport.
+  const offsetRef = useRef(0);
+  const targetOffsetRef = useRef(0);
+  const lapRef = useRef(0);
+  const isPausedRef = useRef(false);
+  isPausedRef.current = paused;
+
+  // Measure track and run continuous RAF loop with wrap-around
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    if (prefersReducedMotion()) return;
 
     const measure = () => {
       // scrollWidth covers both copies; one lap is half of it.
-      const lap = track.scrollWidth / 2;
-      if (lap <= 0) return;
-      track.style.setProperty('--marquee-dur', `${(lap / SPEED).toFixed(1)}s`);
+      lapRef.current = track.scrollWidth / 2;
     };
 
     measure();
 
+    let lastTime = performance.now();
+    let rId: number;
+
+    const tick = (now: number) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      const lap = lapRef.current;
+      if (lap > 0) {
+        // Continuous auto-glide when not paused and not prefersReducedMotion
+        if (!isPausedRef.current && !prefersReducedMotion()) {
+          targetOffsetRef.current += SPEED * dt;
+        }
+
+        // Smoothly interpolate towards targetOffset
+        const diff = targetOffsetRef.current - offsetRef.current;
+        offsetRef.current += diff * Math.min(dt * 7, 0.3);
+
+        // Seamless infinite loop wrap-around
+        while (offsetRef.current >= lap) {
+          offsetRef.current -= lap;
+          targetOffsetRef.current -= lap;
+        }
+        while (offsetRef.current < 0) {
+          offsetRef.current += lap;
+          targetOffsetRef.current += lap;
+        }
+
+        track.style.transform = `translate3d(-${offsetRef.current.toFixed(2)}px, 0, 0)`;
+      }
+
+      rId = requestAnimationFrame(tick);
+    };
+
+    rId = requestAnimationFrame(tick);
+
     const ro = new ResizeObserver(measure);
     ro.observe(track);
-    return () => ro.disconnect();
+
+    return () => {
+      cancelAnimationFrame(rId);
+      ro.disconnect();
+    };
+  }, []);
+
+  const handleNext = useCallback(() => {
+    targetOffsetRef.current += STEP_DISTANCE;
+  }, []);
+
+  const handlePrev = useCallback(() => {
+    targetOffsetRef.current -= STEP_DISTANCE;
   }, []);
 
   const renderCards = (copy: number) =>
@@ -113,21 +149,49 @@ export default function ExploreGallery() {
       className="border-t border-hairline bg-ink py-section-y"
       aria-labelledby="explore-heading"
     >
-      {/* Header */}
-      <div className="mb-10 px-pad-x md:mb-14">
-        <SectionHeading
-          id="explore-heading"
-          className="t-h2 uppercase text-heading"
-          stagger={0.08}
-        >
-          Explore Vyomi.
-        </SectionHeading>
-        <div className="mt-6 max-w-shell">
-          <AccentRule />
+      {/* Header with Navigation Bar */}
+      <div className="mb-10 px-pad-x md:mb-14 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div>
+          <SectionHeading
+            id="explore-heading"
+            className="t-h2 uppercase text-heading"
+            stagger={0.08}
+          >
+            Explore Vyomi.
+          </SectionHeading>
+          <div className="mt-6 max-w-shell">
+            <AccentRule />
+          </div>
+        </div>
+
+        {/* Small Navigation Bar — Right Arrow Type (Loop Mode) */}
+        <div className="flex items-center gap-2 self-start sm:self-end">
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label="Previous image"
+            className="group flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-surface/70 backdrop-blur-md text-muted transition-all duration-300 hover:border-hairline-2 hover:bg-surface hover:text-heading active:scale-95"
+          >
+            <span className="text-sm transition-transform duration-300 group-hover:-translate-x-0.5">←</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label="Next image"
+            className="group flex h-9 items-center gap-2.5 rounded-full border border-hairline bg-surface/70 px-4 backdrop-blur-md text-muted transition-all duration-300 hover:border-hairline-2 hover:bg-surface hover:text-heading active:scale-95"
+          >
+            <span className="t-label text-[0.625rem] text-faint group-hover:text-muted transition-colors">
+              Explore
+            </span>
+            <span className="text-sm text-heading transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* Running strip */}
+      {/* Running strip in loop mode */}
       <div
         className="relative overflow-hidden"
         onPointerEnter={() => setPaused(true)}
@@ -137,7 +201,8 @@ export default function ExploreGallery() {
       >
         <div
           ref={trackRef}
-          className="marquee-track"
+          className="marquee-track flex w-max will-change-transform"
+          style={{ animation: 'none' }}
           data-paused={paused ? 'true' : 'false'}
         >
           <div className="flex">{renderCards(0)}</div>
@@ -163,11 +228,11 @@ export default function ExploreGallery() {
         />
       </div>
 
-      <p className="mt-8 px-pad-x">
+      <div className="mt-8 px-pad-x flex items-center justify-between">
         <Iridescent className="t-small text-faint">
-          Hover to pause
+          Hover to pause · Click right arrow to explore in loop
         </Iridescent>
-      </p>
+      </div>
     </section>
   );
 }

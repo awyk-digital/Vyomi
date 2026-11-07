@@ -67,7 +67,7 @@ export const CLUB_AREAS: ImageSlot[] = [
     ratio: '4 / 3',
     fit: 'cover',
     focal: '50% 55%',
-    src: null,
+    src: '/img/area-training-floor.png',
     alt: 'Vyomi training floor',
   }),
   slot({
@@ -77,7 +77,7 @@ export const CLUB_AREAS: ImageSlot[] = [
     ratio: '3 / 2',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/area-studio.png',
     alt: 'Vyomi group studio',
   }),
   slot({
@@ -97,7 +97,7 @@ export const CLUB_AREAS: ImageSlot[] = [
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 40%',
-    src: null,
+    src: '/img/area-lift.png',
     alt: 'Dedicated lift to Vyomi',
   }),
   slot({
@@ -127,7 +127,7 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
       ratio: '4 / 3',
       fit: 'contain',
       focal: '50% 50%',
-      src: null,
+      src: '/img/eq-plate-main.png',
       alt: 'Plate-loaded Panatta machine',
     }),
     slot({
@@ -137,7 +137,7 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
       ratio: '1 / 1',
       fit: 'cover',
       focal: '50% 50%',
-      src: null,
+      src: '/img/eq-plate-detail-1.png',
       alt: 'Weight plates on a loading sleeve',
     }),
     slot({
@@ -191,7 +191,7 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
       ratio: '4 / 3',
       fit: 'cover',
       focal: '50% 55%',
-      src: null,
+      src: '/img/eq-cond-main.png',
       alt: 'Conditioning zone',
     }),
     slot({
@@ -201,7 +201,7 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
       ratio: '1 / 1',
       fit: 'cover',
       focal: '50% 50%',
-      src: null,
+      src: '/img/eq-cond-detail-1.png',
       alt: 'Conditioning equipment detail',
     }),
     slot({
@@ -211,7 +211,7 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
       ratio: '4 / 5',
       fit: 'cover',
       focal: '50% 55%',
-      src: null,
+      src: '/img/eq-cond-detail-2.png',
       alt: 'Sled and turf lane detail',
     }),
   ],
@@ -308,7 +308,7 @@ export const WELLNESS_IMAGES: ImageSlot[] = [
     ratio: '16 / 9',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/wellness-main.png',
     alt: 'Vyomi spa and recovery room',
   }),
   slot({
@@ -318,7 +318,7 @@ export const WELLNESS_IMAGES: ImageSlot[] = [
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/wellness-salt.png',
     alt: 'Salt bath',
   }),
   slot({
@@ -358,7 +358,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/studio-fitness-detail-a.png',
     alt: 'Equipment detail on the Vyomi training floor',
   }),
   fitnessDetailB: slot({
@@ -368,7 +368,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     ratio: '5 / 4',
     fit: 'cover',
     focal: '50% 55%',
-    src: null,
+    src: '/img/studio-fitness-detail-b.png',
     alt: 'Panatta equipment range',
   }),
   hyroxDetail: slot({

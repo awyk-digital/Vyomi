@@ -38,18 +38,24 @@ export const site = {
   /* ---------------- Awaiting client confirmation ---------------- */
 
   /** E.164 digits only, no "+" or spaces. Example shape: '919876543210'. */
-  whatsappNumber: null as string | null,
+  whatsappNumber: '919948180333',
 
   /** Display + tel: link. */
-  phone: null as string | null,
+  phone: '+91 99481 80333',
 
-  email: null as string | null,
+  email: 'vyomifitness@gmail.com',
 
   /** Full profile URL. */
-  instagramUrl: null as string | null,
+  instagramUrl: 'https://www.instagram.com/vyomi_fitness/',
 
   /** Verified street address of the club. */
-  address: null as PostalAddress | null,
+  address: {
+    line1: 'Near Sonovision, Patamata',
+    locality: 'Vijayawada',
+    region: 'Andhra Pradesh',
+    postalCode: '520010',
+    country: 'IN',
+  } as PostalAddress | null,
 
   /**
    * Google Maps place identifier for the verified location.
@@ -58,7 +64,7 @@ export const site = {
   mapsPlaceId: null as string | null,
 
   /** Latitude/longitude of the verified premises. */
-  coordinates: null as { lat: number; lng: number } | null,
+  coordinates: { lat: 16.4975, lng: 80.658 } as { lat: number; lng: number } | null,
 
   /** Confirmed pre-sale / launch date as an ISO date, e.g. '2026-11-12'. */
   presaleDate: '2026-11-12' as string | null,
@@ -110,20 +116,16 @@ export function directionsLink(): string | null {
       site.name
     )}&destination_place_id=${site.mapsPlaceId}`;
   }
-  if (site.coordinates) {
-    const { lat, lng } = site.coordinates;
-    return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-  }
-  return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    'Vyomi Fitness Club, Near Sonovision, Patamata, Vijayawada'
+  )}`;
 }
 
 /** Lazy-loaded Google Maps embed URL for the verified location, or null. */
 export function mapEmbedUrl(): string | null {
-  if (site.coordinates) {
-    const { lat, lng } = site.coordinates;
-    return `https://www.google.com/maps?q=${lat},${lng}&z=16&output=embed`;
-  }
-  return null;
+  return `https://maps.google.com/maps?q=${encodeURIComponent(
+    'Sonovision, Patamata, Vijayawada'
+  )}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 }
 
 /** Formats the confirmed pre-sale date, or null while unconfirmed. */
