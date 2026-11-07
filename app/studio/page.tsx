@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
 import StudioNav from '@/components/StudioNav';
+import ChapterVideo from '@/components/ChapterVideo';
 import { STUDIO_IMAGES } from '@/config/assets';
 import { EQUIPMENT_CATEGORIES, AMENITIES, DISCIPLINES } from '@/data/club';
 
@@ -91,6 +92,24 @@ export default function StudioPage() {
           </div>
         </section>
 
+        {/* ---------- Establishing walkthrough ----------
+            The arrival sequence: reception, the stone corridor, the lounge
+            with its water feature, then the cardio hall. It sits before the
+            chapters because it is the only asset that shows how the rooms
+            connect — something no single still can carry. ---------- */}
+        <section
+          className="border-b border-hairline bg-ink"
+          aria-label="Walkthrough of the club"
+        >
+          <ChapterVideo
+            src="/video/tour-club.mp4"
+            poster="/video/tour-club-poster.jpg"
+            label="Walkthrough of Vyomi Fitness Club: reception, the stone corridor, the lounge, and the cardio hall."
+            caption="Render — not club photography"
+            className="aspect-[16/9] w-full md:aspect-[2/1]"
+          />
+        </section>
+
         {/* ---------- 01 · Fitness — sticky column, images scroll past ---------- */}
         <section
           id={fitness.id}
@@ -130,9 +149,12 @@ export default function StudioPage() {
 
             <div className="flex flex-col gap-6 lg:col-span-7">
               <Reveal>
-                <AssetSlot
-                  slot={STUDIO_IMAGES.fitness}
-                  sizes="(max-width: 1023px) 100vw, 55vw"
+                <ChapterVideo
+                  src="/video/tour-fitness.mp4"
+                  poster="/video/tour-fitness-poster.jpg"
+                  ratio="16 / 9"
+                  label="The Vyomi training floor: burgundy Panatta machines along the range, members training."
+                  caption="Render — not club photography"
                   className="w-full"
                 />
               </Reveal>

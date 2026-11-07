@@ -6,7 +6,7 @@ Paste this whole file into Google Antigravity as the task. It is self-contained.
 
 ## Your task
 
-**Generate 33 images with your image generation tool, and save each one to an
+**Generate 31 images with your image generation tool, and save each one to an
 exact path in this repo.** You are creating these pictures, not sourcing them.
 Do not download stock, do not reuse existing files, do not leave a slot to be
 filled by someone else.
@@ -121,7 +121,7 @@ per-image variation in mood.
 
 ---
 
-## The 33 images to generate
+## The 31 images to generate
 
 Exact output size is given per slot. Match the aspect ratio precisely — the
 layout reserves space from it.
@@ -172,7 +172,7 @@ footbar, springs and straps. If unsure, leave it pending and flag it.
 | `wellness-salt.png` | 2048 × 2560 | Portrait. The salt bath — tub edge or a backlit salt wall. Controlled highlights, no blown whites. |
 | `wellness-detail.png` | 2048 × 2048 | Square. Folded towels on a timber bench, or brushed-brass shower fittings. Quiet still life. |
 
-### Studio page — 13
+### Studio page — 11
 
 The Studio page runs five chapters (Fitness, HYROX, Zumba, Wellness, Pilates),
 each with its own layout. Wide plates are the establishing shot for a chapter;
@@ -182,7 +182,6 @@ details are the supporting frames beside them.
 
 | Save as | Scene |
 |---|---|
-| `studio-fitness.png` | The strength floor, wide, establishing. A different angle from `area-training-floor`. |
 | `studio-hyrox.png` | The HYROX zone — sled lane and ergs, wide. Different angle from `eq-cond-main`. |
 | `studio-zumba.png` | Zumba class mid-movement, warm lighting. People permitted; motion blur acceptable. |
 | `studio-wellness.png` | The wellness suite, wide. Different angle from `wellness-main`. |
@@ -204,14 +203,15 @@ details are the supporting frames beside them.
 > page. Its three images carry more weight than any others in this list — if
 > you spend extra attention anywhere, spend it there.
 
-> `studio-classes.png` is **no longer used**. The Classes chapter was split
-> into Zumba and Pilates. Do not generate it.
+> `studio-classes.png` and `studio-fitness.png` are **no longer used**. The
+> Classes chapter was split into Zumba and Pilates, and the Fitness chapter
+> now leads with a walkthrough clip instead of a still. Do not generate them.
 
 ---
 
 ## When you are done
 
-1. `npm run assets:sync` — should report `33/36 slots filled, 3 pending`
+1. `npm run assets:sync` — should report `32/35 slots filled, 3 pending`
    (the three trainer portraits).
 2. `npm run build` — must pass.
 3. `npm run dev`, then check the homepage and `/studio` at 375px, 768px, 1440px

@@ -338,17 +338,8 @@ export const WELLNESS_IMAGES: ImageSlot[] = [
    ------------------------------------------------------------------ */
 
 export const STUDIO_IMAGES: Record<string, ImageSlot> = {
-  fitness: slot({
-    id: 'studio-fitness',
-    need: 'Training floor — wide establishing plate for the Fitness chapter',
-    master: '3840 × 2160',
-    ratio: '16 / 9',
-    fit: 'cover',
-    focal: '50% 55%',
-    focalMobile: '60% 55%',
-    src: null,
-    alt: 'Vyomi training floor',
-  }),
+  // studio-fitness retired: the Fitness chapter now leads with the
+  // walkthrough clip (/video/tour-fitness.mp4) rather than a still plate.
   hyrox: slot({
     id: 'studio-hyrox',
     need: 'HYROX zone — sled lane and ergs, wide establishing plate',

@@ -56,7 +56,7 @@ footbar and straps. Mat work must not illustrate reformer Pilates.
 
 ### Wellness — 3, Studio page — 4
 `wellness-main` (16:9 landscape), `wellness-salt`, `wellness-detail`;
-`studio-fitness`, `studio-hyrox`, `studio-classes`, `studio-wellness` — wide
+`studio-hyrox`, `studio-zumba`, `studio-wellness`, `studio-pilates` — wide
 establishing plates at 3840 × 2160.
 
 ### Hero video — replacement recommended
