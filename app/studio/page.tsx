@@ -106,6 +106,9 @@ export default function StudioPage() {
             poster="/video/tour-club-poster.jpg"
             label="Walkthrough of Vyomi Fitness Club: reception, the stone corridor, the lounge, and the cardio hall."
             caption="Render — not club photography"
+            bleed
+            sizes="100vw"
+            captionClassName="px-pad-x pb-3 lg:pl-[9.5rem]"
             className="aspect-[16/9] w-full md:aspect-[2/1]"
           />
         </section>
@@ -155,6 +158,7 @@ export default function StudioPage() {
                   ratio="16 / 9"
                   label="The Vyomi training floor: burgundy Panatta machines along the range, members training."
                   caption="Render — not club photography"
+                  sizes="(max-width: 1023px) 100vw, 55vw"
                   className="w-full"
                 />
               </Reveal>
