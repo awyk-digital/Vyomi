@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start -p 3100",
+    "lint": "next lint",
+    "assets:sync": "node scripts/sync-assets.mjs",
+    "assets:check": "node scripts/sync-assets.mjs --check"
   },
   "dependencies": {
     "clsx": "^2.1.1",

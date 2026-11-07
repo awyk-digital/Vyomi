@@ -1,180 +1,180 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
-import gsap from 'gsap';
+import { useEffect, useRef } from 'react';
+import StudioCapsule from '@/components/StudioCapsule';
+import Pending from '@/components/Pending';
+import SectionHeading from '@/components/SectionHeading';
+import { SUPPLIED } from '@/config/assets';
+import { site, presaleDisplay } from '@/config/site';
+import { useIntroDone } from '@/lib/intro';
 
-interface HeroProps {
-  onOpenInquiry: () => void;
-}
+/**
+ * Cinematic hero: the supplied gym video, one headline, the pre-sale line,
+ * and a single Studio capsule. No conventional navbar — the persistent mark
+ * in the corner is the only chrome.
+ *
+ * The video pauses whenever the hero scrolls out of view, and the poster
+ * carries the composition if the video cannot play.
+ */
+export default function Hero() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const introDone = useIntroDone();
+  const presale = presaleDisplay();
 
-export default function Hero({ onOpenInquiry }: HeroProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const logoRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [animationComplete, setAnimationComplete] = useState(false);
-
+  // Pause offscreen so the hero costs nothing once the visitor scrolls past.
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const logo = logoRef.current;
-    const content = contentRef.current;
-    if (!logo || !content) return;
+    const section = sectionRef.current;
+    const video = videoRef.current;
+    if (!section || !video) return;
 
-    if (prefersReducedMotion) {
-      gsap.set(logo, {
-        position: 'fixed',
-        top: 24,
-        left: 'var(--pad-x)',
-        x: 0,
-        y: 0,
-        width: 130,
-        opacity: 0.9,
-      });
-      gsap.set(content, { opacity: 1 });
-      setAnimationComplete(true);
-      return;
-    }
-
-    // Sequence under 4s:
-    // 1. Logo fades up to 0.9 over 1.4s
-    // 2. Logo eases down and left to header position over 1.3s expo.inOut
-    // 3. Hero content fades in behind it
-    const tl = gsap.timeline({
-      onComplete: () => setAnimationComplete(true),
-    });
-
-    tl.fromTo(
-      logo,
-      {
-        opacity: 0,
-        scale: 1,
-        xPercent: -50,
-        yPercent: -50,
-        left: '50%',
-        top: '46%',
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {
+            /* autoplay refused — the poster carries the frame */
+          });
+        } else {
+          video.pause();
+        }
       },
-      {
-        opacity: 0.92,
-        duration: 1.4,
-        ease: 'power2.out',
-      }
+      { threshold: 0.1 }
     );
+    io.observe(section);
 
-    // FLIP to header position (top-left)
-    tl.to(
-      logo,
-      {
-        left: 'var(--pad-x)',
-        top: '24px',
-        xPercent: 0,
-        yPercent: 0,
-        width: '120px',
-        duration: 1.3,
-        ease: 'expo.inOut',
-      },
-      '+=0.4'
-    );
-
-    // Hero content fades in
-    tl.fromTo(
-      content,
-      { opacity: 0, y: 16 },
-      { opacity: 1, y: 0, duration: 1.0, ease: 'power2.out' },
-      '-=0.4'
-    );
+    const onVisibility = () => {
+      if (document.hidden) video.pause();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
-      tl.kill();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 
   return (
     <section
-      ref={containerRef}
-      className="relative h-[100svh] w-full overflow-hidden bg-[var(--ink)] flex items-center"
+      ref={sectionRef}
+      className="relative flex h-[100svh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-ink"
     >
-      {/* Background Video — plays immediately on load, muted, full viewport */}
-      <div className="absolute inset-0 z-0 h-full w-full pointer-events-none">
+      {/* Media */}
+      <div className="absolute inset-0 z-0">
         <video
-          poster="/video/hero-poster.jpg"
+          ref={videoRef}
+          poster={SUPPLIED.heroPoster}
           muted
           autoPlay
           loop
           playsInline
-          preload="auto"
-          className="h-full w-full object-cover"
-          style={{
-            // Soft lifted grade
-            filter: 'grayscale(0.25) contrast(0.92) brightness(1.04) saturate(0.85)',
-          }}
+          preload="metadata"
+          aria-hidden="true"
+          tabIndex={-1}
+          /*
+           * The supplied footage is 720 × 1280 — portrait, and low resolution
+           * for a full-bleed hero. Its natural ratio (0.5625) is close to a
+           * phone viewport, so mobile crops barely at all; a wide desktop
+           * viewport scales it up and crops top and bottom instead.
+           *
+           * Centre holds the composition in both cases. A landscape master at
+           * 1080p or better is listed in the outstanding-asset report — on a
+           * large display this source is being upscaled roughly 2x.
+           */
+          className="h-full w-full object-cover object-center"
         >
-          <source src="/video/hero.mp4" type="video/mp4" />
+          <source src={SUPPLIED.heroVideo} type="video/mp4" />
         </video>
 
-        {/* Gentle vignette + Left gradient from rgba(11,10,9,0.75) to transparent at 60% */}
-        <div
+        {/* Restrained directional overlay: dark at the base and left for text */}
+        <span
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(90deg, rgba(11,10,9,0.75) 0%, rgba(11,10,9,0.4) 35%, transparent 60%), radial-gradient(circle at center, transparent 40%, rgba(11,10,9,0.6) 100%)',
+              'linear-gradient(to top, rgba(8,8,8,1) 0%, rgba(8,8,8,0.72) 18%, rgba(8,8,8,0.40) 40%, rgba(8,8,8,0.12) 62%, rgba(8,8,8,0.30) 100%)',
           }}
         />
-        <div
+        <span
           aria-hidden="true"
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(180deg, transparent 65%, var(--ink) 100%)',
+            background:
+              'linear-gradient(to right, rgba(8,8,8,0.72) 0%, rgba(8,8,8,0.28) 38%, transparent 66%)',
+          }}
+        />
+        {/*
+          Dedicated join band.
+
+          The overlay above tops out at the hero's own edge, so whatever the
+          video happens to be showing in its last few rows still tinted the
+          boundary — which read as a second, slightly different black against
+          the pure --ink section underneath. This band lands the hero on
+          exactly --ink before the seam, so the two surfaces are one colour.
+        */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-40"
+          style={{
+            background:
+              'linear-gradient(to top, var(--ink) 0%, var(--ink) 22%, rgba(8,8,8,0) 100%)',
           }}
         />
       </div>
 
-      {/* Traveling FLIP Logo (starts large centered ~38vw, travels to header) */}
+      {/* Content */}
       <div
-        ref={logoRef}
-        className="fixed z-50 pointer-events-none w-[clamp(240px,38vw,480px)] will-change-transform"
+        className="relative z-10 px-pad-x pb-[clamp(6.5rem,14vh,9rem)] transition-[opacity,transform] duration-[700ms] ease-editorial"
+        style={{
+          opacity: introDone ? 1 : 0,
+          transform: introDone ? 'translateY(0)' : 'translateY(14px)',
+        }}
       >
-        <div className="relative aspect-[4/3] w-full">
-          <Image
-            src="/logo.png"
-            alt="Vyomi Fitness Club"
-            fill
-            priority
-            className="object-contain drop-shadow-none"
-          />
+        <p className="t-label mb-5 flex items-center gap-2.5 text-muted">
+          <span className="accent-tick" aria-hidden="true" />
+          Vijayawada
+        </p>
+
+        {/*
+          Keyed on `introDone` so the word-rise plays the moment the opening
+          sequence hands over, rather than running unseen behind it.
+        */}
+        <SectionHeading
+          key={introDone ? 'settled' : 'waiting'}
+          as="h1"
+          immediate
+          stagger={0.09}
+          className="t-hero max-w-[16ch] uppercase text-heading"
+        >
+          A higher standard.
+        </SectionHeading>
+
+        <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
+          {presale ? (
+            <p className="t-body text-muted">
+              Pre-sale opens{' '}
+              <time dateTime={site.presaleDate ?? undefined} className="text-heading">
+                {presale}
+              </time>
+              .
+            </p>
+          ) : (
+            <>
+              <p className="t-body text-muted">Pre-sale opening soon.</p>
+              <Pending label="Launch date" />
+            </>
+          )}
         </div>
       </div>
 
-      {/* Hero Content — Minimal, quiet luxury, max-width 16ch */}
+      {/* Studio capsule — bottom centre, clear of mobile safe areas */}
       <div
-        ref={contentRef}
-        className="relative z-10 w-full px-[var(--pad-x)] flex flex-col items-start opacity-0"
+        className="absolute left-1/2 z-20 -translate-x-1/2 transition-opacity duration-[700ms] ease-editorial"
+        style={{
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + clamp(1.75rem, 4vh, 2.75rem))',
+          opacity: introDone ? 1 : 0,
+        }}
       >
-        <div className="max-w-[20ch] flex flex-col items-start">
-          {/* Label */}
-          <span className="type-label block text-[var(--bone-dim)] mb-4 tracking-[0.22em]">
-            Vijayawada
-          </span>
-
-          {/* Headline: --font-display weight 300, sentence case, 2-4 words maximum */}
-          <h1 className="font-display text-hero font-light text-[var(--bone)] leading-[1.08] tracking-tight mb-4">
-            Quiet strength.
-          </h1>
-
-          {/* Single line beneath at --step-0, --bone-dim */}
-          <p className="type-body text-0 text-[var(--bone-dim)] font-light leading-snug mb-8">
-            An architectural sanctuary dedicated to physical calm and restorative balance.
-          </p>
-
-          {/* Single Quiet Button */}
-          <button
-            type="button"
-            onClick={onOpenInquiry}
-            className="border border-[var(--hairline)] rounded-[2px] px-7 py-3 text-label text-[var(--bone-dim)] hover:text-[var(--bone)] hover:bg-[rgba(244,240,234,0.06)] hover:border-[var(--bone-dim)] transition-all duration-300"
-          >
-            Explore the Sanctuary
-          </button>
-        </div>
+        <StudioCapsule />
       </div>
     </section>
   );

@@ -1,62 +1,59 @@
-@import url('https://api.fontshare.com/v2/css?f[]=boska@300,400&f[]=satoshi@300,400&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Local & System Typeface Fallback for PP Editorial New & PP Neue Montreal */
-@font-face {
-  font-family: 'PP Editorial New';
-  src: local('PP Editorial New Regular'), local('PPEditorialNew-Regular'), local('PP Editorial New'), local('Editorial New');
-  font-weight: 300 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'PP Editorial New';
-  src: local('PP Editorial New Italic'), local('PPEditorialNew-Italic'), local('Editorial New Italic');
-  font-weight: 300 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'PP Neue Montreal';
-  src: local('PP Neue Montreal Regular'), local('PPNeueMontreal-Regular'), local('PP Neue Montreal'), local('Neue Montreal');
-  font-weight: 300 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* ============================================================
+   VYOMI — Design tokens
+   Typography: General Sans (all UI/headings), Boska (single quote only)
+   ============================================================ */
 
 :root {
-  /* Warm, quiet luxury palette */
-  --ink:        #0B0A09;   /* warm near-black */
-  --surface:    #131110;   /* raised panels */
-  --glass:      rgba(255, 252, 248, 0.05);
-  --bone:       #F4F0EA;   /* primary text */
-  --bone-dim:   rgba(244, 240, 234, 0.50);
-  --bone-ghost: rgba(244, 240, 234, 0.14);
-  --hairline:   rgba(244, 240, 234, 0.08);
-  --champagne:  #C9AE86;
-  --panatta:    #B8323F;
+  /* Surfaces */
+  --ink:        #080808;  /* near-black page base */
+  --charcoal:   #141414;  /* raised panels / alternating bands */
+  --charcoal-2: #1C1C1C;  /* inputs, hover fills */
 
-  /* Typography: PP Editorial New for high-contrast serif display, PP Neue Montreal for body */
-  --font-display: 'PP Editorial New', 'Editorial New', 'Boska', Georgia, serif;
-  --font-body:    'PP Neue Montreal', 'Neue Montreal', 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Type */
+  --heading:    #F5F5F2;  /* crisp white headings */
+  --muted:      #B8B8B8;  /* readable light grey supporting text */
+  --faint:      #6E6E6E;  /* labels, meta, disabled */
 
-  /* Rescaled quiet luxury fluid scale */
-  --step--1:    clamp(0.75rem, 0.73rem + 0.1vw, 0.8rem);
-  --step-0:     clamp(0.95rem, 0.92rem + 0.15vw, 1rem);
-  --step-1:     clamp(1.1rem, 1.05rem + 0.3vw, 1.3rem);
-  --step-2:     clamp(1.4rem, 1.25rem + 0.7vw, 1.9rem);
-  --step-3:     clamp(1.7rem, 1.45rem + 1.2vw, 2.6rem);
-  --statement:  clamp(1.8rem, 1.4rem + 1.9vw, 3.2rem);
-  --hero:       clamp(2.2rem, 1.6rem + 2.8vw, 4.2rem);
+  /* Rules */
+  --hairline:   rgba(245, 245, 242, 0.10);
+  --hairline-2: rgba(245, 245, 242, 0.18);
 
-  /* Spacing rhythm */
-  --pad-x:      clamp(1.5rem, 6vw, 7rem);
-  --section-y:  clamp(6rem, 16vh, 14rem);
+  /* Restrained accent, sampled from Panatta equipment */
+  --burgundy:   #8C2230;
+  --burgundy-d: #5E1620;
+
+  /* Attraction accents — used only as hairlines, ticks and micro-detail.
+     Never as fills, never as body text. */
+  --bronze:     #B08D57;
+  --bronze-lo:  rgba(176, 141, 87, 0.40);
+  --lime:       #D6F55B;
+  --lime-lo:    rgba(214, 245, 91, 0.38);
+
+  /* Scroll-fill statement endpoints */
+  --stmt-off:   #3A3A3A;
+  --stmt-on:    #F5F5F2;
+
+  /* Families */
+  --font-sans:  'General Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-quote: 'Boska', Georgia, 'Times New Roman', serif;
+
+  /* Fluid type — mobile to desktop targets from the brief */
+  --fs-hero:    clamp(2.375rem, 1.55rem + 4.1vw, 6rem);       /* 38 -> 96 */
+  --fs-h2:      clamp(2.375rem, 1.75rem + 3.1vw, 4.5rem);     /* 38 -> 72 */
+  --fs-h3:      clamp(1.375rem, 1.2rem + 0.9vw, 1.875rem);    /* 22 -> 30 */
+  --fs-quote:   clamp(2rem, 1.1rem + 4.5vw, 4rem);            /* 32 -> 64 */
+  --fs-body:    clamp(1rem, 0.96rem + 0.2vw, 1.125rem);       /* 16 -> 18 */
+  --fs-small:   clamp(0.875rem, 0.86rem + 0.08vw, 0.9375rem); /* 14 -> 15 */
+  --fs-label:   0.75rem;
+
+  /* Rhythm — kept tight; the brief rejects tall, empty sections */
+  --pad-x:      clamp(1.25rem, 5vw, 5.5rem);
+  --section-y:  clamp(4.5rem, 9vh, 8rem);
+  --logo-w:     clamp(3.25rem, 5.2vw, 5.5rem);  /* 52 -> 88px */
 }
 
 @layer base {
@@ -67,107 +64,428 @@
 
   html {
     background-color: var(--ink);
-    color: var(--bone);
-    font-family: var(--font-body);
-    font-weight: 300;
+    color: var(--muted);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    scroll-behavior: smooth;
   }
+
+  /* Lenis drives scrolling; native smooth-behavior would fight it. */
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
 
   body {
     background-color: var(--ink);
-    color: var(--bone);
-    font-family: var(--font-body);
-    font-weight: 300;
-    line-height: 1.7;
+    color: var(--muted);
+    font-size: var(--fs-body);
+    line-height: 1.6;
+    font-weight: 400;
     min-height: 100vh;
     overflow-x: hidden;
   }
 
-  /* Display — PP Editorial New, line-height 1.08, letter-spacing -0.01em, sentence case */
-  h1, h2, h3, h4, h5, h6, .type-display {
-    font-family: var(--font-display);
-    line-height: 1.08;
-    letter-spacing: -0.01em;
-    text-transform: none;
-    font-weight: 300;
-    color: var(--bone);
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    color: var(--heading);
+    letter-spacing: -0.02em;
+    line-height: 1.04;
+    text-wrap: balance;
   }
 
-  /* Body — PP Neue Montreal, max-width 60ch */
-  p, .type-body {
-    font-family: var(--font-body);
-    line-height: 1.7;
-    letter-spacing: 0;
-    max-width: 60ch;
-    text-wrap: pretty;
-    font-weight: 300;
-    color: var(--bone);
-  }
+  p { max-width: 62ch; text-wrap: pretty; }
 
-  /* Label — 0.7rem, uppercase, letter-spacing 0.22em, weight 400, colour --bone-dim */
-  .type-label, label, [data-label] {
-    font-family: var(--font-body);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.22em;
-    font-weight: 400;
-    color: var(--bone-dim);
-    line-height: 1;
-  }
+  ::selection { background: var(--heading); color: var(--ink); }
 
-  .tabular-nums, [data-stat], [data-time], .stat, .countdown {
-    font-variant-numeric: tabular-nums;
+  /* Visible, consistent focus ring on every interactive element */
+  :focus-visible {
+    outline: 2px solid var(--heading);
+    outline-offset: 3px;
+    border-radius: 2px;
   }
-
-  /* Soft, hazy luxury photo grade */
-  img:not(.no-grade), .photo-grade {
-    filter: grayscale(0.25) contrast(0.92) brightness(1.04) saturate(0.85);
-    transition: filter 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .group:hover img:not(.no-grade),
-  img:not(.no-grade):hover,
-  .photo-grade:hover {
-    filter: grayscale(0.08) contrast(0.95) brightness(1.05) saturate(0.95);
-  }
-
-  ::selection {
-    background: var(--champagne);
-    color: var(--ink);
-  }
+  :focus:not(:focus-visible) { outline: none; }
 }
 
-/* Liquid Glass utility */
-.liquid-glass {
-  background: linear-gradient(135deg, rgba(255, 252, 248, 0.08) 0%, rgba(255, 252, 248, 0.02) 100%);
-  backdrop-filter: blur(28px) saturate(1.8);
-  -webkit-backdrop-filter: blur(28px) saturate(1.8);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.2);
+/* ---------- Type utilities ---------- */
+
+.t-hero  { font-size: var(--fs-hero);  letter-spacing: -0.03em;  line-height: 0.98; }
+.t-h2    { font-size: var(--fs-h2);    letter-spacing: -0.028em; line-height: 1.0; }
+.t-h3    { font-size: var(--fs-h3);    letter-spacing: -0.018em; line-height: 1.15; }
+.t-body  { font-size: var(--fs-body);  line-height: 1.6; color: var(--muted); }
+.t-small { font-size: var(--fs-small); line-height: 1.5; }
+
+.t-quote {
+  font-family: var(--font-quote);
+  font-weight: 500;
+  font-size: var(--fs-quote);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--heading);
 }
 
-/* Light-sweep gradient animation utility */
-.light-sweep {
-  background-image: linear-gradient(
-    100deg,
-    var(--bone-ghost) 0%,
-    var(--bone-ghost) 38%,
-    var(--bone) 48%,
-    #FFFFFF 50%,
-    var(--bone) 52%,
-    var(--bone-ghost) 62%,
-    var(--bone-ghost) 100%
+.t-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  color: var(--faint);
+}
+
+.t-ui {
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.nums { font-variant-numeric: tabular-nums; }
+
+/* ---------- Liquid-glass capsule (Studio control only) ---------- */
+
+.glass-capsule {
+  position: relative;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.30),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.22),
+    0 8px 24px -10px rgba(0, 0, 0, 0.6);
+  transition: background 0.4s ease, border-color 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-capsule:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+/* Narrow optical highlight along the top edge — the only "shine" on the page */
+.glass-capsule::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0) 42%
   );
-  background-size: 260% 100%;
-  background-position: 130% 0;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--heading);
+  border: 1px solid var(--hairline-2);
+  background: transparent;
+  padding: 0.8rem 1.6rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+}
+
+.btn-line:hover {
+  background: rgba(245, 245, 242, 0.06);
+  border-color: rgba(245, 245, 242, 0.42);
+}
+
+.btn-solid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--heading);
+  border: 1px solid var(--heading);
+  padding: 0.85rem 1.75rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+.btn-solid:hover { background: #FFFFFF; }
+.btn-solid:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ---------- Form fields ---------- */
+
+.field {
+  width: 100%;
+  background: var(--charcoal-2);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  color: var(--heading);
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  padding: 0.8rem 0.9rem;
+  min-height: 2.75rem;
+  transition: border-color 0.3s ease;
+}
+
+.field::placeholder { color: var(--faint); }
+.field:hover { border-color: var(--hairline-2); }
+.field[aria-invalid="true"] { border-color: var(--burgundy); }
+
+/* iOS zooms inputs under 16px; hold the computed size at 16px on small screens */
+@media (max-width: 767px) {
+  .field { font-size: 1rem; }
+}
+
+/* ---------- Horizontal gallery rail ---------- */
+
+.rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  /* Let vertical page scroll pass through; only claim horizontal gestures */
+  touch-action: pan-y pinch-zoom;
+  overscroll-behavior-x: contain;
+}
+
+.rail::-webkit-scrollbar { display: none; }
+.rail > * { scroll-snap-align: center; }
+
+/* ============================================================
+   MOTION & SURFACE DETAIL
+   Everything below is decoration. Each piece degrades to a static,
+   fully legible state when it cannot run.
+   ============================================================ */
+
+/* ---------- Film grain ---------- */
+
+.grain-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+}
+
+/* ---------- Accent hairlines (bronze → lime) ----------
+   The only places colour is allowed outside the burgundy equipment
+   accent. Always 1px, always short, never a fill.                     */
+
+.accent-rule {
+  position: relative;
+  height: 1px;
+  width: 100%;
+  background: var(--hairline);
+  overflow: hidden;
+}
+
+.accent-rule::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(
+    90deg,
+    var(--bronze) 0%,
+    var(--lime) 62%,
+    transparent 100%
+  );
+}
+
+.accent-rule.is-in::after {
+  transform: scaleX(1);
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Short vertical tick used beside labels and section numbers */
+.accent-tick {
+  display: inline-block;
+  width: 1px;
+  height: 0.85em;
+  vertical-align: -0.1em;
+  background: linear-gradient(to bottom, var(--bronze), var(--lime));
+  opacity: 0.85;
+}
+
+/* Small dot that breathes — "this page is live" */
+.accent-pulse {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 0 0 var(--lime-lo);
+  animation: accent-pulse 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes accent-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--lime-lo); opacity: 1; }
+  50%      { box-shadow: 0 0 0 5px rgba(214, 245, 91, 0); opacity: 0.55; }
+}
+
+/* ---------- Shine sweep ----------
+   A single narrow highlight crossing an element on hover.             */
+
+.shine { position: relative; overflow: hidden; }
+
+.shine::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  transform: translateX(-130%);
+  background: linear-gradient(
+    104deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.14) 47%,
+    rgba(255, 255, 255, 0.46) 51%,
+    rgba(255, 255, 255, 0.14) 55%,
+    transparent 64%
+  );
+}
+
+.shine:hover::after,
+.shine:focus-visible::after {
+  animation: shine-sweep 0.95s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes shine-sweep {
+  from { transform: translateX(-130%); }
+  to   { transform: translateX(130%); }
+}
+
+/* ---------- Iridescent hover text ----------
+   Base text stays fully opaque and readable at all times; the colour
+   layers sit on top and are revealed by a cursor-tracked spotlight.   */
+
+.irid {
+  --mx: 50%;
+  --my: 50%;
+  --irid: 0;
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+
+.irid__base {
+  position: relative;
+  display: inline-block;
+  color: var(--heading);
+}
+
+/* Per-word wrapper inside SectionHeading. Each word owns its own spotlight
+   centre (written from JS in the word's local coordinates), which is what
+   lets a mask-per-element read as one continuous light across the line. */
+.irid-word {
+  --mx: 50%;
+  --my: 50%;
+  --irid: 0;
+  position: relative;
+  display: inline-block;
+}
+
+.irid__layer {
+  position: absolute;
+  inset: 0;
+  display: inline-block;
+  pointer-events: none;
+  user-select: none;
+  white-space: inherit;
+}
+
+/* Oil-slick fill */
+.irid__fill {
+  background-image: linear-gradient(
+    96deg,
+    #ff5f6d 0%,  #ffc371 13%, #f9f871 25%,
+    #6ee7b7 38%, #60a5fa 52%, #a78bfa 66%,
+    #f472b6 80%, #ff5f6d 100%
+  );
+  background-size: 240% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  padding-bottom: 2px;
+  opacity: var(--irid);
+  transition: opacity 0.4s ease;
+  animation: irid-drift 8s linear infinite;
+  -webkit-mask-image: radial-gradient(
+    circle at var(--mx) var(--my),
+    #000 0%, rgba(0, 0, 0, 0.9) 26%, rgba(0, 0, 0, 0) 60%
+  );
+  mask-image: radial-gradient(
+    circle at var(--mx) var(--my),
+    #000 0%, rgba(0, 0, 0, 0.9) 26%, rgba(0, 0, 0, 0) 60%
+  );
 }
+
+/* Chromatic fringe — two offset copies, screened back in */
+.irid__r,
+.irid__c {
+  mix-blend-mode: screen;
+  opacity: calc(var(--irid) * 0.5);
+  transition: opacity 0.4s ease;
+  -webkit-mask-image: radial-gradient(
+    circle at var(--mx) var(--my),
+    #000 0%, rgba(0, 0, 0, 0.7) 30%, rgba(0, 0, 0, 0) 58%
+  );
+  mask-image: radial-gradient(
+    circle at var(--mx) var(--my),
+    #000 0%, rgba(0, 0, 0, 0.7) 30%, rgba(0, 0, 0, 0) 58%
+  );
+}
+
+.irid__r { color: #ff2d55; transform: translate3d(1.5px, 0, 0); }
+.irid__c { color: #22d3ee; transform: translate3d(-1.5px, 0, 0); }
+
+@keyframes irid-drift {
+  from { background-position:   0% 50%; }
+  to   { background-position: 240% 50%; }
+}
+
+/* ---------- Auto-running marquee ---------- */
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-x var(--marquee-dur, 64s) linear infinite;
+}
+
+.marquee-track[data-paused='true'] { animation-play-state: paused; }
+
+@keyframes marquee-x {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+/* ---------- Per-character / per-word reveal ---------- */
+
+.rv-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  /* Descenders (g, y, p) would otherwise be clipped by the mask box.
+     Pad the box out, then pull the extra height back off the layout. */
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.rv-word > span {
+  display: inline-block;
+  will-change: transform;
+}
+
+/* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -176,8 +494,13 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .light-sweep {
-    background-image: none !important;
-    color: var(--bone) !important;
-  }
+  .rail { scroll-snap-type: none; }
+
+  /* Decoration stops; the settled state is always the readable one. */
+  .grain-layer { display: none; }
+  .accent-rule::after { transform: scaleX(1); }
+  .marquee-track { animation: none; width: auto; }
+  .irid__fill, .irid__r, .irid__c { display: none; }
+  .accent-pulse { animation: none; }
+  .rv-word > span { transform: none !important; }
 }

@@ -1,112 +1,192 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
+import Reveal from '@/components/Reveal';
+import Pending from '@/components/Pending';
+import SectionHeading from '@/components/SectionHeading';
+import { site, addressLine, directionsLink, mapEmbedUrl } from '@/config/site';
+
+const DAY_LABEL: Record<string, string> = {
+  Monday: 'Mon',
+  Tuesday: 'Tue',
+  Wednesday: 'Wed',
+  Thursday: 'Thu',
+  Friday: 'Fri',
+  Saturday: 'Sat',
+  Sunday: 'Sun',
+};
+
+/**
+ * Visit Vyomi — a wide, moderately tall map above a neat contact strip.
+ *
+ * The map iframe is only mounted once the section approaches the viewport, so
+ * it costs nothing on initial load, and it is skipped entirely until the
+ * verified location is confirmed in config. No address is invented.
+ */
 export default function LocationSection() {
-  const scheduleDays = [
-    { day: 'Monday', time: '05:30 — 22:30', isToday: true },
-    { day: 'Tuesday', time: '05:30 — 22:30', isToday: false },
-    { day: 'Wednesday', time: '05:30 — 22:30', isToday: false },
-    { day: 'Thursday', time: '05:30 — 22:30', isToday: false },
-    { day: 'Friday', time: '05:30 — 22:30', isToday: false },
-    { day: 'Saturday', time: '06:00 — 22:00', isToday: false },
-    { day: 'Sunday', time: '07:00 — 20:00', isToday: false },
-  ];
+  const mapWrapRef = useRef<HTMLDivElement>(null);
+  const [mapVisible, setMapVisible] = useState(false);
+
+  const address = addressLine();
+  const directions = directionsLink();
+  const embed = mapEmbedUrl();
+
+  useEffect(() => {
+    const el = mapWrapRef.current;
+    if (!el || !embed) return;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setMapVisible(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [embed]);
 
   return (
-    <section className="relative w-full border-t border-[var(--hairline)] bg-[var(--ink)] py-20 px-[var(--pad-x)]">
-      <div className="max-w-6xl mx-auto">
-        <div className="border-b border-[var(--hairline)] pb-6 mb-12 flex items-end justify-between">
-          <h2 className="font-display text-3 font-light text-[var(--bone)]">
-            Find us.
-          </h2>
-          <span className="type-label font-mono text-[0.68rem] text-[var(--bone-dim)]">
-            Vijayawada
-          </span>
-        </div>
+    <section
+      id="location"
+      className="border-t border-hairline bg-ink px-pad-x py-section-y"
+      aria-labelledby="location-heading"
+    >
+      <div className="mx-auto max-w-shell">
+        <Reveal className="mb-10">
+          <SectionHeading id="location-heading" className="t-h2 uppercase text-heading">
+            Visit Vyomi.
+          </SectionHeading>
+        </Reveal>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
-          <div className="lg:col-span-5 flex flex-col space-y-8">
-            <div>
-              <span className="type-label text-[var(--bone-dim)] block mb-2">Location</span>
-              <address className="not-italic type-body text-0 text-[var(--bone)] font-light leading-relaxed">
-                Level 4, The Monolith Towers
-                <br />
-                MG Road, Near Benz Circle
-                <br />
-                Vijayawada, Andhra Pradesh 520010
-              </address>
-            </div>
-
-            <div className="border border-[var(--hairline)] p-5 bg-[var(--surface)] rounded-[2px]">
-              <span className="type-label text-[var(--champagne)] block mb-3">Sanctuary hours</span>
-              <div className="flex flex-col space-y-2">
-                {scheduleDays.map((item) => (
-                  <div
-                    key={item.day}
-                    className="flex justify-between items-center text-label text-[0.68rem]"
-                  >
-                    <span className={item.isToday ? 'text-[var(--bone)]' : 'text-[var(--bone-dim)]'}>
-                      {item.day} {item.isToday && '· Today'}
-                    </span>
-                    <span className={`tabular-nums font-mono ${item.isToday ? 'text-[var(--bone)]' : 'text-[var(--bone-dim)]'}`}>
-                      {item.time}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col space-y-2 pt-1 text-label text-[0.68rem]">
-              <div className="flex space-x-2">
-                <span className="text-[var(--bone-dim)]">Phone:</span>
-                <a href="tel:+919999999999" className="text-[var(--bone)] hover:text-[var(--champagne)]">
-                  +91 99999 99999
-                </a>
-              </div>
-              <div className="flex space-x-2">
-                <span className="text-[var(--bone-dim)]">Email:</span>
-                <a href="mailto:concierge@vyomifitness.com" className="text-[var(--bone)] hover:text-[var(--champagne)]">
-                  concierge@vyomifitness.com
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-7 flex flex-col space-y-4">
-            <div className="relative w-full h-[320px] md:h-[420px] overflow-hidden border border-[var(--hairline)] bg-[var(--surface)] rounded-[2px]">
+        {/* Map — wide, moderately tall */}
+        <div
+          ref={mapWrapRef}
+          className="relative h-[clamp(240px,34vw,400px)] w-full overflow-hidden border border-hairline bg-charcoal"
+        >
+          {embed ? (
+            mapVisible && (
               <iframe
-                title="Vyomi Fitness Club Map"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d61204.60670868128!2d80.60946059600021!3d16.506174304859067!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a35eff9f3a52597%3A0x6b6c0e86b240ff80!2sVijayawada%2C%20Andhra%20Pradesh!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
-                width="100%"
-                height="100%"
+                title={`Map showing ${site.name}`}
+                src={embed}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="h-full w-full"
                 style={{
                   border: 0,
-                  filter: 'grayscale(1) invert(0.92) contrast(1.1) brightness(0.75)',
+                  filter: 'grayscale(1) invert(0.92) contrast(1.05) brightness(0.8)',
                 }}
-                loading="lazy"
               />
-              <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                <span className="h-2 w-2 rounded-full bg-[var(--champagne)] border border-[var(--ink)]" />
-              </div>
+            )
+          ) : (
+            <div className="flex h-full w-full flex-col items-start justify-end gap-3 p-5">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 opacity-[0.55]"
+                style={{
+                  backgroundImage:
+                    'repeating-linear-gradient(135deg, rgba(245,245,242,0.035) 0px, rgba(245,245,242,0.035) 1px, transparent 1px, transparent 9px)',
+                }}
+              />
+              <span className="t-label relative text-burgundy">Map pending</span>
+              <p className="t-small relative max-w-measure text-muted">
+                The embed is wired and will render here as soon as the verified club
+                location is confirmed.
+              </p>
             </div>
+          )}
+        </div>
 
-            <div className="flex space-x-6 text-label text-[0.68rem]">
+        {/* Contact strip */}
+        <div className="mt-8 grid grid-cols-1 gap-8 border-t border-hairline pt-8 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Address */}
+          <div>
+            <span className="t-label mb-3 block text-muted">Address</span>
+            {address && site.address ? (
+              <address className="t-small not-italic text-heading">
+                {site.address.line1}
+                <br />
+                {site.address.line2 && (
+                  <>
+                    {site.address.line2}
+                    <br />
+                  </>
+                )}
+                {site.address.locality}, {site.address.region} {site.address.postalCode}
+              </address>
+            ) : (
+              <Pending label="Verified address" />
+            )}
+          </div>
+
+          {/* Hours */}
+          <div>
+            <span className="t-label mb-3 block text-muted">Opening hours</span>
+            {site.openingHours?.length ? (
+              <ul>
+                {site.openingHours.map((h) => (
+                  <li
+                    key={h.days}
+                    className="t-small flex justify-between gap-4 text-heading"
+                  >
+                    <span>{DAY_LABEL[h.days] ?? h.days}</span>
+                    <span className="nums">
+                      {h.opens} — {h.closes}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Pending label="Opening hours" />
+            )}
+          </div>
+
+          {/* Getting here — confirmed by the brief */}
+          <div>
+            <span className="t-label mb-3 block text-muted">Getting here</span>
+            <ul className="t-small text-heading">
+              {site.access.dedicatedLift && <li>Dedicated lift to the club</li>}
+              {site.access.parking && <li>On-site parking</li>}
+            </ul>
+          </div>
+
+          {/* Actions */}
+          <div>
+            <span className="t-label mb-3 block text-muted">Directions</span>
+            {directions ? (
               <a
-                href="https://maps.google.com/?q=Vijayawada"
+                href={directions}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[var(--bone-dim)] hover:text-[var(--bone)]"
+                className="t-ui group inline-flex items-center gap-1.5 border-b border-hairline-2 pb-1 text-heading transition-colors duration-300 hover:border-heading"
               >
-                Open in maps ↗
+                Get directions
+                <span
+                  aria-hidden="true"
+                  className="transition-transform duration-500 ease-editorial group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                >
+                  ↗
+                </span>
               </a>
+            ) : (
+              <Pending label="Maps location" />
+            )}
+
+            {site.phone && (
               <a
-                href="https://maps.google.com/?daddr=Vijayawada"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[var(--bone-dim)] hover:text-[var(--bone)]"
+                href={`tel:${site.phone.replace(/\s/g, '')}`}
+                className="t-small nums mt-4 block text-heading"
               >
-                Get directions ↗
+                {site.phone}
               </a>
-            </div>
+            )}
+            {site.email && (
+              <a href={`mailto:${site.email}`} className="t-small mt-1 block text-heading">
+                {site.email}
+              </a>
+            )}
           </div>
         </div>
       </div>

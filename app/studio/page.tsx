@@ -1,394 +1,404 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import AssetSlot from '@/components/AssetSlot';
+import Reveal from '@/components/Reveal';
+import Pending from '@/components/Pending';
+import Footer from '@/components/Footer';
+import SectionHeading from '@/components/SectionHeading';
+import AccentRule from '@/components/AccentRule';
+import StudioNav from '@/components/StudioNav';
+import { STUDIO_IMAGES } from '@/config/assets';
+import { EQUIPMENT_CATEGORIES, AMENITIES, DISCIPLINES } from '@/data/club';
 
-interface StudioSectionData {
-  id: string;
-  index: string;
-  name: string;
-  headline: string;
-  subheadline: string;
-  paragraphs: string[];
-  pillars: string[];
-  specs: { label: string; value: string }[];
-  schedule: string;
-  image: string;
+export const metadata: Metadata = {
+  title: 'Studio',
+  description:
+    'Fitness and equipment, HYROX, Zumba, wellness and recovery, and reformer Pilates at Vyomi Fitness Club, Vijayawada.',
+};
+
+/**
+ * The Studio page — five disciplines, five compositions.
+ *
+ * The brief for this page was that no two chapters should share a layout, so
+ * each one is built differently rather than being the same grid with
+ * different content poured into it:
+ *
+ *   01 Fitness   — sticky text column, images scrolling past it
+ *   02 HYROX     — full-bleed cinematic plate, heading overlaid
+ *   03 Zumba     — offset collage against an oversized chapter numeral
+ *   04 Wellness  — calm, centred, symmetrical
+ *   05 Pilates   — the showpiece: full-bleed, oversized type, detail pair
+ *
+ * Content discipline is unchanged from the rest of the site: only what the
+ * brief confirms is written as copy. Everything else — timetables, instructor
+ * names, reformer counts, station lists — renders as a visible pending marker
+ * instead of plausible-looking invented detail.
+ *
+ * A server component. The chapter rail and the headings are the only client
+ * pieces, and both are additive.
+ */
+
+/** Left clearance for the fixed rail on large screens. */
+const GUTTER = 'px-pad-x lg:pl-[9.5rem]';
+
+function ChapterLabel({ index, label }: { index: number; label: string }) {
+  return (
+    <span className="t-label mb-4 flex items-center gap-2.5 text-faint">
+      <span className="accent-tick" aria-hidden="true" />
+      <span className="nums">{String(index).padStart(2, '0')}</span>
+      <span aria-hidden="true">·</span>
+      <span>{label}</span>
+    </span>
+  );
 }
 
-const SECTIONS: StudioSectionData[] = [
-  {
-    id: 'fitness',
-    index: '01',
-    name: 'Fitness',
-    headline: 'Biomechanical purity.',
-    subheadline: 'Movement calibrated to natural joint articulation and structural longevity.',
-    paragraphs: [
-      'Our physical floor rejects arbitrary fatigue. Training is arranged around purposeful kinetic pathways using bespoke Italian Panatta Monolith apparatus.',
-      'Variable resistance cams match your muscles’ natural torque curves throughout each repetition, producing maximal recruitment with zero destructive joint compression.',
-      'Every session is monitored with velocity telemetry, ensuring you build dense, functional strength while preserving structural longevity for life outside the floor.',
-    ],
-    pillars: [
-      'Panatta Monolith circular torque cams',
-      'Velocity loss tracking under 10%',
-      'Active physical therapist review',
-    ],
-    specs: [
-      { label: 'APPARATUS', value: 'Panatta Monolith' },
-      { label: 'DURATION', value: '60 Minutes' },
-      { label: 'INTENSITY', value: 'Calibrated High' },
-    ],
-    schedule: 'Monday · Wednesday · Friday · 06:00 & 17:30',
-    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=85',
-  },
-  {
-    id: 'hyrox',
-    index: '02',
-    name: 'Hyrox',
-    headline: 'Unrelenting pace.',
-    subheadline: 'Official race conditioning, pacing economics, and lactate threshold control.',
-    paragraphs: [
-      'As an official training facility in Vijayawada, we deliver competition-grade Hyrox preparation. Sessions simulate the full 8-station race sequence under controlled conditions.',
-      'Work across dedicated weighted sled alleys, Concept2 SkiErgs, rowing stations, and wall-ball targets, structured to expand aerobic work capacity.',
-      'Our coaches emphasize pacing economics and lactate clearance, so you develop the physical stamina to sustain high wattage under fatigue without redlining.',
-    ],
-    pillars: [
-      '8 official competition sled & erg stations',
-      'Lactate threshold heart rate pacing',
-      'Team & individual simulation heats',
-    ],
-    specs: [
-      { label: 'STATIONS', value: '8 Competition Stations' },
-      { label: 'DURATION', value: '60 Minutes' },
-      { label: 'INTENSITY', value: 'High Lactate' },
-    ],
-    schedule: 'Tuesday · Thursday · Saturday · 06:30 & 18:00',
-    image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1920&q=85',
-  },
-  {
-    id: 'pilates',
-    index: '03',
-    name: 'Pilates',
-    headline: 'Spinal decompression.',
-    subheadline: 'Classical reformer sequences cultivating rotational tone and deep core stability.',
-    paragraphs: [
-      'Set in a serene studio filled with soft natural light, our reformer practice emphasizes postural alignment and pelvic stabilization under progressive spring tension.',
-      'Using Balanced Body Allegro II reformers with integrated tower resistance, sequences stretch and strengthen simultaneously, decompressing spinal discs.',
-      'Class sizes are strictly capped at eight guests to ensure each member receives hands-on anatomical guidance from certified classical instructors.',
-    ],
-    pillars: [
-      'Allegro II custom spring carriage tension',
-      'Spinal articulation and deep transversus focus',
-      'Strict 8-guest intimate cohort cap',
-    ],
-    specs: [
-      { label: 'EQUIPMENT', value: 'Allegro II Reformers' },
-      { label: 'DURATION', value: '50 Minutes' },
-      { label: 'CAPACITY', value: 'Max 8 Guests' },
-    ],
-    schedule: 'Daily Sessions · 07:30, 09:00 & 18:30',
-    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1920&q=85',
-  },
-  {
-    id: 'zumba',
-    index: '04',
-    name: 'Zumba',
-    headline: 'Rhythmic flow.',
-    subheadline: 'Acoustic cardiovascular movement in an uplifting, shock-absorbed hall.',
-    paragraphs: [
-      'A joyful cardiovascular journey combining polyrhythmic choreographies with dynamic agility drills on sprung Canadian maple timber flooring.',
-      'Our studio features acoustic timber dampening, allowing the music to resonate cleanly without sensory harshness or auditory fatigue.',
-      'Designed to elevate heart rate, improve dynamic balance, and leave you mentally revitalized through effortless aerobic expression.',
-    ],
-    pillars: [
-      'Sprung hardwood shock-absorbing floor',
-      'Custom acoustic baffle soundstage',
-      'Cardiovascular endurance and joy',
-    ],
-    specs: [
-      { label: 'FLOORING', value: 'Sprung Hardwood' },
-      { label: 'DURATION', value: '55 Minutes' },
-      { label: 'INTENSITY', value: 'Aerobic Cardio' },
-    ],
-    schedule: 'Monday · Wednesday · Friday · 19:15',
-    image: 'https://images.unsplash.com/photo-1524594152303-9fd13543fe6e?auto=format&fit=crop&w=1920&q=85',
-  },
-  {
-    id: 'wellness',
-    index: '05',
-    name: 'Wellness',
-    headline: 'Cellular stillness.',
-    subheadline: 'Himalayan salt halotherapy, Nordic cedar heat, and contrast cold plunge pools.',
-    paragraphs: [
-      'Recovery is the counterpart to effort. Our wellness sanctuary integrates clinical halotherapy with contrast temperature hydrotherapy for deep autonomic balance.',
-      'Breathe micronized saline aerosol inside the Himalayan salt room, warming soft tissue before entering the 65°C Nordic cedar sauna.',
-      'Conclude with cold plunge vasoconstriction at 6°C to flush inflammatory metabolites and trigger profound parasympathetic nervous system restoration.',
-    ],
-    pillars: [
-      'Himalayan salt micronized aerosol',
-      '65°C Finnish cedar dry sauna suite',
-      '6°C chilled contrast hydrotherapy basin',
-    ],
-    specs: [
-      { label: 'HALOTHERAPY', value: 'Pink Himalayan Salt' },
-      { label: 'HYDROTHERAPY', value: '6°C Chilled Plunge' },
-      { label: 'HEAT', value: 'Full-Spectrum Sauna' },
-    ],
-    schedule: 'Open Daily · 05:30 — 22:30 IST',
-    image: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1920&q=85',
-  },
-];
-
 export default function StudioPage() {
-  const [activeId, setActiveId] = useState('fitness');
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const windowHeight = window.innerHeight;
-
-      for (const section of SECTIONS) {
-        const el = document.getElementById(section.id);
-        if (el) {
-          const top = el.offsetTop;
-          const height = el.offsetHeight;
-          if (scrollY >= top - windowHeight * 0.4 && scrollY < top + height - windowHeight * 0.4) {
-            setActiveId(section.id);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const [fitness, hyrox, zumba, wellness, pilates] = DISCIPLINES;
 
   return (
-    <div className="relative w-full bg-[var(--ink)] text-[var(--bone)] selection:bg-[var(--champagne)] selection:text-[var(--ink)]">
-      {/* Top Header Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-[72px] px-[var(--pad-x)] flex items-center justify-between pointer-events-none">
-        {/* Vyomi Logo in Top Left */}
-        <Link
-          href="/"
-          className="pointer-events-auto flex items-center space-x-3 group"
-          aria-label="Return to Vyomi Home"
-        >
-          <div className="relative w-[110px] h-[36px]">
-            <Image
-              src="/logo.png"
-              alt="Vyomi Fitness Club"
-              fill
-              priority
-              className="object-contain"
-            />
-          </div>
-        </Link>
+    <>
+      <StudioNav />
 
-        {/* Return to Sanctuary Glass Capsule */}
-        <Link
-          href="/"
-          className="pointer-events-auto liquid-glass px-4 py-2 rounded-full text-label text-[0.68rem] text-[var(--bone-dim)] hover:text-[var(--bone)] transition-all inline-flex items-center space-x-1.5"
+      {/* Slim top bar — the rail carries chapter navigation, so this only
+          needs the way back and the single booking action. */}
+      <header className="border-b border-hairline bg-ink">
+        <div
+          className={`flex flex-wrap items-center gap-x-6 gap-y-3 pb-5 ${GUTTER}`}
+          style={{ paddingTop: 'clamp(5rem, 11vw, 7.5rem)' }}
         >
-          <span>←</span>
-          <span>Return to sanctuary</span>
-        </Link>
+          <Link href="/" className="t-ui text-muted transition-colors hover:text-heading">
+            ← Home
+          </Link>
+          <div className="ms-auto">
+            <Link href="/#trial" className="btn-line shine !py-2">
+              Two-day request
+            </Link>
+          </div>
+        </div>
       </header>
 
-      {/* Floating Liquid Glass Navigation Capsule on Left:
-          Ultra-short, compact (~220px high), minimalist, multi-layer liquid glass */}
-      <aside
-        className="hidden md:flex fixed left-8 top-1/2 -translate-y-1/2 z-40 flex-col w-[184px] p-3 rounded-2xl liquid-glass"
-        style={{
-          boxShadow:
-            '0 24px 48px -12px rgba(0,0,0,0.65), inset 0 1px 1px 0 rgba(255,255,255,0.38), inset 0 -1px 1px 0 rgba(0,0,0,0.25)',
-        }}
-      >
-        {/* Minimal header */}
-        <div className="flex items-center justify-between pb-2 mb-1.5 border-b border-[var(--hairline)]">
-          <span className="type-label text-[0.62rem] text-[var(--bone-dim)] tracking-[0.22em]">
-            STUDIO
-          </span>
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--champagne)]" />
-        </div>
-
-        {/* 5 Minimalist rows */}
-        <div className="flex flex-col space-y-1">
-          {SECTIONS.map((item) => {
-            const isActive = activeId === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => scrollToSection(item.id)}
-                className={`group flex items-center justify-between py-1.5 px-2.5 rounded-md text-left transition-all duration-300 ${
-                  isActive
-                    ? 'bg-white/[0.08] text-[var(--bone)]'
-                    : 'text-[var(--bone-dim)] hover:text-[var(--bone)] hover:bg-white/[0.03]'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <span className="font-mono text-[0.60rem] text-[var(--bone-dim)] opacity-45">
-                    {item.index}
-                  </span>
-                  <span className="font-display text-[0.88rem] font-light">
-                    {item.name}
-                  </span>
-                </div>
-
-                {isActive && (
-                  <span className="h-1 w-1 rounded-full bg-[var(--champagne)] shadow-[0_0_6px_var(--champagne)]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </aside>
-
-      {/* Mobile Floating Liquid Glass Capsule Bar */}
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center space-x-4 px-5 py-2.5 rounded-full liquid-glass max-w-[92vw] overflow-x-auto whitespace-nowrap shadow-2xl">
-        {SECTIONS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => scrollToSection(item.id)}
-            className={`font-display text-[0.82rem] font-light transition-colors ${
-              activeId === item.id
-                ? 'text-[var(--bone)] underline underline-offset-4'
-                : 'text-[var(--bone-dim)] opacity-60'
-            }`}
-          >
-            {item.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Scrollable Discipline Sections */}
-      {SECTIONS.map((section, idx) => (
-        <section
-          key={section.id}
-          id={section.id}
-          className="relative min-h-screen w-full flex flex-col justify-center py-28 md:py-36 px-[var(--pad-x)] border-b border-[var(--hairline)] overflow-hidden"
-        >
-          {/* Section Background Image with soft lifted grade */}
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <Image
-              src={section.image}
-              alt={section.name}
-              fill
-              priority={section.id === 'fitness'}
-              sizes="100vw"
-              className="object-cover"
-              style={{
-                filter: 'grayscale(0.25) contrast(0.92) brightness(1.04) saturate(0.85)',
-              }}
-            />
-            {/* Ambient gradients for quiet luxury reading clarity */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-r from-[var(--ink)]/95 via-[var(--ink)]/85 to-[var(--ink)]/50"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-[var(--ink)] via-transparent to-[var(--ink)]/70"
-            />
-          </div>
-
-          {/* Section Content */}
-          <div className="relative z-10 max-w-4xl mx-auto md:ml-[240px] flex flex-col items-start">
-            <span className="type-label text-[var(--champagne)] mb-3 tracking-[0.22em] font-mono">
-              DISCIPLINE {section.index} · {section.name.toUpperCase()}
-            </span>
-
-            <h2 className="font-display text-4 font-light text-[var(--bone)] leading-tight mb-2">
-              {section.headline}
-            </h2>
-
-            <p className="font-display text-1 italic text-[var(--bone-dim)] font-light mb-8 max-w-2xl">
-              &ldquo;{section.subheadline}&rdquo;
-            </p>
-
-            {/* Paragraphs making section rich and scrollable */}
-            <div className="flex flex-col space-y-4 mb-8 max-w-2xl">
-              {section.paragraphs.map((p, pIdx) => (
-                <p key={pIdx} className="type-body text-0 text-[var(--bone-dim)] font-light leading-relaxed">
-                  {p}
-                </p>
-              ))}
-            </div>
-
-            {/* Core Pillars / Method chips */}
-            <div className="flex flex-wrap gap-2.5 mb-8 max-w-2xl">
-              {section.pillars.map((pillar, pilIdx) => (
-                <span
-                  key={pilIdx}
-                  className="liquid-glass text-label text-[0.62rem] text-[var(--bone-dim)] px-3.5 py-1.5 rounded-full"
-                >
-                  {pillar}
-                </span>
-              ))}
-            </div>
-
-            {/* Spec Metrics Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-6 border-t border-b border-[var(--hairline)] w-full max-w-2xl mb-8">
-              {section.specs.map((spec, sIdx) => (
-                <div key={sIdx} className="flex flex-col">
-                  <span className="type-label text-[0.62rem] text-[var(--bone-dim)] mb-1">
-                    {spec.label}
-                  </span>
-                  <span className="font-display text-0 font-light text-[var(--bone)]">
-                    {spec.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Timings & Booking Action */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full max-w-2xl gap-5">
-              <div>
-                <span className="type-label text-[0.62rem] text-[var(--bone-dim)] block mb-1">
-                  WEEKLY SCHEDULE
-                </span>
-                <span className="font-mono text-[0.82rem] text-[var(--bone)]">
-                  {section.schedule}
-                </span>
-              </div>
-
-              <a
-                href={`https://wa.me/919999999999?text=Hi%20Vyomi%20%E2%80%94%20I'd%20like%20to%20reserve%20a%20spot%20in%20the%20${encodeURIComponent(
-                  section.name
-                )}%20session.`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="liquid-glass px-5 py-2.5 rounded-[2px] text-label text-[0.68rem] text-[var(--bone)] hover:border-[var(--champagne)] hover:text-[var(--champagne)] transition-all inline-flex items-center space-x-2 self-start sm:self-auto"
-              >
-                <span>Reserve {section.name}</span>
-                <span>↗</span>
-              </a>
-            </div>
-
-            {/* Gentle scroll indicator to next section if not last */}
-            {idx < SECTIONS.length - 1 && (
-              <button
-                type="button"
-                onClick={() => scrollToSection(SECTIONS[idx + 1].id)}
-                className="mt-12 text-label text-[0.62rem] text-[var(--bone-dim)] hover:text-[var(--bone)] flex items-center space-x-2 transition-colors opacity-60 hover:opacity-100"
-              >
-                <span>Explore {SECTIONS[idx + 1].name}</span>
-                <span>↓</span>
-              </button>
-            )}
+      <main id="main" className="pb-24 lg:pb-0">
+        {/* ---------- Title ---------- */}
+        <section className={`border-b border-hairline bg-ink py-section-y ${GUTTER}`}>
+          <SectionHeading as="h1" immediate className="t-hero uppercase text-heading">
+            The Studio.
+          </SectionHeading>
+          <p className="t-body mt-5 max-w-measure text-muted">
+            Five disciplines under one roof.
+          </p>
+          <div className="mt-10 max-w-shell">
+            <AccentRule />
           </div>
         </section>
-      ))}
-    </div>
+
+        {/* ---------- 01 · Fitness — sticky column, images scroll past ---------- */}
+        <section
+          id={fitness.id}
+          className={`scroll-mt-24 border-b border-hairline bg-ink py-section-y ${GUTTER}`}
+          aria-labelledby="fitness-heading"
+        >
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+            {/*
+              The text column pins while the three plates travel past it.
+              `self-start` is what lets `sticky` work inside a grid row —
+              a stretched item has nothing to stick within.
+            */}
+            <div className="lg:col-span-5 lg:sticky lg:top-28 lg:self-start">
+              <ChapterLabel index={1} label={fitness.label} />
+              <SectionHeading
+                id="fitness-heading"
+                className="t-h2 uppercase text-heading"
+              >
+                {fitness.title}
+              </SectionHeading>
+
+              <p className="t-small mt-6 text-muted">{fitness.blurb}</p>
+
+              <dl className="mt-8 border-t border-hairline">
+                {EQUIPMENT_CATEGORIES.map((c) => (
+                  <div key={c.id} className="border-b border-hairline py-4">
+                    <dt className="t-ui mb-1 text-heading">{c.label}</dt>
+                    <dd className="t-small text-muted">{c.blurb}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="mt-6">
+                <Pending label={fitness.pending} />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-6 lg:col-span-7">
+              <Reveal>
+                <AssetSlot
+                  slot={STUDIO_IMAGES.fitness}
+                  sizes="(max-width: 1023px) 100vw, 55vw"
+                  className="w-full"
+                />
+              </Reveal>
+              <Reveal className="lg:ml-[18%]">
+                <AssetSlot
+                  slot={STUDIO_IMAGES.fitnessDetailA}
+                  sizes="(max-width: 1023px) 100vw, 45vw"
+                  className="w-full"
+                />
+              </Reveal>
+              <Reveal className="lg:mr-[10%]">
+                <AssetSlot
+                  slot={STUDIO_IMAGES.fitnessDetailB}
+                  sizes="(max-width: 1023px) 100vw, 50vw"
+                  className="w-full"
+                />
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------- 02 · HYROX — full-bleed, heading overlaid ---------- */}
+        <section
+          id={hyrox.id}
+          className="scroll-mt-24 border-b border-hairline bg-ink"
+          aria-labelledby="hyrox-heading"
+        >
+          <div className="relative">
+            <AssetSlot
+              slot={STUDIO_IMAGES.hyrox}
+              sizes="100vw"
+              ratio="21 / 9"
+              className="w-full"
+            />
+
+            {/* Legibility wash under the overlaid type */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(to top, rgba(8,8,8,0.88) 0%, rgba(8,8,8,0.45) 38%, rgba(8,8,8,0.08) 72%)',
+              }}
+            />
+
+            <div
+              className={`absolute inset-x-0 bottom-0 pb-[clamp(1.5rem,4vw,3.5rem)] ${GUTTER}`}
+            >
+              <ChapterLabel index={2} label={hyrox.label} />
+              <SectionHeading
+                id="hyrox-heading"
+                className="t-h2 uppercase text-heading"
+              >
+                {hyrox.title}
+              </SectionHeading>
+            </div>
+          </div>
+
+          <div className={`grid grid-cols-1 gap-10 py-section-y md:grid-cols-12 ${GUTTER}`}>
+            <Reveal className="md:col-span-6">
+              <AssetSlot
+                slot={STUDIO_IMAGES.hyroxDetail}
+                sizes="(max-width: 767px) 100vw, 48vw"
+                className="w-full"
+              />
+            </Reveal>
+            <Reveal className="md:col-span-5 md:col-start-8 md:pt-8">
+              <p className="t-small text-muted">{hyrox.blurb}</p>
+              <div className="mt-6">
+                <AccentRule />
+              </div>
+              <div className="mt-6">
+                <Pending label={hyrox.pending} />
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ---------- 03 · Zumba — offset collage on an oversized numeral ---------- */}
+        <section
+          id={zumba.id}
+          className={`relative scroll-mt-24 overflow-hidden border-b border-hairline bg-ink py-section-y ${GUTTER}`}
+          aria-labelledby="zumba-heading"
+        >
+          {/*
+            Outlined chapter numeral sitting behind the collage. Decorative
+            only — the real chapter number is in the label above.
+          */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-4 top-6 select-none font-medium leading-none"
+            style={{
+              fontSize: 'clamp(9rem, 26vw, 24rem)',
+              color: 'transparent',
+              WebkitTextStroke: '1px rgba(245,245,242,0.055)',
+            }}
+          >
+            03
+          </span>
+
+          <div className="relative">
+            <ChapterLabel index={3} label={zumba.label} />
+            <SectionHeading id="zumba-heading" className="t-h2 uppercase text-heading">
+              {zumba.title}
+            </SectionHeading>
+
+            <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-12">
+              <Reveal className="sm:col-span-7">
+                <AssetSlot
+                  slot={STUDIO_IMAGES.zumba}
+                  sizes="(max-width: 639px) 100vw, 56vw"
+                  className="w-full"
+                />
+              </Reveal>
+
+              <Reveal className="sm:col-span-4 sm:col-start-9 sm:-mt-12">
+                <AssetSlot
+                  slot={STUDIO_IMAGES.zumbaDetailA}
+                  sizes="(max-width: 639px) 100vw, 30vw"
+                  className="w-full"
+                />
+              </Reveal>
+
+              <Reveal className="sm:col-span-3 sm:col-start-4 sm:mt-6">
+                <AssetSlot
+                  slot={STUDIO_IMAGES.zumbaDetailB}
+                  sizes="(max-width: 639px) 100vw, 24vw"
+                  className="w-full"
+                />
+              </Reveal>
+
+              <Reveal className="sm:col-span-4 sm:col-start-8 sm:mt-6 sm:self-end">
+                <p className="t-small text-muted">{zumba.blurb}</p>
+                <div className="mt-5">
+                  <Pending label={zumba.pending} />
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------- 04 · Wellness — calm and centred ---------- */}
+        <section
+          id={wellness.id}
+          className={`scroll-mt-24 border-b border-hairline bg-ink py-section-y ${GUTTER}`}
+          aria-labelledby="wellness-heading"
+        >
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="flex justify-center">
+              <ChapterLabel index={4} label={wellness.label} />
+            </div>
+            <SectionHeading
+              id="wellness-heading"
+              className="t-h2 mx-auto uppercase text-heading"
+            >
+              {wellness.title}
+            </SectionHeading>
+            <p className="t-small mx-auto mt-6 max-w-[46ch] text-muted">
+              {wellness.blurb}
+            </p>
+
+            <Reveal className="mt-12">
+              <AssetSlot
+                slot={STUDIO_IMAGES.wellness}
+                sizes="(max-width: 1023px) 100vw, 56rem"
+                className="w-full"
+              />
+            </Reveal>
+
+            <ul className="mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-x-10 border-t border-hairline sm:grid-cols-3">
+              {AMENITIES.map((a) => (
+                <li
+                  key={a}
+                  className="t-small border-b border-hairline py-3 text-left text-heading"
+                >
+                  {a}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 flex justify-center">
+              <Pending label={wellness.pending} />
+            </div>
+          </div>
+        </section>
+
+        {/* ---------- 05 · Pilates — the showpiece ---------- */}
+        <section
+          id={pilates.id}
+          className="scroll-mt-24 border-b border-hairline bg-ink"
+          aria-labelledby="pilates-heading"
+        >
+          <div className={`pt-section-y ${GUTTER}`}>
+            <ChapterLabel index={5} label={pilates.label} />
+            {/*
+              Set at hero scale rather than h2: this is the chapter the client
+              asked to lead the Studio, and it is the last thing read before
+              the booking call to action.
+            */}
+            <SectionHeading
+              id="pilates-heading"
+              className="t-hero uppercase text-heading"
+            >
+              {pilates.title}
+            </SectionHeading>
+            <p className="t-body mt-6 max-w-measure text-muted">{pilates.blurb}</p>
+            <div className="mt-10 max-w-shell">
+              <AccentRule />
+            </div>
+          </div>
+
+          <Reveal className="mt-14 block">
+            <AssetSlot
+              slot={STUDIO_IMAGES.pilates}
+              sizes="100vw"
+              ratio="21 / 9"
+              className="w-full"
+            />
+          </Reveal>
+
+          <div className={`grid grid-cols-1 gap-10 py-section-y md:grid-cols-12 ${GUTTER}`}>
+            <Reveal className="md:col-span-4">
+              <AssetSlot
+                slot={STUDIO_IMAGES.pilatesDetailA}
+                sizes="(max-width: 767px) 100vw, 32vw"
+                className="w-full"
+              />
+            </Reveal>
+            <Reveal className="md:col-span-3 md:pt-16">
+              <AssetSlot
+                slot={STUDIO_IMAGES.pilatesDetailB}
+                sizes="(max-width: 767px) 100vw, 24vw"
+                className="w-full"
+              />
+            </Reveal>
+            <Reveal className="md:col-span-4 md:col-start-9 md:pt-8">
+              <p className="t-small text-muted">
+                Reformer work is coached on the carriage itself — spring
+                resistance, footbar and straps — rather than as mat Pilates.
+              </p>
+              <div className="mt-6">
+                <Pending label={pilates.pending} />
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ---------- Booking ---------- */}
+        <section className={`bg-ink py-section-y ${GUTTER}`}>
+          <div className="max-w-shell">
+            <SectionHeading className="t-h2 uppercase text-heading">
+              {'Two days.\nExperience Vyomi.'}
+            </SectionHeading>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link href="/#trial" className="btn-solid shine">
+                Request your two days
+              </Link>
+              <Link href="/#enquire" className="btn-line shine">
+                Enquire on WhatsApp ↗
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </>
   );
 }

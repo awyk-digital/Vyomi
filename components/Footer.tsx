@@ -1,115 +1,184 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import Pending from '@/components/Pending';
+import { SUPPLIED } from '@/config/assets';
+import { site, whatsappLink, presaleDisplay } from '@/config/site';
 
-interface FooterProps {
-  onOpenInquiry: () => void;
-}
-
-export default function Footer({ onOpenInquiry }: FooterProps) {
-  const [showStickyBar, setShowStickyBar] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowStickyBar(window.scrollY > window.innerHeight * 0.6);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+/**
+ * Footer — the existing classic structure, kept.
+ *
+ * Preserved: the pre-sale line with an enquiry action, four link columns, the
+ * oversized clipped wordmark, and the fine subline. Refinements are limited to
+ * spacing, rules and type scale.
+ *
+ * One deliberate change: the oversized wordmark now sets in General Sans Medium
+ * rather than the old serif display face, because the brief reserves Boska for
+ * the single editorial quote. The treatment — oversized, low-contrast, clipped
+ * at the bottom edge — is unchanged.
+ *
+ * The old sticky mobile bar is gone: it pointed at a hardcoded placeholder
+ * number and overlapped the hero's Studio capsule on small screens.
+ */
+export default function Footer() {
+  const presale = presaleDisplay();
+  const wa = whatsappLink('Hello Vyomi — I would like to enquire about membership.');
 
   return (
-    <>
-      <footer className="relative w-full border-t border-[var(--hairline)] bg-[var(--ink)] pt-20 pb-12 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-[var(--pad-x)] flex flex-col justify-between">
-          {/* Top Row: Left line + Right Inquire CTA */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-10 gap-6">
-            <h2 className="font-display text-2 font-light text-[var(--bone)]">
-              Pre-sale opens 12 November.
-            </h2>
+    <footer className="relative overflow-hidden border-t border-hairline bg-ink pt-16">
+      <div className="mx-auto max-w-shell px-pad-x">
+        {/* Pre-sale line + enquiry action */}
+        <div className="flex flex-col gap-5 pb-10 md:flex-row md:items-center md:justify-between">
+          {presale ? (
+            <p className="t-h3 text-heading">
+              Pre-sale opens <time dateTime={site.presaleDate ?? undefined}>{presale}</time>.
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="t-h3 text-heading">Pre-sale opening soon.</p>
+              <Pending label="Launch date" />
+            </div>
+          )}
 
-            <button
-              type="button"
-              onClick={onOpenInquiry}
-              className="border border-[var(--hairline)] rounded-[2px] px-7 py-3 text-label text-[var(--bone-dim)] hover:text-[var(--bone)] hover:bg-[rgba(244,240,234,0.06)] hover:border-[var(--bone-dim)] transition-all duration-300 w-fit"
-            >
-              Inquire for access
-            </button>
+          <a href="#enquire" className="btn-line w-fit">
+            Enquire
+          </a>
+        </div>
+
+        <div className="h-px w-full bg-hairline" />
+
+        {/* Link columns */}
+        <nav aria-label="Footer" className="grid grid-cols-2 gap-8 py-12 md:grid-cols-4">
+          <div className="flex flex-col gap-3">
+            <span className="t-label text-faint">Club</span>
+            <Link href="/#explore" className="t-small text-heading hover:text-muted">
+              Explore Vyomi
+            </Link>
+            <Link href="/#equipment" className="t-small text-heading hover:text-muted">
+              Equipment
+            </Link>
+            <Link href="/#trainers" className="t-small text-heading hover:text-muted">
+              Trainers
+            </Link>
           </div>
 
-          <div className="h-px w-full bg-[var(--hairline)] mb-14" />
+          <div className="flex flex-col gap-3">
+            <span className="t-label text-faint">Studio</span>
+            <Link href="/studio#fitness" className="t-small text-heading hover:text-muted">
+              Fitness
+            </Link>
+            <Link href="/studio#hyrox" className="t-small text-heading hover:text-muted">
+              HYROX
+            </Link>
+            <Link href="/studio#zumba" className="t-small text-heading hover:text-muted">
+              Zumba
+            </Link>
+            <Link href="/studio#pilates" className="t-small text-heading hover:text-muted">
+              Pilates
+            </Link>
+            <Link href="/studio#wellness" className="t-small text-heading hover:text-muted">
+              Wellness
+            </Link>
+          </div>
 
-          {/* Middle Links (no membership!) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20 text-label text-[0.68rem]">
-            <div className="flex flex-col space-y-3">
-              <span className="text-[var(--bone-dim)] opacity-40">Sanctuary</span>
-              <a href="/#floor" className="text-[var(--bone)] hover:text-[var(--champagne)]">The floor</a>
-              <a href="/#floor" className="text-[var(--bone)] hover:text-[var(--champagne)]">Panatta apparatus</a>
-              <a href="/#specialists" className="text-[var(--bone)] hover:text-[var(--champagne)]">The coaches</a>
-            </div>
+          <div className="flex flex-col gap-3">
+            <span className="t-label text-faint">Visit</span>
+            <Link href="/#wellness" className="t-small text-heading hover:text-muted">
+              Wellness
+            </Link>
+            <Link href="/#trial" className="t-small text-heading hover:text-muted">
+              Two-day experience
+            </Link>
+            <Link href="/#location" className="t-small text-heading hover:text-muted">
+              Location
+            </Link>
+          </div>
 
-            <div className="flex flex-col space-y-3">
-              <span className="text-[var(--bone-dim)] opacity-40">Disciplines</span>
-              <a href="/studio" className="text-[var(--bone)] hover:text-[var(--champagne)]">The Studio</a>
-              <a href="/studio" className="text-[var(--bone)] hover:text-[var(--champagne)]">Reformer pilates</a>
-              <a href="/studio" className="text-[var(--bone)] hover:text-[var(--champagne)]">Hyrox racing</a>
-            </div>
+          <div className="flex flex-col items-start gap-3">
+            <span className="t-label text-faint">Contact</span>
 
-            <div className="flex flex-col space-y-3">
-              <span className="text-[var(--bone-dim)] opacity-40">Recovery</span>
-              <a href="/#wellness" className="text-[var(--bone)] hover:text-[var(--champagne)]">Salt therapy</a>
-              <a href="/#wellness" className="text-[var(--bone)] hover:text-[var(--champagne)]">Cold plunge</a>
-              <a href="/#wellness" className="text-[var(--bone)] hover:text-[var(--champagne)]">Cedar sauna</a>
-            </div>
-
-            <div className="flex flex-col space-y-3">
-              <span className="text-[var(--bone-dim)] opacity-40">Contact</span>
-              <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" className="text-[var(--bone)] hover:text-[var(--champagne)]">
-                WhatsApp concierge ↗
+            {wa ? (
+              <a
+                href={wa}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="t-small text-heading hover:text-muted"
+              >
+                WhatsApp ↗
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-[var(--bone)] hover:text-[var(--champagne)]">
+            ) : (
+              <Pending label="WhatsApp number" />
+            )}
+
+            {site.instagramUrl ? (
+              <a
+                href={site.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="t-small text-heading hover:text-muted"
+              >
                 Instagram ↗
               </a>
-            </div>
+            ) : (
+              <Pending label="Instagram profile" />
+            )}
+
+            {site.phone ? (
+              <a
+                href={`tel:${site.phone.replace(/\s/g, '')}`}
+                className="t-small nums text-heading hover:text-muted"
+              >
+                {site.phone}
+              </a>
+            ) : (
+              <Pending label="Phone number" />
+            )}
+
+            {site.email ? (
+              <a href={`mailto:${site.email}`} className="t-small text-heading hover:text-muted">
+                {site.email}
+              </a>
+            ) : (
+              <Pending label="Email address" />
+            )}
           </div>
-        </div>
-
-        {/* Oversized VYOMI Wordmark — font-display Boska Light 300, clipped at bottom edge */}
-        <div className="w-full overflow-hidden select-none -mb-6 md:-mb-12">
-          <div className="font-display text-[20vw] font-light tracking-[-0.03em] text-[var(--bone)] opacity-[0.06] hover:opacity-[0.12] transition-opacity duration-700 leading-none whitespace-nowrap text-center">
-            Vyomi
-          </div>
-        </div>
-
-        {/* Footer Subline */}
-        <div className="max-w-6xl mx-auto px-[var(--pad-x)] pt-6 border-t border-[var(--hairline)] flex flex-col sm:flex-row items-center justify-between gap-4 text-label text-[0.65rem] text-[var(--bone-dim)]">
-          <span>Vyomi Fitness Club · Vijayawada · Est. 2026</span>
-          <span>Quiet luxury wellness</span>
-        </div>
-      </footer>
-
-      {/* Sticky Mobile Bar below 768px */}
-      <div
-        className={`md:hidden fixed bottom-0 left-0 right-0 z-40 h-[60px] bg-[#0B0A09]/90 backdrop-blur-md border-t border-[var(--hairline)] flex items-center transition-transform duration-500 pb-[env(safe-area-inset-bottom)] ${
-          showStickyBar ? 'translate-y-0' : 'translate-y-full'
-        }`}
-      >
-        <a
-          href="https://wa.me/919999999999?text=Hi%20Vyomi%20%E2%80%94%20I'd%20like%20to%20inquire%20about%20the%20pre-sale."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-1/2 h-full flex items-center justify-center border-r border-[var(--hairline)] text-label text-[0.68rem] text-[var(--bone)]"
-        >
-          WhatsApp
-        </a>
-        <button
-          type="button"
-          onClick={onOpenInquiry}
-          className="w-1/2 h-full text-label text-[0.68rem] text-[var(--bone)] hover:text-[var(--champagne)]"
-        >
-          Inquire
-        </button>
+        </nav>
       </div>
-    </>
+
+      {/* Oversized wordmark, clipped at the bottom edge */}
+      <div
+        aria-hidden="true"
+        className="w-full select-none overflow-hidden px-pad-x"
+        style={{ marginBottom: 'clamp(-1.5rem, -2vw, -0.75rem)' }}
+      >
+        <span
+          className="block whitespace-nowrap text-center font-medium leading-none text-heading opacity-[0.07]"
+          style={{ fontSize: '19vw', letterSpacing: '-0.04em' }}
+        >
+          Vyomi
+        </span>
+      </div>
+
+      {/* Subline */}
+      <div className="mx-auto max-w-shell px-pad-x">
+        <div className="flex flex-col items-center gap-4 border-t border-hairline py-6 sm:flex-row sm:justify-between">
+          <Link href="/" aria-label="Vyomi Fitness Club — home" className="shrink-0">
+            <Image
+              src={SUPPLIED.logo.src}
+              alt="Vyomi Fitness Club"
+              width={SUPPLIED.logo.width}
+              height={SUPPLIED.logo.height}
+              sizes="44px"
+              className="h-11 w-auto opacity-70 transition-opacity duration-300 hover:opacity-100"
+            />
+          </Link>
+
+          <p className="t-label text-center text-faint sm:text-right">
+            {site.name} · {site.city} · Est. 2026
+          </p>
+        </div>
+      </div>
+    </footer>
   );
 }

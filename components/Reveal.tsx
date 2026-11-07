@@ -3,82 +3,71 @@
 import { useEffect, useRef, type ElementType, type ReactNode } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { DURATION_REVEAL, EASE, TRIGGER_START, shouldReduceMotion } from '@/lib/motion';
+import {
+  REVEAL_DUR,
+  REVEAL_Y,
+  STAGGER,
+  EASE_OUT,
+  TRIGGER_START,
+  prefersReducedMotion,
+} from '@/lib/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
 interface RevealProps {
   children: ReactNode;
+  as?: ElementType;
   className?: string;
   delay?: number;
-  as?: ElementType;
+  /** Staggers direct children instead of revealing the block as one unit. */
+  stagger?: boolean;
 }
 
 /**
- * Reveal Component
- * Animates children from:
- *   y: 40, opacity: 0, clip-path: inset(0 0 100% 0)
- * To:
- *   y: 0, opacity: 1, clip-path: inset(0 0 0 0)
- * Using DURATION_REVEAL (1.1s) and EASE ('power3.out'), triggered once at TRIGGER_START ('top 78%').
- * Falls back to still state if prefers-reduced-motion or on mobile (<768px).
+ * Subtle opacity + vertical reveal on scroll. Transform and opacity only.
+ *
+ * Content is visible by default and only hidden once the effect confirms it
+ * will animate, so nothing is ever stranded invisible if JS fails to run.
  */
 export default function Reveal({
   children,
+  as: Tag = 'div',
   className = '',
   delay = 0,
-  as: Component = 'div',
+  stagger = false,
 }: RevealProps) {
-  const containerRef = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const el = containerRef.current;
+    const el = ref.current;
     if (!el) return;
+    if (prefersReducedMotion()) return;
 
-    if (shouldReduceMotion()) {
-      // Instant display for reduced-motion or mobile screens
-      gsap.set(el, { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0%)' });
-      return;
-    }
+    const targets = stagger ? Array.from(el.children) : [el];
+    if (targets.length === 0) return;
 
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        el,
-        {
-          y: 40,
-          opacity: 0,
-          clipPath: 'inset(0% 0% 100% 0%)',
-        },
-        {
-          y: 0,
-          opacity: 1,
-          clipPath: 'inset(0% 0% 0% 0%)',
-          duration: DURATION_REVEAL,
-          ease: EASE,
-          delay,
-          scrollTrigger: {
-            trigger: el,
-            start: TRIGGER_START,
-            once: true,
-          },
-        }
-      );
-    }, el);
+    gsap.set(targets, { opacity: 0, y: REVEAL_Y });
 
-    return () => ctx.revert();
-  }, [delay]);
+    const tween = gsap.to(targets, {
+      opacity: 1,
+      y: 0,
+      duration: REVEAL_DUR,
+      ease: EASE_OUT,
+      delay,
+      stagger: stagger ? STAGGER : 0,
+      scrollTrigger: { trigger: el, start: TRIGGER_START, once: true },
+    });
+
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+      gsap.set(targets, { clearProps: 'opacity,transform' });
+    };
+  }, [delay, stagger]);
 
   return (
-    <Component
-      ref={containerRef}
-      className={className}
-      style={{
-        // Initial clip-path to prevent flash of unstyled content before GSAP hydrates
-        willChange: 'transform, opacity, clip-path',
-      }}
-    >
+    <Tag ref={ref} className={className}>
       {children}
-    </Component>
+    </Tag>
   );
 }
-
