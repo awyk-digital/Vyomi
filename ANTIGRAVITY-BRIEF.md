@@ -168,7 +168,7 @@ footbar, springs and straps. If unsure, leave it pending and flag it.
 
 | Save as | Size | Scene |
 |---|---|---|
-| `wellness-main.png` | 3840 × 2160 | Wide landscape. The spa / recovery suite. Natural stone and timber keeping their own colour against the dark scheme. |
+| `wellness-main.png` | 3840 × 2160 | Wide landscape. The spa / recovery suite. Natural stone and timber keeping their own colour against the dark scheme. **No swimming pool** — the club has none. Spa, salt bath and recovery only. |
 | `wellness-salt.png` | 2048 × 2560 | Portrait. The salt bath — tub edge or a backlit salt wall. Controlled highlights, no blown whites. |
 | `wellness-detail.png` | 2048 × 2048 | Square. Folded towels on a timber bench, or brushed-brass shower fittings. Quiet still life. |
 

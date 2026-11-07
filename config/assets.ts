@@ -303,12 +303,12 @@ export const CLASS_IMAGES: ImageSlot[] = [
 export const WELLNESS_IMAGES: ImageSlot[] = [
   slot({
     id: 'wellness-main',
-    need: 'Spa / recovery room — medium landscape interior, natural material colour retained',
+    need: 'Spa / recovery room — medium landscape interior, natural material colour retained. NO swimming pool: the brief confirms spa, salt bath and recovery only',
     master: '3840 × 2160',
     ratio: '16 / 9',
     fit: 'cover',
     focal: '50% 50%',
-    src: '/img/wellness-main.png',
+    src: null,
     alt: 'Vyomi spa and recovery room',
   }),
   slot({
