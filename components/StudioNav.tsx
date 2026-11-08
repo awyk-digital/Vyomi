@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { DISCIPLINES } from '@/data/club';
-import { prefersReducedMotion } from '@/lib/motion';
 
 /**
  * The Studio chapter rail.
@@ -64,11 +63,19 @@ export default function StudioNav() {
     return () => io.disconnect();
   }, []);
 
-  const count = DISCIPLINES.length;
 
   return (
     <>
-      {/* ---------- Desktop: curved left rail ---------- */}
+      {/* ---------- Desktop: left-edge scrim behind the rail over media ---------- */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-y-0 left-0 z-30 hidden w-[220px] lg:block"
+        style={{
+          background: 'linear-gradient(90deg, rgba(8,8,8,0.55) 0%, transparent 100%)',
+        }}
+      />
+
+      {/* ---------- Desktop: aligned left rail ---------- */}
       <nav
         aria-label="Studio chapters"
         className="fixed left-0 top-1/2 z-40 hidden -translate-y-1/2 lg:block"
@@ -83,49 +90,55 @@ export default function StudioNav() {
           textShadow: '0 1px 3px rgba(0,0,0,0.75), 0 0 14px rgba(0,0,0,0.5)',
         }}
       >
-        <ul className="flex flex-col gap-7">
-          {DISCIPLINES.map((d, i) => {
-            // 0 at both ends, 1 in the middle — the arc.
-            const t = count > 1 ? i / (count - 1) : 0.5;
-            const bulge = Math.sin(Math.PI * t);
-            const isActive = active === d.id;
+        <div className="relative">
+          {/* 1px vertical hairline spine connecting the five chapters into one instrument */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-3 top-3 w-px"
+            style={{
+              left: 0,
+              background: 'var(--hairline)',
+            }}
+          />
 
-            return (
-              <li
-                key={d.id}
-                style={{
-                  transform: prefersReducedMotion()
-                    ? undefined
-                    : `translateX(${(bulge * 26).toFixed(1)}px)`,
-                }}
-              >
-                <a
-                  href={`#${d.id}`}
-                  aria-current={isActive ? 'true' : undefined}
-                  className="group flex items-center gap-3 py-1"
-                >
-                  {/* Tick grows and takes the accent when the chapter is live */}
-                  <span
-                    aria-hidden="true"
-                    className="block h-px transition-all duration-500 ease-editorial"
-                    style={{
-                      width: isActive ? 30 : 12,
-                      background: isActive
-                        ? 'linear-gradient(90deg, var(--bronze), var(--lime))'
-                        : 'var(--hairline-2)',
-                    }}
-                  />
-                  <span
-                    className="t-label transition-colors duration-400"
-                    style={{ color: isActive ? 'var(--heading)' : 'var(--faint)' }}
+          <ul className="flex flex-col gap-7">
+            {DISCIPLINES.map((d) => {
+              const isActive = active === d.id;
+
+              return (
+                <li key={d.id}>
+                  <a
+                    href={`#${d.id}`}
+                    aria-current={isActive ? 'true' : undefined}
+                    className="group flex items-center gap-3 py-1"
                   >
-                    {d.label}
-                  </span>
-                </a>
-              </li>
-            );
-          })}
-        </ul>
+                    {/* Fixed 30px track: inner tick animates width without shifting the label */}
+                    <span
+                      aria-hidden="true"
+                      className="relative flex h-px w-[30px] shrink-0 items-center"
+                    >
+                      <span
+                        className="block h-px transition-all duration-500 ease-editorial"
+                        style={{
+                          width: isActive ? 30 : 12,
+                          background: isActive
+                            ? 'linear-gradient(90deg, var(--bronze), var(--lime))'
+                            : 'var(--hairline-2)',
+                        }}
+                      />
+                    </span>
+                    <span
+                      className="t-label transition-colors duration-400"
+                      style={{ color: isActive ? 'var(--heading)' : 'var(--faint)' }}
+                    >
+                      {d.label}
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </nav>
 
       {/* ---------- Mobile: bottom bar ---------- */}

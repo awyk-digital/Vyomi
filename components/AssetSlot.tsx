@@ -1,5 +1,16 @@
+'use client';
+
 import Image from 'next/image';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { isLowPowerDevice, prefersReducedMotion } from '@/lib/motion';
 import type { ImageSlot } from '@/config/assets';
+
+gsap.registerPlugin(ScrollTrigger);
+
+const DRIFT = 6;
+const COVER = 1.15;
 
 interface AssetSlotProps {
   slot: ImageSlot;
@@ -27,6 +38,10 @@ interface AssetSlotProps {
  *
  * Layout space is always reserved from `slot.ratio`, so supplying an asset
  * later causes no layout shift.
+ *
+ * Chapter plates receive the same subtle scroll-linked parallax drift
+ * ChapterVideo has: scale(1.15) with yPercent -6 to 6, scrubbed, gated
+ * behind prefersReducedMotion() and isLowPowerDevice().
  */
 export default function AssetSlot({
   slot,
@@ -37,25 +52,58 @@ export default function AssetSlot({
   rounded = false,
   hideConceptualLabel = false,
 }: AssetSlotProps) {
+  const figureRef = useRef<HTMLElement>(null);
+  const mediaRef = useRef<HTMLDivElement>(null);
   const aspectRatio = ratio ?? slot.ratio;
   const radius = rounded ? '2px' : '0';
+
+  useEffect(() => {
+    const fig = figureRef.current;
+    const media = mediaRef.current;
+    if (!fig || !media) return;
+    if (slot.fit === 'contain') return;
+    if (prefersReducedMotion() || isLowPowerDevice()) return;
+
+    const ctx = gsap.context(() => {
+      gsap.set(media, { scale: COVER });
+      gsap.fromTo(
+        media,
+        { yPercent: -DRIFT },
+        {
+          yPercent: DRIFT,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: fig,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
+        },
+      );
+    }, fig);
+
+    return () => ctx.revert();
+  }, [slot.fit]);
 
   // Supplied asset path
   if (slot.src) {
     return (
       <figure
+        ref={figureRef}
         className={`relative overflow-hidden bg-charcoal ${className}`}
         style={{ aspectRatio, borderRadius: radius }}
       >
-        <Image
-          src={slot.src}
-          alt={slot.alt}
-          fill
-          priority={priority}
-          sizes={sizes}
-          className={slot.fit === 'contain' ? 'object-contain' : 'object-cover'}
-          style={{ objectPosition: slot.focal }}
-        />
+        <div ref={mediaRef} className="absolute inset-0 will-change-transform">
+          <Image
+            src={slot.src}
+            alt={slot.alt}
+            fill
+            priority={priority}
+            sizes={sizes}
+            className={slot.fit === 'contain' ? 'object-contain' : 'object-cover'}
+            style={{ objectPosition: slot.focal }}
+          />
+        </div>
         {/* Subtle edge vignette, per the art-direction notes */}
         <span
           aria-hidden="true"

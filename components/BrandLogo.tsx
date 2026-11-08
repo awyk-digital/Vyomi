@@ -248,7 +248,7 @@ export default function BrandLogo() {
             alt="Vyomi Fitness Club"
             fill
             priority
-            sizes="88px"
+            sizes="(max-width: 768px) 28vw, 360px"
             className="object-contain"
             /*
              * Carries the mark over bright video frames without putting a

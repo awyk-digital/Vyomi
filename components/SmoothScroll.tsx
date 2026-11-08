@@ -85,7 +85,7 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
         if (!target) return;
 
         e.preventDefault();
-        lenis?.scrollTo(target as HTMLElement, { offset: -24 });
+        lenis?.scrollTo(target as HTMLElement, { offset: 0 });
         history.pushState(null, '', url.hash);
         // Keep keyboard focus with the visual position.
         (target as HTMLElement).setAttribute('tabindex', '-1');
@@ -98,7 +98,7 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
         const target = document.querySelector(window.location.hash);
         if (target) {
           requestAnimationFrame(() => {
-            lenis?.scrollTo(target as HTMLElement, { offset: -24, immediate: true });
+            lenis?.scrollTo(target as HTMLElement, { offset: 0, immediate: true });
             ScrollTrigger.refresh();
           });
         }
