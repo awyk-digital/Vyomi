@@ -107,7 +107,7 @@ export const CLUB_AREAS: ImageSlot[] = [
     ratio: '3 / 2',
     fit: 'cover',
     focal: '50% 60%',
-    src: null,
+    src: '/img/area-parking.jpg',
     alt: 'Parking at Vyomi',
   }),
 ];
@@ -159,7 +159,7 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
       ratio: '4 / 3',
       fit: 'contain',
       focal: '50% 50%',
-      src: null,
+      src: '/img/eq-pin-main.jpg',
       alt: 'Pin-loaded selectorised machine',
     }),
     slot({
@@ -169,7 +169,7 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
       ratio: '1 / 1',
       fit: 'cover',
       focal: '50% 50%',
-      src: null,
+      src: '/img/eq-pin-detail-1.jpg',
       alt: 'Selector pin in a weight stack',
     }),
     slot({
@@ -231,7 +231,7 @@ export const TRAINER_PORTRAITS: ImageSlot[] = [
     ratio: '3 / 4',
     fit: 'cover',
     focal: '50% 25%',
-    src: null,
+    src: '/img/trainer-l1.jpg',
     alt: '',
   }),
   slot({
@@ -241,7 +241,7 @@ export const TRAINER_PORTRAITS: ImageSlot[] = [
     ratio: '3 / 4',
     fit: 'cover',
     focal: '50% 25%',
-    src: null,
+    src: '/img/trainer-l2.jpg',
     alt: '',
   }),
   slot({
@@ -251,7 +251,7 @@ export const TRAINER_PORTRAITS: ImageSlot[] = [
     ratio: '3 / 4',
     fit: 'cover',
     focal: '50% 25%',
-    src: null,
+    src: '/img/trainer-l3.jpg',
     alt: '',
   }),
 ];
@@ -308,7 +308,7 @@ export const WELLNESS_IMAGES: ImageSlot[] = [
     ratio: '16 / 9',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/wellness-main.jpg',
     alt: 'Vyomi spa and recovery room',
   }),
   slot({
@@ -378,7 +378,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     ratio: '5 / 4',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/studio-hyrox-detail.jpg',
     alt: 'HYROX conditioning detail',
   }),
 
@@ -433,7 +433,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/studio-pilates-detail-a.jpg',
     alt: 'Reformer carriage detail',
   }),
   pilatesDetailB: slot({
@@ -454,7 +454,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     ratio: '16 / 9',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/studio-wellness.jpg',
     alt: 'Vyomi wellness suite',
   }),
 };
