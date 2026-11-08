@@ -87,7 +87,7 @@ export const CLUB_AREAS: ImageSlot[] = [
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 45%',
-    src: null,
+    src: '/img/area-wellness.png',
     alt: 'Vyomi wellness area',
   }),
   slot({
@@ -147,7 +147,7 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
       ratio: '4 / 5',
       fit: 'cover',
       focal: '50% 50%',
-      src: null,
+      src: '/img/eq-plate-detail-2.png',
       alt: 'Machine handle detail',
     }),
   ],
@@ -179,7 +179,7 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
       ratio: '4 / 5',
       fit: 'cover',
       focal: '50% 50%',
-      src: null,
+      src: '/img/eq-pin-detail-2.png',
       alt: 'Seat adjustment detail',
     }),
   ],
@@ -270,7 +270,7 @@ export const CLASS_IMAGES: ImageSlot[] = [
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 40%',
-    src: null,
+    src: '/img/class-hyrox.png',
     alt: 'HYROX conditioning session',
   }),
   slot({
@@ -280,7 +280,7 @@ export const CLASS_IMAGES: ImageSlot[] = [
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/class-reformer.png',
     alt: 'Reformer Pilates session',
   }),
   slot({
@@ -290,7 +290,7 @@ export const CLASS_IMAGES: ImageSlot[] = [
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 40%',
-    src: null,
+    src: '/img/class-strength.png',
     alt: 'Strength training session',
   }),
 ];
@@ -328,7 +328,7 @@ export const WELLNESS_IMAGES: ImageSlot[] = [
     ratio: '1 / 1',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/wellness-detail.png',
     alt: 'Recovery area detail',
   }),
 ];
@@ -348,7 +348,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     fit: 'cover',
     focal: '50% 50%',
     focalMobile: '55% 50%',
-    src: null,
+    src: '/img/studio-hyrox.png',
     alt: 'Vyomi HYROX zone',
   }),
   fitnessDetailA: slot({
@@ -390,7 +390,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     ratio: '16 / 9',
     fit: 'cover',
     focal: '50% 45%',
-    src: null,
+    src: '/img/studio-zumba.png',
     alt: 'Zumba class at Vyomi',
   }),
   zumbaDetailA: slot({
@@ -400,7 +400,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/studio-zumba-detail-a.png',
     alt: 'Group studio mirror and floor',
   }),
   zumbaDetailB: slot({
@@ -410,7 +410,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     ratio: '1 / 1',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/studio-zumba-detail-b.png',
     alt: 'Studio sound and lighting detail',
   }),
 
@@ -423,7 +423,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     fit: 'cover',
     focal: '50% 50%',
     focalMobile: '55% 50%',
-    src: null,
+    src: '/img/studio-pilates.png',
     alt: 'Vyomi reformer Pilates studio',
   }),
   pilatesDetailA: slot({
@@ -443,7 +443,7 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
     ratio: '1 / 1',
     fit: 'cover',
     focal: '50% 50%',
-    src: null,
+    src: '/img/studio-pilates-detail-b.png',
     alt: 'Reformer straps and handles',
   }),
 
