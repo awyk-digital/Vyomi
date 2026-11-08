@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 import StudioCapsule from '@/components/StudioCapsule';
 import Pending from '@/components/Pending';
 import SectionHeading from '@/components/SectionHeading';
-import HeroCanvas from '@/components/HeroCanvas';
 import { SUPPLIED } from '@/config/assets';
 import { site, presaleDisplay } from '@/config/site';
 import { useIntroDone } from '@/lib/intro';
@@ -120,9 +119,6 @@ export default function Hero() {
               'linear-gradient(to top, var(--ink) 0%, var(--ink) 22%, rgba(8,8,8,0) 100%)',
           }}
         />
-
-        {/* WebGL Fluid Caustic Atmosphere Layer */}
-        <HeroCanvas />
       </div>
 
       {/* Content */}
@@ -133,22 +129,10 @@ export default function Hero() {
           transform: introDone ? 'translateY(0)' : 'translateY(14px)',
         }}
       >
-        <div className="mb-5 flex flex-wrap items-center gap-3">
-          <p className="t-label flex items-center gap-2 text-muted">
-            <span className="accent-tick" aria-hidden="true" />
-            <span className="tracking-[0.2em] uppercase text-heading/90">Chapter 01</span>
-            <span className="text-faint">/</span>
-            <span>Vijayawada</span>
-          </p>
-          <span className="hidden sm:inline-block h-3 w-px bg-hairline-2" aria-hidden="true" />
-          <span className="hidden sm:inline-block text-[11px] font-mono tracking-wider text-faint">
-            16.5062° N · 80.6480° E
-          </span>
-          <span className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-hairline px-2.5 py-0.5 text-[11px] text-muted bg-ink/40 backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Private Access
-          </span>
-        </div>
+        <p className="t-label mb-5 flex items-center gap-2.5 text-muted">
+          <span className="accent-tick" aria-hidden="true" />
+          Vijayawada
+        </p>
 
         {/*
           Keyed on `introDone` so the word-rise plays the moment the opening
@@ -159,16 +143,16 @@ export default function Hero() {
           as="h1"
           immediate
           stagger={0.09}
-          className="t-hero max-w-[16ch] uppercase text-heading tracking-tight"
+          className="t-hero max-w-[16ch] uppercase text-heading"
         >
           A higher standard.
         </SectionHeading>
 
-        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
           {presale ? (
             <p className="t-body text-muted">
               Pre-sale opens{' '}
-              <time dateTime={site.presaleDate ?? undefined} className="text-heading font-medium">
+              <time dateTime={site.presaleDate ?? undefined} className="text-heading">
                 {presale}
               </time>
               .
@@ -179,14 +163,6 @@ export default function Hero() {
               <Pending label="Launch date" />
             </>
           )}
-
-          <a
-            href="#equipment"
-            className="group inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted hover:text-heading transition-colors duration-300 border-b border-transparent hover:border-heading/40 pb-0.5"
-          >
-            <span>Panatta Biomechanics</span>
-            <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
-          </a>
         </div>
       </div>
 
