@@ -209,7 +209,7 @@ export default function StudioPage() {
         {/* ---------- 02 · HYROX — full-bleed, heading overlaid ---------- */}
         <section
           id={hyrox.id}
-          className="scroll-mt-24 border-b border-hairline bg-ink"
+          className="scroll-mt-0 border-b border-hairline bg-ink"
           aria-labelledby="hyrox-heading"
         >
           <div className="relative">
