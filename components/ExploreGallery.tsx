@@ -10,9 +10,8 @@ import { prefersReducedMotion } from '@/lib/motion';
 
 /**
  * Luxury 3D Architectural Rotunda
- * Features sculpted chamfered-bezel cards with curved corners,
- * 3-second smooth auto-advance rhythm, buttery compositor-accelerated momentum,
- * and warm bronze overhead downlight illumination.
+ * Clean, focused visual presentation with sculpted chamfered-bezel cards,
+ * 3-second auto-advance rhythm, and buttery compositor-accelerated momentum.
  */
 
 const N = AREAS.length; // 6 spaces
@@ -21,7 +20,6 @@ const AUTO_ADVANCE_SECONDS = 3.0; // 3 seconds per image
 export default function ExploreGallery() {
   const stageRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const progressBarRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -51,25 +49,12 @@ export default function ExploreGallery() {
       // 3-second auto-advance cycle when idle
       if (!isInteractingRef.current && !isHoveredRef.current && !prefersReducedMotion()) {
         idleTimerRef.current += dt;
-
-        // Update visual 3-second progress indicator bar
-        if (progressBarRef.current) {
-          const ratio = Math.min(idleTimerRef.current / AUTO_ADVANCE_SECONDS, 1);
-          progressBarRef.current.style.transform = `scaleX(${ratio.toFixed(3)})`;
-        }
-
         if (idleTimerRef.current >= AUTO_ADVANCE_SECONDS) {
           targetProgressRef.current = Math.round(targetProgressRef.current) + 1;
           idleTimerRef.current = 0;
-          if (progressBarRef.current) {
-            progressBarRef.current.style.transform = 'scaleX(0)';
-          }
         }
       } else {
         idleTimerRef.current = 0;
-        if (progressBarRef.current) {
-          progressBarRef.current.style.transform = 'scaleX(0)';
-        }
       }
 
       // Buttery physics: drag vs coasting & magnetic docking
@@ -246,8 +231,6 @@ export default function ExploreGallery() {
     goToIndex(i);
   };
 
-  const activeArea = AREAS[activeIndex] || AREAS[0];
-
   return (
     <section
       id="explore"
@@ -266,9 +249,6 @@ export default function ExploreGallery() {
       {/* Header with Navigation Bar */}
       <div className="mb-8 px-pad-x md:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
-          <span className="t-label mb-2 block uppercase tracking-widest text-bronze">
-            3D Architectural Walkthrough
-          </span>
           <SectionHeading
             id="explore-heading"
             className="t-h2 uppercase text-heading"
@@ -299,7 +279,7 @@ export default function ExploreGallery() {
             className="group flex h-10 items-center gap-3 rounded-full border border-hairline bg-charcoal/80 px-5 backdrop-blur-md text-muted transition-colors duration-300 hover:border-bronze hover:bg-charcoal hover:text-heading active:scale-95"
           >
             <span className="t-label text-[0.625rem] tracking-wider uppercase text-bronze font-medium">
-              Next Space
+              Explore
             </span>
             <span className="text-base text-heading transition-transform duration-300 group-hover:translate-x-1">
               →
@@ -347,7 +327,7 @@ export default function ExploreGallery() {
                 backfaceVisibility: 'hidden',
               }}
             >
-              {/* Sculpted Luxury Bezel Outer Rim — Smooth Curved 22px Chamfer */}
+              {/* Sculpted Luxury Bezel Outer Rim — Smooth Curved Chamfer */}
               <div
                 className={`group relative aspect-[4/3] w-full p-[1.5px] rounded-[1.35rem] transition-[background,box-shadow] duration-500 ${
                   isCurrent
@@ -365,7 +345,7 @@ export default function ExploreGallery() {
                     hideConceptualLabel={Boolean(area.slot.src)}
                   />
 
-                  {/* Top brushed-gold rim highlight (overhead gym downlight illumination) */}
+                  {/* Top brushed-gold rim highlight */}
                   <span
                     aria-hidden="true"
                     className="pointer-events-none absolute top-0 inset-x-8 h-[1.5px] bg-gradient-to-r from-transparent via-bronze to-transparent opacity-85 z-10"
@@ -382,16 +362,6 @@ export default function ExploreGallery() {
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-0 rounded-[calc(1.35rem-1.5px)] shadow-[inset_0_0_24px_rgba(0,0,0,0.45)]"
                   />
-
-                  {/* Focal badge for the centered active space */}
-                  {isCurrent && (
-                    <div className="absolute top-4 left-4 z-20 flex items-center gap-2 rounded-full border border-bronze/50 bg-ink/85 px-3 py-1 shadow-lg backdrop-blur-md">
-                      <span className="h-1.5 w-1.5 rounded-full bg-bronze animate-pulse" />
-                      <span className="t-label text-[0.5625rem] tracking-widest uppercase text-heading font-medium">
-                        Focal View
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -436,55 +406,10 @@ export default function ExploreGallery() {
         />
       </div>
 
-      {/* Luxury Feature Bar & Quick-Jump Selector */}
-      <div className="mt-8 px-pad-x">
-        <div className="mx-auto max-w-shell border border-hairline/80 bg-charcoal/40 p-5 backdrop-blur-md sm:p-6 rounded-2xl relative overflow-hidden">
-          {/* 3-Second Active Progress Bar line at the top of the card */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-charcoal-2 overflow-hidden">
-            <div
-              ref={progressBarRef}
-              className="h-full w-full origin-left bg-gradient-to-r from-bronze/60 to-bronze transition-none"
-              style={{ transform: 'scaleX(0)' }}
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-hairline/60 pb-4">
-            <div className="flex items-center gap-3">
-              <span className="t-label nums px-2 py-0.5 rounded-full border border-bronze/40 text-bronze text-[0.6875rem]">
-                {String(activeIndex + 1).padStart(2, '0')} / {String(N).padStart(2, '0')}
-              </span>
-              <h3 className="t-h3 uppercase text-heading font-medium tracking-wide">
-                {activeArea.caption}
-              </h3>
-            </div>
-
-            <Iridescent className="t-label text-[0.625rem] tracking-wider uppercase text-faint">
-              Auto-advancing every 3s · Swipe or drag to browse
-            </Iridescent>
-          </div>
-
-          {/* Quick-Jump Selector Pills */}
-          <div className="mt-4 flex flex-wrap gap-2 pt-1">
-            {AREAS.map((a, idx) => {
-              const selected = activeIndex === idx;
-              return (
-                <button
-                  key={a.slot.id}
-                  type="button"
-                  onClick={() => goToIndex(idx)}
-                  className={`t-label px-3.5 py-1.5 rounded-full text-[0.6875rem] transition-colors duration-300 border ${
-                    selected
-                      ? 'border-bronze bg-bronze/15 text-heading font-medium shadow-[0_0_15px_rgba(176,141,87,0.25)]'
-                      : 'border-hairline bg-surface/40 text-faint hover:border-hairline-2 hover:text-muted hover:bg-surface'
-                  }`}
-                >
-                  <span className="mr-1.5 nums opacity-60">0{idx + 1}</span>
-                  {a.caption}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <div className="mt-8 px-pad-x flex items-center justify-between">
+        <Iridescent className="t-small text-faint">
+          Hover to pause · Drag or click right arrow to explore in loop
+        </Iridescent>
       </div>
     </section>
   );
