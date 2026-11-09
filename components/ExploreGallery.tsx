@@ -9,131 +9,115 @@ import { AREAS } from '@/data/club';
 import { prefersReducedMotion } from '@/lib/motion';
 
 /**
- * 3D Architectural Gallery
- * Features dynamic cylindrical/coverflow perspective transforms,
- * depth scaling, smooth continuous loop, interactive drag/swipe,
- * mouse wheel navigation, and click-to-center.
+ * Luxury 3D Architectural Rotunda
+ * Features true circular cylinder projection, optical Leica-style depth of field,
+ * polished stone floor reflections, brushed bronze accents, and weighted inertial physics.
  */
 
-const CARD_WIDTH = 420;
-const CARD_GAP = 28;
-const STEP_DISTANCE = CARD_WIDTH + CARD_GAP;
-const COPIES = 3; // 3 copies ensure seamless infinite 3D loop even on ultra-wide screens
-const SPEED = 24; // CSS pixels/sec during idle auto-glide
+const N = AREAS.length; // 6 spaces
 
 export default function ExploreGallery() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLElement | null)[]>([]);
-  const [paused, setPaused] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  const offsetRef = useRef(0);
-  const targetOffsetRef = useRef(0);
-  const lapRef = useRef(0);
-  const initializedRef = useRef(false);
+  // Smooth continuous float progress
+  const progressRef = useRef(0);
+  const targetProgressRef = useRef(0);
+  const velocityRef = useRef(0);
 
-  const isPausedRef = useRef(false);
-  isPausedRef.current = paused;
-
-  // Pointer drag state
-  const isDraggingRef = useRef(false);
+  // Interaction tracking
+  const isInteractingRef = useRef(false);
+  const isHoveredRef = useRef(false);
   const startXRef = useRef(0);
-  const startOffsetRef = useRef(0);
+  const lastXRef = useRef(0);
+  const lastTimeRef = useRef(0);
   const hasDraggedRef = useRef(false);
+  const idleTimerRef = useRef(0);
 
-  const totalCards = AREAS.length * COPIES;
-  const singleLap = AREAS.length * STEP_DISTANCE;
-
+  // Main 3D render loop
   useEffect(() => {
-    lapRef.current = singleLap;
-
-    const container = containerRef.current;
-    const containerWidth = container ? container.offsetWidth : (typeof window !== 'undefined' ? window.innerWidth : 1200);
-    const containerCenter = containerWidth / 2;
-
-    // Start centered on the first card of the middle copy (copy 1, index = AREAS.length)
-    if (!initializedRef.current) {
-      const initialOffset = singleLap + CARD_WIDTH / 2 - containerCenter;
-      offsetRef.current = initialOffset;
-      targetOffsetRef.current = initialOffset;
-      initializedRef.current = true;
-    }
-
-    const track = trackRef.current;
-    if (!track) return;
-
-    let lastTime = performance.now();
     let rId: number;
+    let lastTick = performance.now();
 
     const tick = (now: number) => {
-      const dt = Math.min((now - lastTime) / 1000, 0.1);
-      lastTime = now;
+      const dt = Math.min((now - lastTick) / 1000, 0.1);
+      lastTick = now;
 
-      const lap = lapRef.current;
-      if (lap > 0) {
-        // Continuous auto-glide when not paused and not prefersReducedMotion
-        if (!isPausedRef.current && !isDraggingRef.current && !prefersReducedMotion()) {
-          targetOffsetRef.current += SPEED * dt;
+      // Handle idle auto-drift
+      if (!isInteractingRef.current && !isHoveredRef.current && !prefersReducedMotion()) {
+        idleTimerRef.current += dt;
+        if (idleTimerRef.current > 4.2) {
+          targetProgressRef.current += 1;
+          idleTimerRef.current = 0;
+        }
+      } else {
+        idleTimerRef.current = 0;
+      }
+
+      // High-end spring damping physics
+      const diff = targetProgressRef.current - progressRef.current;
+      progressRef.current += diff * Math.min(dt * 6.5, 0.32);
+
+      const currentProg = progressRef.current;
+
+      // Update active index state for UI highlights
+      const active = Math.round(currentProg) % N;
+      const normalizedActive = (active + N) % N;
+      setActiveIndex(normalizedActive);
+
+      // Measure stage for responsive 3D geometry
+      const stage = stageRef.current;
+      const stageWidth = stage ? stage.offsetWidth : (typeof window !== 'undefined' ? window.innerWidth : 1200);
+      const isMobile = stageWidth < 768;
+
+      // Angular geometry of the rotunda
+      const stepAngleDeg = isMobile ? 44 : 38;
+      const stepAngleRad = (stepAngleDeg * Math.PI) / 180;
+      const radius = isMobile ? Math.max(stageWidth * 0.58, 300) : Math.max(stageWidth * 0.46, 560);
+
+      // Project each card onto the 3D cylinder
+      for (let i = 0; i < N; i++) {
+        const cardEl = cardRefs.current[i];
+        if (!cardEl) continue;
+
+        // Circular distance from current progress (-N/2 to +N/2)
+        let delta = (i - currentProg) % N;
+        if (delta > N / 2) delta -= N;
+        if (delta < -N / 2) delta += N;
+
+        const angle = delta * stepAngleRad;
+        const absDelta = Math.abs(delta);
+
+        // 3D Rotunda coordinates
+        const x = Math.sin(angle) * radius;
+        const z = (Math.cos(angle) - 1) * radius * 0.88;
+        const rotY = -delta * stepAngleDeg * 0.85;
+
+        // Scale: active card prominent, receding smoothly
+        const scale = Math.max(0.72, 1.05 - absDelta * 0.15);
+
+        // Optical depth of field bokeh blur: crisp in focus at center, smooth falloff on sides
+        const blur = Math.max(0, (absDelta - 0.28) * 2.2);
+
+        // Studio lighting & atmospheric attenuation
+        const opacity = Math.max(0.2, 1 - absDelta * 0.35);
+        const brightness = Math.max(0.55, 1 - absDelta * 0.24);
+
+        // Layer order: active card always on top
+        const zIndex = Math.round(100 - absDelta * 20);
+
+        if (!prefersReducedMotion()) {
+          cardEl.style.transform = `translate3d(calc(-50% + ${x.toFixed(1)}px), 0, ${z.toFixed(1)}px) rotateY(${rotY.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
+          cardEl.style.filter = `blur(${blur.toFixed(1)}px) brightness(${brightness.toFixed(2)})`;
+          cardEl.style.opacity = opacity.toFixed(2);
+        } else {
+          cardEl.style.transform = `translate3d(calc(-50% + ${(delta * 340).toFixed(1)}px), 0, 0)`;
+          cardEl.style.opacity = (1 - absDelta * 0.4).toFixed(2);
         }
 
-        // Smooth spring-like easing towards target offset
-        const diff = targetOffsetRef.current - offsetRef.current;
-        offsetRef.current += diff * Math.min(dt * 8, 0.35);
-
-        // Seamless wrap within [lap, 2 * lap)
-        while (offsetRef.current >= 2 * lap) {
-          offsetRef.current -= lap;
-          targetOffsetRef.current -= lap;
-        }
-        while (offsetRef.current < lap) {
-          offsetRef.current += lap;
-          targetOffsetRef.current += lap;
-        }
-
-        // Translate track
-        track.style.transform = `translate3d(-${offsetRef.current.toFixed(2)}px, 0, 0)`;
-
-        // Calculate 3D perspective transforms for each card
-        const currContainer = containerRef.current;
-        const cWidth = currContainer ? currContainer.offsetWidth : 1200;
-        const cCenter = cWidth / 2;
-        const focalRadius = Math.max(cWidth * 0.44, 420);
-
-        for (let i = 0; i < totalCards; i++) {
-          const card = cardRefs.current[i];
-          if (!card) continue;
-
-          // Card center relative to visible viewport container
-          const cardCenter = i * STEP_DISTANCE + CARD_WIDTH / 2 - offsetRef.current;
-          const dist = cardCenter - cCenter;
-          const norm = dist / focalRadius;
-
-          // Clamp for cards offscreen
-          const clampedNorm = Math.max(-2.5, Math.min(2.5, norm));
-          const absNorm = Math.abs(clampedNorm);
-
-          // 3D rotation around Y:
-          // Center card = 0deg (straight). Cards on left tilt towards center (positive rotY),
-          // cards on right tilt towards center (negative rotY).
-          const rotY = -clampedNorm * 28;
-
-          // Depth translation along Z axis:
-          // Center card pops forward (+35px), cards to the sides recede into background
-          const transZ = 35 - Math.min(absNorm, 1.8) * 120;
-
-          // Scale: center card is largest, diminishing towards edges
-          const scale = Math.max(0.82, 1.05 - absNorm * 0.14);
-
-          // Opacity & Brightness dropoff for atmospheric studio lighting
-          const opacity = Math.max(0.4, 1 - absNorm * 0.32);
-          const brightness = Math.max(0.65, 1 - absNorm * 0.26);
-
-          card.style.transform = `translate3d(0, 0, ${transZ.toFixed(1)}px) rotateY(${rotY.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
-          card.style.opacity = opacity.toFixed(2);
-          card.style.filter = `brightness(${brightness.toFixed(2)})`;
-          card.style.zIndex = String(Math.round(100 - absNorm * 25));
-        }
+        cardEl.style.zIndex = String(zIndex);
       }
 
       rId = requestAnimationFrame(tick);
@@ -144,124 +128,106 @@ export default function ExploreGallery() {
     return () => {
       cancelAnimationFrame(rId);
     };
-  }, [singleLap, totalCards]);
+  }, []);
+
+  // Navigation handlers with weighted momentum
+  const goToIndex = useCallback((targetIndex: number) => {
+    idleTimerRef.current = 0;
+    const current = progressRef.current;
+    let diff = (targetIndex - (current % N)) % N;
+    if (diff > N / 2) diff -= N;
+    if (diff < -N / 2) diff += N;
+    targetProgressRef.current = current + diff;
+  }, []);
 
   const handleNext = useCallback(() => {
-    targetOffsetRef.current += STEP_DISTANCE;
+    idleTimerRef.current = 0;
+    targetProgressRef.current = Math.round(targetProgressRef.current) + 1;
   }, []);
 
   const handlePrev = useCallback(() => {
-    targetOffsetRef.current -= STEP_DISTANCE;
+    idleTimerRef.current = 0;
+    targetProgressRef.current = Math.round(targetProgressRef.current) - 1;
   }, []);
 
-  // Pointer drag handlers
+  // Pointer drag & touch swipe mechanics
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
-    isDraggingRef.current = true;
+    isInteractingRef.current = true;
     setIsDragging(true);
     hasDraggedRef.current = false;
     startXRef.current = e.clientX;
-    startOffsetRef.current = targetOffsetRef.current;
-    setPaused(true);
+    lastXRef.current = e.clientX;
+    lastTimeRef.current = performance.now();
+    velocityRef.current = 0;
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDraggingRef.current) return;
-    const dx = e.clientX - startXRef.current;
-    if (Math.abs(dx) > 6) {
+    if (!isInteractingRef.current) return;
+    const currentX = e.clientX;
+    const dx = currentX - lastXRef.current;
+    const now = performance.now();
+    const dt = Math.max((now - lastTimeRef.current) / 1000, 0.001);
+
+    if (Math.abs(currentX - startXRef.current) > 6) {
       hasDraggedRef.current = true;
     }
-    targetOffsetRef.current = startOffsetRef.current - dx * 1.35;
+
+    // Measure drag velocity for flick physics
+    velocityRef.current = -dx / dt / 800;
+    lastXRef.current = currentX;
+    lastTimeRef.current = now;
+
+    // Direct drag response
+    const stageWidth = stageRef.current?.offsetWidth || 1000;
+    const sensitivity = (stageWidth < 768 ? 2.4 : 1.7) / stageWidth;
+    targetProgressRef.current -= dx * sensitivity;
+    progressRef.current -= dx * sensitivity;
   };
 
   const handlePointerUp = () => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
+    if (!isInteractingRef.current) return;
+    isInteractingRef.current = false;
     setIsDragging(false);
+
+    // Apply inertia and magnetically snap to nearest card
+    const inertia = Math.max(-1.5, Math.min(1.5, velocityRef.current * 0.35));
+    targetProgressRef.current = Math.round(targetProgressRef.current + inertia);
+
     setTimeout(() => {
-      setPaused(false);
       hasDraggedRef.current = false;
-    }, 600);
+    }, 150);
   };
 
-  // Center a card when clicked
-  const handleCardClick = (idx: number) => {
+  // Card click: bring directly to front center
+  const handleCardClick = (i: number) => {
     if (hasDraggedRef.current) return;
-    const container = containerRef.current;
-    const cWidth = container ? container.offsetWidth : 1200;
-    const targetCenter = idx * STEP_DISTANCE + CARD_WIDTH / 2;
-    targetOffsetRef.current = targetCenter - cWidth / 2;
+    goToIndex(i);
   };
 
-  // Horizontal wheel support
-  const handleWheel = (e: React.WheelEvent) => {
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-      targetOffsetRef.current += e.deltaX * 0.9;
-    }
-  };
-
-  const renderCards = (copy: number) =>
-    AREAS.map((area, i) => {
-      const idx = copy * AREAS.length + i;
-      return (
-        <figure
-          key={`${copy}-${area.slot.id}`}
-          ref={(el) => {
-            cardRefs.current[idx] = el;
-          }}
-          onClick={() => handleCardClick(idx)}
-          className="mr-7 shrink-0 cursor-pointer select-none"
-          style={{
-            width: `min(82vw, ${CARD_WIDTH}px)`,
-            transformStyle: 'preserve-3d',
-            willChange: 'transform, filter, opacity',
-          }}
-        >
-          <div
-            className="group relative overflow-hidden aspect-[4/3] w-full rounded-[3px] border border-hairline/60 bg-charcoal shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] transition-all duration-300 hover:border-gold/40 hover:shadow-[0_30px_60px_-10px_rgba(0,0,0,0.95)]"
-            style={{ transformStyle: 'preserve-3d' }}
-          >
-            <AssetSlot
-              slot={area.slot}
-              ratio="auto"
-              className="h-full w-full"
-              sizes="(max-width: 767px) 82vw, 420px"
-              hideConceptualLabel={Boolean(area.slot.src)}
-            />
-
-            {/* Subtle photographic lens glare overlay */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08] opacity-80 transition-opacity duration-300 group-hover:opacity-100"
-            />
-          </div>
-
-          <figcaption className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="t-label nums text-faint">
-              {String((i % AREAS.length) + 1).padStart(2, '0')}
-            </span>
-            <span className="t-small text-heading transition-colors group-hover:text-gold">
-              {area.caption}
-            </span>
-            {area.slot.conceptual && area.slot.src && (
-              <span className="t-label text-[0.5625rem] text-faint">
-                Representative
-              </span>
-            )}
-          </figcaption>
-        </figure>
-      );
-    });
+  const activeArea = AREAS[activeIndex] || AREAS[0];
 
   return (
     <section
       id="explore"
-      className="border-t border-hairline bg-ink py-section-y"
+      className="relative border-t border-hairline bg-ink py-section-y overflow-hidden"
       aria-labelledby="explore-heading"
     >
+      {/* Subtle ambient luxury floor spotlight behind the rotunda */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[480px] w-[850px] rounded-full blur-[140px] opacity-25"
+        style={{
+          background: 'radial-gradient(circle, rgba(176,141,87,0.35) 0%, rgba(140,34,48,0.15) 50%, transparent 70%)',
+        }}
+      />
+
       {/* Header with Navigation Bar */}
-      <div className="mb-10 px-pad-x md:mb-14 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+      <div className="mb-8 px-pad-x md:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
+          <span className="t-label mb-2 block uppercase tracking-widest text-bronze">
+            3D Architectural Walkthrough
+          </span>
           <SectionHeading
             id="explore-heading"
             className="t-h2 uppercase text-heading"
@@ -269,98 +235,194 @@ export default function ExploreGallery() {
           >
             Explore Vyomi.
           </SectionHeading>
-          <div className="mt-6 max-w-shell">
+          <div className="mt-5 max-w-shell">
             <AccentRule />
           </div>
         </div>
 
-        {/* Small Navigation Bar — 3D Controls */}
-        <div className="flex items-center gap-2 self-start sm:self-end">
+        {/* Small Navigation Bar — Luxury Rotunda Controls */}
+        <div className="flex items-center gap-3 self-start sm:self-end">
           <button
             type="button"
             onClick={handlePrev}
-            aria-label="Previous image"
-            className="group flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-surface/70 backdrop-blur-md text-muted transition-all duration-300 hover:border-hairline-2 hover:bg-surface hover:text-heading active:scale-95"
+            aria-label="Previous space"
+            className="group flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-charcoal/80 backdrop-blur-md text-muted transition-all duration-300 hover:border-bronze hover:bg-charcoal hover:text-heading active:scale-95"
           >
-            <span className="text-sm transition-transform duration-300 group-hover:-translate-x-0.5">←</span>
+            <span className="text-base transition-transform duration-300 group-hover:-translate-x-0.5">←</span>
           </button>
 
           <button
             type="button"
             onClick={handleNext}
-            aria-label="Next image"
-            className="group flex h-9 items-center gap-2.5 rounded-full border border-hairline bg-surface/70 px-4 backdrop-blur-md text-muted transition-all duration-300 hover:border-hairline-2 hover:bg-surface hover:text-heading active:scale-95"
+            aria-label="Next space"
+            className="group flex h-10 items-center gap-3 rounded-full border border-hairline bg-charcoal/80 px-5 backdrop-blur-md text-muted transition-all duration-300 hover:border-bronze hover:bg-charcoal hover:text-heading active:scale-95"
           >
-            <span className="t-label text-[0.625rem] text-faint group-hover:text-muted transition-colors">
-              3D Explore
+            <span className="t-label text-[0.625rem] tracking-wider uppercase text-bronze font-medium">
+              Next Space
             </span>
-            <span className="text-sm text-heading transition-transform duration-300 group-hover:translate-x-1">
+            <span className="text-base text-heading transition-transform duration-300 group-hover:translate-x-1">
               →
             </span>
           </button>
         </div>
       </div>
 
-      {/* 3D Stage Container */}
+      {/* 3D Rotunda Stage */}
       <div
-        ref={containerRef}
-        className={`relative overflow-hidden py-12 select-none touch-pan-y ${
+        ref={stageRef}
+        className={`relative mx-auto w-full max-w-shell select-none touch-pan-y ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         style={{
-          perspective: '1300px',
-          perspectiveOrigin: '50% 50%',
+          perspective: '1500px',
+          perspectiveOrigin: '50% 46%',
+          height: 'clamp(360px, 48vw, 480px)',
         }}
-        onWheel={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        onPointerEnter={() => setPaused(true)}
+        onPointerEnter={() => {
+          isHoveredRef.current = true;
+        }}
         onPointerLeave={() => {
-          if (!isDraggingRef.current) setPaused(false);
+          isHoveredRef.current = false;
         }}
       >
-        <div
-          ref={trackRef}
-          className="flex w-max will-change-transform py-4"
-          style={{
-            transformStyle: 'preserve-3d',
-          }}
-        >
-          {Array.from({ length: COPIES }).map((_, c) => (
+        {AREAS.map((area, i) => {
+          const isCurrent = activeIndex === i;
+          return (
             <div
-              key={c}
-              className="flex"
-              style={{ transformStyle: 'preserve-3d' }}
-              aria-hidden={c !== 1}
+              key={area.slot.id}
+              ref={(el) => {
+                cardRefs.current[i] = el;
+              }}
+              onClick={() => handleCardClick(i)}
+              className="absolute top-0 left-1/2 will-change-transform transition-shadow"
+              style={{
+                width: 'min(80vw, 440px)',
+                transformStyle: 'preserve-3d',
+              }}
             >
-              {renderCards(c)}
-            </div>
-          ))}
-        </div>
+              {/* Card Body with Polished Stone Floor Reflection */}
+              <div
+                className={`group relative aspect-[4/3] w-full overflow-hidden rounded-[2px] transition-all duration-500 ${
+                  isCurrent
+                    ? 'border border-bronze/60 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.95),0_0_35px_rgba(176,141,87,0.15)] ring-1 ring-bronze/30'
+                    : 'border border-hairline/60 shadow-[0_20px_50px_rgba(0,0,0,0.9)]'
+                }`}
+                style={{
+                  WebkitBoxReflect:
+                    'below 12px linear-gradient(to bottom, transparent 65%, rgba(0,0,0,0.42))',
+                }}
+              >
+                <AssetSlot
+                  slot={area.slot}
+                  ratio="auto"
+                  className="h-full w-full"
+                  sizes="(max-width: 767px) 80vw, 440px"
+                  hideConceptualLabel={Boolean(area.slot.src)}
+                />
 
-        {/* Ambient edge fades dissolving cards as they curve away */}
+                {/* Subtle photographic lens glare overlay */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.10] opacity-80 transition-opacity duration-500 group-hover:opacity-100"
+                />
+
+                {/* Floating badge for active focal card */}
+                {isCurrent && (
+                  <div className="absolute top-3.5 left-3.5 z-20 flex items-center gap-2 rounded-full border border-bronze/50 bg-ink/80 px-3 py-1 backdrop-blur-md">
+                    <span className="h-1.5 w-1.5 rounded-full bg-bronze animate-pulse" />
+                    <span className="t-label text-[0.5625rem] tracking-widest uppercase text-heading">
+                      Focal View
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Card Caption */}
+              <figcaption className="mt-4 flex items-baseline justify-between px-1">
+                <div className="flex items-baseline gap-2.5">
+                  <span className="t-label nums font-medium text-bronze">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span
+                    className={`t-small transition-colors duration-300 font-medium ${
+                      isCurrent ? 'text-heading' : 'text-muted group-hover:text-heading'
+                    }`}
+                  >
+                    {area.caption}
+                  </span>
+                </div>
+                {area.slot.conceptual && area.slot.src && (
+                  <span className="t-label text-[0.5625rem] text-faint">
+                    Conceptual
+                  </span>
+                )}
+              </figcaption>
+            </div>
+          );
+        })}
+
+        {/* Ambient atmospheric edge fades */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 w-[clamp(3rem,10vw,10rem)] z-30"
+          className="pointer-events-none absolute inset-y-0 left-0 w-[clamp(2.5rem,8vw,8rem)] z-30"
           style={{
             background: 'linear-gradient(to right, var(--ink) 0%, rgba(8,8,8,0) 100%)',
           }}
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-[clamp(3rem,10vw,10rem)] z-30"
+          className="pointer-events-none absolute inset-y-0 right-0 w-[clamp(2.5rem,8vw,8rem)] z-30"
           style={{
             background: 'linear-gradient(to left, var(--ink) 0%, rgba(8,8,8,0) 100%)',
           }}
         />
       </div>
 
-      <div className="mt-6 px-pad-x flex items-center justify-between">
-        <Iridescent className="t-small text-faint">
-          Drag to spin 3D view · Click any image to focus · Hover to pause
-        </Iridescent>
+      {/* Luxury Spotlight Feature Bar & Quick-Jump Selector */}
+      <div className="mt-12 px-pad-x">
+        {/* Active Space Details Card */}
+        <div className="mx-auto max-w-shell border border-hairline/80 bg-charcoal/40 p-5 backdrop-blur-md sm:p-6 rounded-[2px] transition-all duration-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-hairline/60 pb-4">
+            <div className="flex items-center gap-3">
+              <span className="t-label nums px-2 py-0.5 rounded border border-bronze/40 text-bronze text-[0.6875rem]">
+                {String(activeIndex + 1).padStart(2, '0')} / {String(N).padStart(2, '0')}
+              </span>
+              <h3 className="t-h3 uppercase text-heading font-medium tracking-wide">
+                {activeArea.caption}
+              </h3>
+            </div>
+
+            <Iridescent className="t-label text-[0.625rem] tracking-wider uppercase text-faint">
+              Drag to rotate 3D view · Click space to focus
+            </Iridescent>
+          </div>
+
+          {/* Quick Jump Selector Pills */}
+          <div className="mt-4 flex flex-wrap gap-2 pt-1">
+            {AREAS.map((a, idx) => {
+              const selected = activeIndex === idx;
+              return (
+                <button
+                  key={a.slot.id}
+                  type="button"
+                  onClick={() => goToIndex(idx)}
+                  className={`t-label px-3.5 py-1.5 rounded-full text-[0.6875rem] transition-all duration-300 border ${
+                    selected
+                      ? 'border-bronze bg-bronze/15 text-heading font-medium shadow-[0_0_15px_rgba(176,141,87,0.25)]'
+                      : 'border-hairline bg-surface/40 text-faint hover:border-hairline-2 hover:text-muted hover:bg-surface'
+                  }`}
+                >
+                  <span className="mr-1.5 nums opacity-60">0{idx + 1}</span>
+                  {a.caption}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </section>
   );
