@@ -10,15 +10,18 @@ import { prefersReducedMotion } from '@/lib/motion';
 
 /**
  * Luxury 3D Architectural Rotunda
- * Features true circular cylinder projection, buttery smooth momentum physics,
- * magnetic docking, zero reflection artifacts, and compositor-accelerated 120fps motion.
+ * Features sculpted chamfered-bezel cards with curved corners,
+ * 3-second smooth auto-advance rhythm, buttery compositor-accelerated momentum,
+ * and warm bronze overhead downlight illumination.
  */
 
 const N = AREAS.length; // 6 spaces
+const AUTO_ADVANCE_SECONDS = 3.0; // 3 seconds per image
 
 export default function ExploreGallery() {
   const stageRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const progressBarRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -45,22 +48,35 @@ export default function ExploreGallery() {
       const dt = Math.min((now - lastTick) / 1000, 0.05);
       lastTick = now;
 
-      // Idle auto-advance after 4.8 seconds of inactivity
+      // 3-second auto-advance cycle when idle
       if (!isInteractingRef.current && !isHoveredRef.current && !prefersReducedMotion()) {
         idleTimerRef.current += dt;
-        if (idleTimerRef.current > 4.8) {
+
+        // Update visual 3-second progress indicator bar
+        if (progressBarRef.current) {
+          const ratio = Math.min(idleTimerRef.current / AUTO_ADVANCE_SECONDS, 1);
+          progressBarRef.current.style.transform = `scaleX(${ratio.toFixed(3)})`;
+        }
+
+        if (idleTimerRef.current >= AUTO_ADVANCE_SECONDS) {
           targetProgressRef.current = Math.round(targetProgressRef.current) + 1;
           idleTimerRef.current = 0;
+          if (progressBarRef.current) {
+            progressBarRef.current.style.transform = 'scaleX(0)';
+          }
         }
       } else {
         idleTimerRef.current = 0;
+        if (progressBarRef.current) {
+          progressBarRef.current.style.transform = 'scaleX(0)';
+        }
       }
 
       // Buttery physics: drag vs coasting & magnetic docking
       if (isInteractingRef.current) {
         // High-frequency responsive follow during drag
         const diff = targetProgressRef.current - progressRef.current;
-        progressRef.current += diff * Math.min(dt * 16, 0.42);
+        progressRef.current += diff * Math.min(dt * 18, 0.45);
       } else {
         // Friction decay on momentum velocity
         velocityRef.current *= Math.pow(0.86, dt * 60);
@@ -70,12 +86,12 @@ export default function ExploreGallery() {
         const snapTarget = Math.round(targetProgressRef.current);
         const snapDiff = snapTarget - targetProgressRef.current;
         if (Math.abs(velocityRef.current) < 1.4) {
-          targetProgressRef.current += snapDiff * Math.min(dt * 6.5, 0.22);
+          targetProgressRef.current += snapDiff * Math.min(dt * 7.0, 0.24);
         }
 
         // Velvety smooth exponential spring interpolation
         const diff = targetProgressRef.current - progressRef.current;
-        progressRef.current += diff * Math.min(dt * 7.5, 0.26);
+        progressRef.current += diff * Math.min(dt * 8.0, 0.28);
       }
 
       const currentProg = progressRef.current;
@@ -189,8 +205,8 @@ export default function ExploreGallery() {
     }
 
     // Measure instant velocity for buttery flick release
-    const instantVelocity = -dx / dt / 550;
-    velocityRef.current = velocityRef.current * 0.4 + instantVelocity * 0.6;
+    const instantVelocity = -dx / dt / 520;
+    velocityRef.current = velocityRef.current * 0.35 + instantVelocity * 0.65;
     lastXRef.current = currentX;
     lastTimeRef.current = now;
 
@@ -216,7 +232,6 @@ export default function ExploreGallery() {
 
   // Buttery wheel & trackpad scrolling
   const handleWheel = (e: React.WheelEvent) => {
-    // Intercept horizontal scroll or vertical scroll with high intent
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     if (Math.abs(delta) > 3) {
       idleTimerRef.current = 0;
@@ -239,7 +254,7 @@ export default function ExploreGallery() {
       className="relative border-t border-hairline bg-ink py-section-y overflow-hidden"
       aria-labelledby="explore-heading"
     >
-      {/* Subtle warm ambient glow behind the rotunda */}
+      {/* Subtle warm ambient spotlight behind the rotunda */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[420px] w-[800px] rounded-full blur-[130px] opacity-20"
@@ -302,7 +317,7 @@ export default function ExploreGallery() {
         style={{
           perspective: '1400px',
           perspectiveOrigin: '50% 50%',
-          height: 'clamp(320px, 44vw, 420px)',
+          height: 'clamp(330px, 46vw, 440px)',
         }}
         onWheel={handleWheel}
         onPointerDown={handlePointerDown}
@@ -327,46 +342,61 @@ export default function ExploreGallery() {
               onClick={() => handleCardClick(i)}
               className="absolute top-0 left-1/2 will-change-transform"
               style={{
-                width: 'min(80vw, 440px)',
+                width: 'min(82vw, 440px)',
                 transformStyle: 'preserve-3d',
                 backfaceVisibility: 'hidden',
               }}
             >
-              {/* Card Body — Clean, zero reflection, rich luxury depth */}
+              {/* Sculpted Luxury Bezel Outer Rim — Smooth Curved 22px Chamfer */}
               <div
-                className={`group relative aspect-[4/3] w-full overflow-hidden rounded-[2px] transition-[border-color,box-shadow] duration-500 ${
+                className={`group relative aspect-[4/3] w-full p-[1.5px] rounded-[1.35rem] transition-[background,box-shadow] duration-500 ${
                   isCurrent
-                    ? 'border border-bronze/60 shadow-[0_25px_60px_-10px_rgba(0,0,0,0.92),0_0_30px_rgba(176,141,87,0.12)] ring-1 ring-bronze/25'
-                    : 'border border-hairline/60 shadow-[0_15px_40px_rgba(0,0,0,0.85)]'
+                    ? 'bg-gradient-to-b from-bronze/75 via-hairline-2 to-bronze/35 shadow-[0_25px_60px_-10px_rgba(0,0,0,0.95),0_0_35px_rgba(176,141,87,0.18)] ring-1 ring-bronze/30'
+                    : 'bg-gradient-to-b from-hairline-2/80 via-hairline/60 to-transparent shadow-[0_15px_40px_rgba(0,0,0,0.85)]'
                 }`}
               >
-                <AssetSlot
-                  slot={area.slot}
-                  ratio="auto"
-                  className="h-full w-full"
-                  sizes="(max-width: 767px) 80vw, 440px"
-                  hideConceptualLabel={Boolean(area.slot.src)}
-                />
+                {/* Inner Card Container with Smooth Sculpted Corners */}
+                <div className="relative h-full w-full overflow-hidden rounded-[calc(1.35rem-1.5px)] bg-charcoal">
+                  <AssetSlot
+                    slot={area.slot}
+                    ratio="auto"
+                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    sizes="(max-width: 767px) 82vw, 440px"
+                    hideConceptualLabel={Boolean(area.slot.src)}
+                  />
 
-                {/* Subtle photographic lens glare sheen */}
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08] opacity-80 transition-opacity duration-300 group-hover:opacity-100"
-                />
+                  {/* Top brushed-gold rim highlight (overhead gym downlight illumination) */}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-0 inset-x-8 h-[1.5px] bg-gradient-to-r from-transparent via-bronze to-transparent opacity-85 z-10"
+                  />
 
-                {/* Focal badge for the centered active space */}
-                {isCurrent && (
-                  <div className="absolute top-3.5 left-3.5 z-20 flex items-center gap-2 rounded-full border border-bronze/50 bg-ink/80 px-3 py-1 backdrop-blur-md">
-                    <span className="h-1.5 w-1.5 rounded-full bg-bronze animate-pulse" />
-                    <span className="t-label text-[0.5625rem] tracking-widest uppercase text-heading">
-                      Focal View
-                    </span>
-                  </div>
-                )}
+                  {/* Subtle photographic lens glare sheen */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08] opacity-80 transition-opacity duration-300 group-hover:opacity-100"
+                  />
+
+                  {/* Soft inner photographic vignette */}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 rounded-[calc(1.35rem-1.5px)] shadow-[inset_0_0_24px_rgba(0,0,0,0.45)]"
+                  />
+
+                  {/* Focal badge for the centered active space */}
+                  {isCurrent && (
+                    <div className="absolute top-4 left-4 z-20 flex items-center gap-2 rounded-full border border-bronze/50 bg-ink/85 px-3 py-1 shadow-lg backdrop-blur-md">
+                      <span className="h-1.5 w-1.5 rounded-full bg-bronze animate-pulse" />
+                      <span className="t-label text-[0.5625rem] tracking-widest uppercase text-heading font-medium">
+                        Focal View
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Bottom Card Caption */}
-              <figcaption className="mt-3.5 flex items-baseline justify-between px-1">
+              <figcaption className="mt-4 flex items-baseline justify-between px-2">
                 <div className="flex items-baseline gap-2.5">
                   <span className="t-label nums font-medium text-bronze">
                     {String(i + 1).padStart(2, '0')}
@@ -408,10 +438,19 @@ export default function ExploreGallery() {
 
       {/* Luxury Feature Bar & Quick-Jump Selector */}
       <div className="mt-8 px-pad-x">
-        <div className="mx-auto max-w-shell border border-hairline/80 bg-charcoal/40 p-5 backdrop-blur-md sm:p-6 rounded-[2px]">
+        <div className="mx-auto max-w-shell border border-hairline/80 bg-charcoal/40 p-5 backdrop-blur-md sm:p-6 rounded-2xl relative overflow-hidden">
+          {/* 3-Second Active Progress Bar line at the top of the card */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-charcoal-2 overflow-hidden">
+            <div
+              ref={progressBarRef}
+              className="h-full w-full origin-left bg-gradient-to-r from-bronze/60 to-bronze transition-none"
+              style={{ transform: 'scaleX(0)' }}
+            />
+          </div>
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-hairline/60 pb-4">
             <div className="flex items-center gap-3">
-              <span className="t-label nums px-2 py-0.5 rounded border border-bronze/40 text-bronze text-[0.6875rem]">
+              <span className="t-label nums px-2 py-0.5 rounded-full border border-bronze/40 text-bronze text-[0.6875rem]">
                 {String(activeIndex + 1).padStart(2, '0')} / {String(N).padStart(2, '0')}
               </span>
               <h3 className="t-h3 uppercase text-heading font-medium tracking-wide">
@@ -420,7 +459,7 @@ export default function ExploreGallery() {
             </div>
 
             <Iridescent className="t-label text-[0.625rem] tracking-wider uppercase text-faint">
-              Swipe or drag to scroll · Click space to focus
+              Auto-advancing every 3s · Swipe or drag to browse
             </Iridescent>
           </div>
 
