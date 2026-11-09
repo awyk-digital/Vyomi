@@ -13,20 +13,14 @@ import { prefersReducedMotion } from '@/lib/motion';
  * with an interactive small navigation bar (right arrow type) for exploration.
  */
 
-/** Coordinated card geometry — desktop width × height, inside the brief's range. */
-const GEOMETRY = [
-  { w: 440, h: 300 },
-  { w: 360, h: 340 },
-  { w: 420, h: 280 },
-  { w: 330, h: 360 },
-  { w: 350, h: 330 },
-  { w: 400, h: 265 },
-] as const;
+/** Uniform card width and spacing for all gallery cards. */
+const CARD_WIDTH = 420;
+const CARD_GAP = 24;
 
 /** Constant travel speed in CSS pixels per second. */
 const SPEED = 26;
-/** Step distance when clicking navigation arrows (~average card width + margin). */
-const STEP_DISTANCE = 410;
+/** Step distance when clicking navigation arrows (card width + margin). */
+const STEP_DISTANCE = CARD_WIDTH + CARD_GAP;
 
 export default function ExploreGallery() {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -105,25 +99,20 @@ export default function ExploreGallery() {
 
   const renderCards = (copy: number) =>
     AREAS.map((area, i) => {
-      const g = GEOMETRY[i % GEOMETRY.length];
       return (
         <figure
           key={`${copy}-${area.slot.id}`}
           className="mr-6 shrink-0"
           style={{
-            width: `min(82vw, ${g.w}px)`,
-            marginTop: `${area.offset}rem`,
+            width: `min(82vw, ${CARD_WIDTH}px)`,
           }}
         >
-          <div
-            className="overflow-hidden"
-            style={{ height: `clamp(220px, 46vw, ${g.h}px)` }}
-          >
+          <div className="overflow-hidden aspect-[4/3] w-full">
             <AssetSlot
               slot={area.slot}
               ratio="auto"
               className="h-full w-full"
-              sizes="(max-width: 767px) 82vw, 460px"
+              sizes="(max-width: 767px) 82vw, 420px"
               hideConceptualLabel={Boolean(area.slot.src)}
             />
           </div>

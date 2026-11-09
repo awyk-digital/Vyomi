@@ -28,11 +28,11 @@ export interface Area {
 /** The six areas the brief confirms. No invented floor plans. */
 export const AREAS: Area[] = [
   { slot: CLUB_AREAS[0], caption: 'Reception & lounge', offset: 0 },
-  { slot: CLUB_AREAS[1], caption: 'Training floor', offset: 1.75 },
+  { slot: CLUB_AREAS[1], caption: 'Training floor', offset: 0 },
   { slot: CLUB_AREAS[2], caption: 'Studio', offset: 0 },
-  { slot: CLUB_AREAS[3], caption: 'Wellness spaces', offset: 2.25 },
-  { slot: CLUB_AREAS[4], caption: 'Dedicated lift', offset: 0.75 },
-  { slot: CLUB_AREAS[5], caption: 'Parking', offset: 1.5 },
+  { slot: CLUB_AREAS[3], caption: 'Wellness spaces', offset: 0 },
+  { slot: CLUB_AREAS[4], caption: 'Dedicated lift', offset: 0 },
+  { slot: CLUB_AREAS[5], caption: 'Parking', offset: 0 },
 ];
 
 /* ---------------- 2 · Facilities & equipment ---------------- */
