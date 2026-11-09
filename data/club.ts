@@ -159,14 +159,14 @@ export const CLASSES: ClassEntry[] = [
     label: 'Reformer Pilates',
     href: '/studio#pilates',
     slot: CLASS_IMAGES[1],
-    offset: 2.5,
+    offset: 0,
   },
   {
     id: 'strength',
     label: 'Strength & conditioning',
     href: '/studio#fitness',
     slot: CLASS_IMAGES[2],
-    offset: 1,
+    offset: 0,
   },
 ];
 
