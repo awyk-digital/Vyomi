@@ -8,6 +8,7 @@ import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
 import StudioNav from '@/components/StudioNav';
 import ChapterVideo from '@/components/ChapterVideo';
+import StudioWorkoutGuide from '@/components/StudioWorkoutGuide';
 import { STUDIO_IMAGES } from '@/config/assets';
 import { EQUIPMENT_CATEGORIES, AMENITIES, DISCIPLINES } from '@/data/club';
 
@@ -169,8 +170,16 @@ export default function StudioPage() {
                     ))}
                   </dl>
 
-                  <div className="mt-6">
+                  <div className="mt-6 flex flex-wrap items-center gap-3">
                     <Pending label={fitness.pending} />
+                    <a
+                      href="#workout-guide"
+                      className="btn-line !py-1 !px-3 font-mono text-xs inline-flex items-center gap-2 hover:bg-hairline"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-burgundy" aria-hidden="true" />
+                      <span>Form Micro-Animations</span>
+                      <span aria-hidden="true">↓</span>
+                    </a>
                   </div>
                 </Reveal>
               </div>
@@ -261,12 +270,23 @@ export default function StudioPage() {
               <div className="mt-6">
                 <AccentRule />
               </div>
-              <div className="mt-6">
+              <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Pending label={hyrox.pending} />
+                <a
+                  href="#workout-guide"
+                  className="btn-line !py-1 !px-3 font-mono text-xs inline-flex items-center gap-2 hover:bg-hairline"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-champagne" aria-hidden="true" />
+                  <span>HYROX Kinematic Guide</span>
+                  <span aria-hidden="true">↓</span>
+                </a>
               </div>
             </Reveal>
           </div>
         </section>
+
+        {/* ---------- Interactive Movement Biomechanics & Workout Micro-Animations ---------- */}
+        <StudioWorkoutGuide />
 
         {/* ---------- 03 · Zumba — offset collage on an oversized numeral ---------- */}
         <section
@@ -429,8 +449,16 @@ export default function StudioPage() {
                 Reformer work is coached on the carriage itself — spring
                 resistance, footbar and straps — rather than as mat Pilates.
               </p>
-              <div className="mt-6">
+              <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Pending label={pilates.pending} />
+                <a
+                  href="#workout-guide"
+                  className="btn-line !py-1 !px-3 font-mono text-xs inline-flex items-center gap-2 hover:bg-hairline"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-lime" aria-hidden="true" />
+                  <span>Reformer Spring Telemetry</span>
+                  <span aria-hidden="true">↑</span>
+                </a>
               </div>
             </Reveal>
           </div>
