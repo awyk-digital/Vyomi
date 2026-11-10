@@ -588,7 +588,7 @@ export const SUPPLIED = {
    * into the frame; re-encoded from the original at 1834 × 1044 with the bars
    * cropped and the house grade applied. Poster is a frame of this same cut.
    */
-  heroVideo: '/video/hero.mp4',
+  heroVideo: '/video/hero-v2.mp4',
   heroPoster: '/video/hero-poster.jpg',
   heroVideoSize: { width: 1834, height: 1044 },
 } as const;

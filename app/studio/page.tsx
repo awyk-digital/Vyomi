@@ -123,7 +123,7 @@ export default function StudioPage() {
           aria-label="Walkthrough of the club"
         >
           <ChapterVideo
-            src="/video/tour-club.mp4"
+            src="/video/tour-club-v2.mp4"
             poster="/video/tour-club-poster.jpg"
             label="Walkthrough of Vyomi Fitness Club: reception, the stone corridor, the lounge, and the cardio hall."
             caption="Render — not club photography"
