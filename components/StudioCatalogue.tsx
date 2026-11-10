@@ -16,18 +16,11 @@ import { prefersReducedMotion } from '@/lib/motion';
 
 const INITIAL_VISIBLE_COUNT = 12;
 
-/** Staggered horizontal gallery card geometry matching ExploreGallery ("EXPLORE VYOMI."). */
-const SPOTLIGHT_GEOMETRY = [
-  { w: 440, h: 300, offset: 0 },
-  { w: 360, h: 340, offset: 2.0 },
-  { w: 420, h: 280, offset: 0.5 },
-  { w: 330, h: 360, offset: 1.8 },
-  { w: 380, h: 310, offset: 0.3 },
-  { w: 410, h: 280, offset: 1.4 },
-] as const;
-
+/** Uniform spotlight card geometry so all machines render at identical size and 4:3 aspect ratio */
+const CARD_WIDTH = 420;
+const CARD_GAP = 24; // mr-6
+const STEP_DISTANCE = CARD_WIDTH + CARD_GAP;
 const LOOP_SPEED = 24;
-const STEP_DISTANCE = 410;
 
 const PANATTA_SPOTLIGHT_IDS = [
   'panatta-pendulum-squat',
@@ -139,15 +132,10 @@ function SpotlightStrip({
 
   const renderCards = (copy: number) =>
     items.map((item, i) => {
-      const g = SPOTLIGHT_GEOMETRY[i % SPOTLIGHT_GEOMETRY.length];
       return (
         <figure
           key={`${copy}-${item.id}`}
-          className="mr-6 shrink-0"
-          style={{
-            width: `min(82vw, ${g.w}px)`,
-            marginTop: `${g.offset}rem`,
-          }}
+          className="mr-6 shrink-0 w-[min(82vw,420px)]"
         >
           <button
             type="button"
@@ -155,10 +143,7 @@ function SpotlightStrip({
             className="group block w-full text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-burgundy cursor-pointer"
             aria-label={`Inspect ${item.brand} ${item.name}`}
           >
-            <div
-              className="overflow-hidden bg-charcoal"
-              style={{ height: `clamp(220px, 46vw, ${g.h}px)` }}
-            >
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal">
               <img
                 src={item.image}
                 alt={`${item.brand} ${item.name} — ${item.model}`}
