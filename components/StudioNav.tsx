@@ -138,7 +138,7 @@ export default function StudioNav() {
               );
             })}
 
-            <li className="pt-2 mt-1 border-t border-hairline">
+            <li key="fitness-catalogue">
               <a
                 href="/catalogue"
                 target="_blank"

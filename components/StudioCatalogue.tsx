@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AccentRule from '@/components/AccentRule';
+import SectionHeading from '@/components/SectionHeading';
 import {
   CATALOGUE_BRAND_TABS,
   CATALOGUE_CATEGORIES,
@@ -11,14 +12,30 @@ import {
   type CatalogueItem,
 } from '@/data/catalogue';
 import { site, whatsappLink } from '@/config/site';
+import { prefersReducedMotion } from '@/lib/motion';
 
 const INITIAL_VISIBLE_COUNT = 12;
+
+/** Staggered horizontal gallery card geometry matching ExploreGallery ("EXPLORE VYOMI."). */
+const SPOTLIGHT_GEOMETRY = [
+  { w: 440, h: 300, offset: 0 },
+  { w: 360, h: 340, offset: 2.0 },
+  { w: 420, h: 280, offset: 0.5 },
+  { w: 330, h: 360, offset: 1.8 },
+  { w: 380, h: 310, offset: 0.3 },
+  { w: 410, h: 280, offset: 1.4 },
+] as const;
+
+const LOOP_SPEED = 24;
+const STEP_DISTANCE = 410;
 
 const PANATTA_SPOTLIGHT_IDS = [
   'panatta-pendulum-squat',
   'panatta-multi-flight',
   'panatta-super-declined-press',
   'panatta-super-high-row',
+  'panatta-horizontal-multi-press',
+  'panatta-leg-press-bridge',
 ] as const;
 
 const PLATE_LOADED_SPOTLIGHT_IDS = [
@@ -26,6 +43,8 @@ const PLATE_LOADED_SPOTLIGHT_IDS = [
   'rl-chest-press',
   'shua-leg-press-45',
   'rl-hack-squat',
+  'panatta-dips-press',
+  'rl-incline-press',
 ] as const;
 
 function pickByIds(ids: readonly string[]): CatalogueItem[] {
@@ -34,8 +53,216 @@ function pickByIds(ids: readonly string[]): CatalogueItem[] {
     .filter((item): item is CatalogueItem => Boolean(item));
 }
 
-function isHighlightedStation(item: CatalogueItem): boolean {
-  return item.brand === 'Panatta' || item.category === 'Plate-Loaded';
+interface SpotlightStripProps {
+  id: string;
+  title: string;
+  subtitle: string;
+  items: CatalogueItem[];
+  onInspect: (item: CatalogueItem) => void;
+  onExploreCategory: () => void;
+  exploreLabel: string;
+}
+
+/** Horizontal gliding staggered equipment rail matching ExploreGallery ("EXPLORE VYOMI.") */
+function SpotlightStrip({
+  id,
+  title,
+  subtitle,
+  items,
+  onInspect,
+  onExploreCategory,
+  exploreLabel,
+}: SpotlightStripProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(false);
+
+  const offsetRef = useRef(0);
+  const targetOffsetRef = useRef(0);
+  const lapRef = useRef(0);
+  const isPausedRef = useRef(false);
+  isPausedRef.current = paused;
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const measure = () => {
+      lapRef.current = track.scrollWidth / 2;
+    };
+    measure();
+
+    let lastTime = performance.now();
+    let rId: number;
+
+    const tick = (now: number) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      const lap = lapRef.current;
+      if (lap > 0) {
+        if (!isPausedRef.current && !prefersReducedMotion()) {
+          targetOffsetRef.current += LOOP_SPEED * dt;
+        }
+        const diff = targetOffsetRef.current - offsetRef.current;
+        offsetRef.current += diff * Math.min(dt * 7, 0.3);
+
+        while (offsetRef.current >= lap) {
+          offsetRef.current -= lap;
+          targetOffsetRef.current -= lap;
+        }
+        while (offsetRef.current < 0) {
+          offsetRef.current += lap;
+          targetOffsetRef.current += lap;
+        }
+
+        track.style.transform = `translate3d(-${offsetRef.current.toFixed(2)}px, 0, 0)`;
+      }
+      rId = requestAnimationFrame(tick);
+    };
+
+    rId = requestAnimationFrame(tick);
+    const ro = new ResizeObserver(measure);
+    ro.observe(track);
+    return () => {
+      cancelAnimationFrame(rId);
+      ro.disconnect();
+    };
+  }, [items.length]);
+
+  const handlePrev = useCallback(() => {
+    targetOffsetRef.current -= STEP_DISTANCE;
+  }, []);
+
+  const handleNext = useCallback(() => {
+    targetOffsetRef.current += STEP_DISTANCE;
+  }, []);
+
+  const renderCards = (copy: number) =>
+    items.map((item, i) => {
+      const g = SPOTLIGHT_GEOMETRY[i % SPOTLIGHT_GEOMETRY.length];
+      return (
+        <figure
+          key={`${copy}-${item.id}`}
+          className="mr-6 shrink-0"
+          style={{
+            width: `min(82vw, ${g.w}px)`,
+            marginTop: `${g.offset}rem`,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => onInspect(item)}
+            className="group block w-full text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-burgundy cursor-pointer"
+            aria-label={`Inspect ${item.brand} ${item.name}`}
+          >
+            <div
+              className="overflow-hidden bg-charcoal"
+              style={{ height: `clamp(220px, 46vw, ${g.h}px)` }}
+            >
+              <img
+                src={item.image}
+                alt={`${item.brand} ${item.name} — ${item.model}`}
+                className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+              />
+            </div>
+
+            <figcaption className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="t-label nums text-faint">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span className="t-small text-heading group-hover:text-white transition-colors">
+                {item.name}
+              </span>
+              <span className="t-label text-[0.625rem] text-[#B08D57]">{item.model}</span>
+            </figcaption>
+          </button>
+        </figure>
+      );
+    });
+
+  return (
+    <section id={id} className="border-t border-hairline bg-ink py-section-y">
+      {/* Header matching EXPLORE VYOMI. */}
+      <div className="mb-10 px-pad-x md:mb-14 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div className="max-w-2xl">
+          <SectionHeading className="t-h2 uppercase text-heading" stagger={0.06}>
+            {title}
+          </SectionHeading>
+          <p className="mt-3 t-small text-muted">{subtitle}</p>
+          <div className="mt-6 max-w-shell">
+            <AccentRule />
+          </div>
+        </div>
+
+        {/* Navigation controls matching EXPLORE VYOMI. */}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-end shrink-0">
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label={`Previous ${title} machine`}
+            className="group flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-[#141414]/80 backdrop-blur-md text-muted transition-all duration-300 hover:border-hairline-2 hover:bg-charcoal hover:text-heading active:scale-95 cursor-pointer"
+          >
+            <span className="text-sm transition-transform duration-300 group-hover:-translate-x-0.5">
+              ←
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label={`Next ${title} machine`}
+            className="group flex h-9 items-center gap-2.5 rounded-full border border-hairline bg-[#141414]/80 px-4 backdrop-blur-md text-muted transition-all duration-300 hover:border-hairline-2 hover:bg-charcoal hover:text-heading active:scale-95 cursor-pointer"
+          >
+            <span className="t-label text-[0.625rem] text-faint group-hover:text-muted transition-colors">
+              Explore
+            </span>
+            <span className="text-sm text-heading transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onExploreCategory}
+            className="h-9 rounded-full border border-hairline-2 px-4 font-mono text-[11px] uppercase tracking-[0.14em] text-[#B08D57] hover:border-[#B08D57] hover:text-heading transition-colors cursor-pointer"
+          >
+            {exploreLabel} ↓
+          </button>
+        </div>
+      </div>
+
+      {/* Gliding Staggered Photo Strip */}
+      <div
+        className="relative overflow-hidden"
+        onPointerEnter={() => setPaused(true)}
+        onPointerLeave={() => setPaused(false)}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={() => setPaused(false)}
+      >
+        <div ref={trackRef} className="marquee-track flex w-max will-change-transform">
+          <div className="flex">{renderCards(0)}</div>
+          <div className="flex" aria-hidden="true">
+            {renderCards(1)}
+          </div>
+        </div>
+
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 w-[clamp(2rem,8vw,7rem)]"
+          style={{
+            background: 'linear-gradient(to right, var(--ink) 0%, rgba(8,8,8,0) 100%)',
+          }}
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-[clamp(2rem,8vw,7rem)]"
+          style={{
+            background: 'linear-gradient(to left, var(--ink) 0%, rgba(8,8,8,0) 100%)',
+          }}
+        />
+      </div>
+    </section>
+  );
 }
 
 export default function StudioCatalogue() {
@@ -44,6 +271,8 @@ export default function StudioCatalogue() {
   const [query, setQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
   const [activeItem, setActiveItem] = useState<CatalogueItem | null>(null);
+  const [zoomed, setZoomed] = useState(false);
+  const [panOrigin, setPanOrigin] = useState({ x: 50, y: 50 });
 
   const panattaSpotlight = useMemo(() => pickByIds(PANATTA_SPOTLIGHT_IDS), []);
   const plateLoadedSpotlight = useMemo(() => pickByIds(PLATE_LOADED_SPOTLIGHT_IDS), []);
@@ -96,11 +325,18 @@ export default function StudioCatalogue() {
     document.getElementById('full-equipment-floor')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const openInspector = useCallback((item: CatalogueItem) => {
+    setZoomed(false);
+    setPanOrigin({ x: 50, y: 50 });
+    setActiveItem(item);
+  }, []);
+
   useEffect(() => {
     if (!activeItem) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setActiveItem(null);
+        setZoomed(false);
         return;
       }
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
@@ -111,6 +347,7 @@ export default function StudioCatalogue() {
           e.key === 'ArrowRight'
             ? (idx + 1) % list.length
             : (idx - 1 + list.length) % list.length;
+        setZoomed(false);
         setActiveItem(list[nextIdx]);
       }
     };
@@ -125,206 +362,77 @@ export default function StudioCatalogue() {
     const list = filteredItems.length > 0 ? filteredItems : CATALOGUE_ITEMS;
     const idx = list.findIndex((i) => i.id === activeItem.id);
     if (idx === -1) return;
+    setZoomed(false);
     setActiveItem(list[(idx + dir + list.length) % list.length]);
   };
 
   return (
     <div className="bg-ink text-muted">
       {/* ========================================================================
-          SECTION 1 · FEATURED HIGHLIGHTS FIRST (PANATTA & PLATE-LOADED)
+          TITLE BAND
       ======================================================================== */}
-      <section
-        id="featured-highlights"
-        aria-labelledby="spotlights-heading"
-        className="border-b border-hairline bg-ink"
-      >
-        <div className="mx-auto max-w-[1440px] px-6 md:px-14 lg:px-20 pt-14 pb-20 md:pt-20 md:pb-24">
-          {/* Page Intro */}
-          <div className="max-w-3xl">
-            <div className="flex flex-wrap items-center gap-3 text-xs font-mono uppercase tracking-[0.22em] text-faint">
-              <span className="h-px w-8 bg-burgundy inline-block" aria-hidden="true" />
-              <span>Vyomi Fitness Club · Vijayawada</span>
-              <span className="text-hairline-2">·</span>
-              <span className="text-[#B08D57]">SHUA · Panatta · Realleader</span>
-            </div>
-
-            <h1
-              id="spotlights-heading"
-              className="mt-4 t-hero uppercase text-heading font-normal tracking-[-0.025em]"
-            >
-              Fitness Catalogue.
-            </h1>
-
-            <p className="mt-4 t-body text-muted leading-relaxed">
-              Every machine in its architectural training bay — spotlighting our flagship Italian{' '}
-              <span className="text-heading">Panatta</span> biomechanical range and heavy{' '}
-              <span className="text-heading">Plate-Loaded</span> iron first, followed by the full
-              46-station floor directory.
-            </p>
-
-            <div className="mt-8 max-w-shell">
-              <AccentRule />
-            </div>
+      <section className="bg-ink px-pad-x pt-14 pb-16 md:pt-20 md:pb-20">
+        <div className="max-w-3xl">
+          <div className="flex flex-wrap items-center gap-3 text-xs font-mono uppercase tracking-[0.22em] text-faint">
+            <span className="h-px w-8 bg-burgundy inline-block" aria-hidden="true" />
+            <span>Vyomi Fitness Club · Vijayawada</span>
+            <span className="text-hairline-2">·</span>
+            <span className="text-[#B08D57]">SHUA · Panatta · Realleader</span>
           </div>
 
-          {/* 01 · PANATTA HIGHLIGHT + 02 · PLATE-LOADED HIGHLIGHT */}
-          <div className="mt-14 space-y-12">
-            {/* ---- 01 · Panatta Highlighted Showcase ---- */}
-            <div
-              className="relative overflow-hidden border border-[#8C2230]/55 bg-charcoal p-6 sm:p-8 lg:p-10 shadow-[0_0_50px_rgba(140,34,48,0.12)]"
-              style={{
-                background:
-                  'radial-gradient(ellipse at top right, rgba(140,34,48,0.14), rgba(20,20,20,0.98) 62%)',
-              }}
-            >
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-hairline">
-                <div className="max-w-2xl">
-                  <div className="inline-flex items-center gap-2.5 px-3 py-1 border border-[#8C2230]/60 bg-[#8C2230]/20 text-[11px] font-mono uppercase tracking-[0.2em] text-[#F5F5F2]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#B08D57]" aria-hidden="true" />
-                    <span>Highlighted Series 01 · Italian Biomechanics</span>
-                  </div>
-                  <h2 className="mt-4 t-h2 text-heading font-normal tracking-[-0.02em]">
-                    Panatta Signature Series.
-                  </h2>
-                  <p className="mt-3 t-small text-muted leading-relaxed">
-                    Precision joint curves in Vyomi burgundy frames — featuring the Super Pendulum
-                    Squat (1FW080), Standing Multi Flight (1FE028), Super Declined Chest Press,
-                    and Super High Row.
-                  </p>
-                </div>
+          <h1 className="mt-4 t-hero uppercase text-heading font-normal tracking-[-0.025em]">
+            Fitness Catalogue.
+          </h1>
 
-                <button
-                  type="button"
-                  onClick={() => jumpToFilter('Panatta', 'All')}
-                  className="btn-line shine shrink-0 !py-2.5 !px-5 font-mono text-xs uppercase tracking-[0.16em] border-[#8C2230] text-heading hover:bg-[#8C2230] cursor-pointer"
-                >
-                  Browse All 17 Panatta ↓
-                </button>
-              </div>
-
-              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {panattaSpotlight.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveItem(item)}
-                    className="group relative text-left border border-[#8C2230]/45 bg-charcoal-2 hover:border-[#B08D57] transition-all overflow-hidden flex flex-col cursor-pointer"
-                  >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
-                      <img
-                        src={item.image}
-                        alt={`${item.brand} ${item.name} — ${item.model}`}
-                        className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
-                      />
-                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#080808]/85 border border-[#8C2230]/70 font-mono text-[10px] uppercase tracking-[0.16em] text-[#F5F5F2]">
-                        Highlighted
-                      </span>
-                    </div>
-                    <div className="p-4 border-t border-hairline flex-1 flex flex-col justify-between gap-2">
-                      <div>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#B08D57]">
-                          Panatta · {item.model}
-                        </span>
-                        <h3 className="mt-1.5 text-base font-normal text-heading group-hover:text-white leading-snug">
-                          {item.name}
-                        </h3>
-                      </div>
-                      <span className="font-mono text-[11px] text-faint group-hover:text-[#B08D57] transition-colors">
-                        Inspect station →
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* ---- 02 · Plate-Loaded Highlighted Showcase ---- */}
-            <div
-              className="relative overflow-hidden border border-[#B08D57]/55 bg-charcoal p-6 sm:p-8 lg:p-10 shadow-[0_0_50px_rgba(176,141,87,0.10)]"
-              style={{
-                background:
-                  'radial-gradient(ellipse at top right, rgba(176,141,87,0.12), rgba(20,20,20,0.98) 62%)',
-              }}
-            >
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-hairline">
-                <div className="max-w-2xl">
-                  <div className="inline-flex items-center gap-2.5 px-3 py-1 border border-[#B08D57]/60 bg-[#B08D57]/15 text-[11px] font-mono uppercase tracking-[0.2em] text-[#F5F5F2]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#D6F55B]" aria-hidden="true" />
-                    <span>Highlighted Series 02 · Iso-Lateral Iron</span>
-                  </div>
-                  <h2 className="mt-4 t-h2 text-heading font-normal tracking-[-0.02em]">
-                    Plate-Loaded Series.
-                  </h2>
-                  <p className="mt-3 t-small text-muted leading-relaxed">
-                    Free-plate loading across Panatta FreeWeight HP, Realleader HS heavy frames, and
-                    SHUA linear 45° sleds — engineered for raw progressive overload.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => jumpToFilter('All', 'Plate-Loaded')}
-                  className="btn-line shine shrink-0 !py-2.5 !px-5 font-mono text-xs uppercase tracking-[0.16em] border-[#B08D57] text-heading hover:bg-[#B08D57] hover:text-ink cursor-pointer"
-                >
-                  Filter Plate-Loaded ↓
-                </button>
-              </div>
-
-              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {plateLoadedSpotlight.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveItem(item)}
-                    className="group relative text-left border border-[#B08D57]/45 bg-charcoal-2 hover:border-[#D6F55B]/75 transition-all overflow-hidden flex flex-col cursor-pointer"
-                  >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
-                      <img
-                        src={item.image}
-                        alt={`${item.brand} ${item.name} — ${item.model}`}
-                        className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
-                      />
-                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#080808]/85 border border-[#B08D57]/70 font-mono text-[10px] uppercase tracking-[0.16em] text-[#B08D57]">
-                        Highlighted · Plate-Loaded
-                      </span>
-                    </div>
-                    <div className="p-4 border-t border-hairline flex-1 flex flex-col justify-between gap-2">
-                      <div>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#B08D57]">
-                          {item.brand} · {item.model}
-                        </span>
-                        <h3 className="mt-1.5 text-base font-normal text-heading group-hover:text-white leading-snug">
-                          {item.name}
-                        </h3>
-                      </div>
-                      <span className="font-mono text-[11px] text-faint group-hover:text-[#B08D57] transition-colors">
-                        Inspect station →
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <p className="mt-4 t-body text-muted leading-relaxed">
+            Dedicated showroom featuring Italian Panatta Series and heavy Plate-Loaded frames
+            first, followed by the complete 46-station commercial floor directory.
+          </p>
         </div>
       </section>
 
       {/* ========================================================================
-          SECTION 2 · COMPLETE INTERACTIVE FLOOR CATALOGUE
+          HIGHLIGHT 01 · PANATTA (EXPLORE VYOMI STAGGERED RAIL STYLE)
+      ======================================================================== */}
+      <SpotlightStrip
+        id="panatta-series"
+        title="Panatta Series."
+        subtitle="Italian FreeWeight & Fit Evo biomechanics in signature frames."
+        items={panattaSpotlight}
+        onInspect={openInspector}
+        onExploreCategory={() => jumpToFilter('Panatta', 'All')}
+        exploreLabel="View All 17"
+      />
+
+      {/* ========================================================================
+          HIGHLIGHT 02 · PLATE-LOADED (EXPLORE VYOMI STAGGERED RAIL STYLE)
+      ======================================================================== */}
+      <SpotlightStrip
+        id="plate-loaded-series"
+        title="Plate-Loaded."
+        subtitle="Converging iso-lateral arms and linear heavy iron sleds."
+        items={plateLoadedSpotlight}
+        onInspect={openInspector}
+        onExploreCategory={() => jumpToFilter('All', 'Plate-Loaded')}
+        exploreLabel="Filter Plate-Loaded"
+      />
+
+      {/* ========================================================================
+          COMPLETE FLOOR DIRECTORY (CLEAN CARDS, ZERO "HIGHLIGHTED" TAGS)
       ======================================================================== */}
       <section
         id="full-equipment-floor"
         aria-labelledby="catalogue-heading"
-        className="scroll-mt-12 bg-ink border-b border-hairline"
+        className="scroll-mt-12 bg-ink border-t border-hairline"
       >
-        <div className="mx-auto max-w-[1440px] px-6 md:px-14 lg:px-20 py-20 md:py-28">
+        <div className="mx-auto max-w-[1440px] px-pad-x py-section-y">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-hairline">
             <div className="max-w-2xl">
               <div className="flex items-center gap-4 text-xs font-mono uppercase tracking-[0.22em] text-faint">
                 <span className="h-px w-8 bg-burgundy inline-block" aria-hidden="true" />
-                <span>Complete Floor Index</span>
+                <span>Complete Floor Directory</span>
                 <span className="text-hairline-2">·</span>
-                <span className="text-[#B08D57]">46 Architectural Bay Shots</span>
+                <span className="text-[#B08D57]">46 Equipment Stations</span>
               </div>
               <h2
                 id="catalogue-heading"
@@ -333,8 +441,8 @@ export default function StudioCatalogue() {
                 All Strength &amp; Cardio Stations.
               </h2>
               <p className="mt-4 t-body text-muted leading-relaxed">
-                Panatta and Plate-Loaded stations are flagged with bronze/crimson accents across
-                the full directory.
+                Filter across manufacturers, loading architecture, or muscle focus — click any
+                card to inspect in full 2.25× high-resolution detail.
               </p>
             </div>
 
@@ -430,7 +538,7 @@ export default function StudioCatalogue() {
             <p className="text-sm text-muted">{activeBrandMeta.subtitle}</p>
           </div>
 
-          {/* Grid */}
+          {/* Clean Equipment Grid (NO overlay badges) */}
           {visibleItems.length === 0 ? (
             <div className="mt-12 border border-hairline bg-charcoal p-12 text-center">
               <p className="font-mono text-xs uppercase tracking-[0.18em] text-faint">
@@ -453,86 +561,59 @@ export default function StudioCatalogue() {
             </div>
           ) : (
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {visibleItems.map((item) => {
-                const highlighted = isHighlightedStation(item);
-                const isPanatta = item.brand === 'Panatta';
-                return (
-                  <article
-                    key={item.id}
-                    className={`group relative border transition-all flex flex-col overflow-hidden bg-charcoal ${
-                      isPanatta
-                        ? 'border-[#8C2230]/55 hover:border-[#8C2230]'
-                        : highlighted
-                        ? 'border-[#B08D57]/45 hover:border-[#B08D57]'
-                        : 'border-hairline hover:border-hairline-2'
-                    }`}
+              {visibleItems.map((item) => (
+                <article
+                  key={item.id}
+                  className="group relative border border-hairline bg-charcoal hover:border-hairline-2 transition-colors flex flex-col overflow-hidden"
+                >
+                  <div
+                    className="h-[2px] w-0 group-hover:w-full bg-burgundy transition-all duration-300"
+                    aria-hidden="true"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => openInspector(item)}
+                    className="text-left flex flex-col flex-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-burgundy cursor-pointer"
+                    aria-label={`Inspect ${item.brand} ${item.name}`}
                   >
-                    <div
-                      className={`h-[2px] w-full transition-opacity duration-300 ${
-                        isPanatta
-                          ? 'bg-burgundy opacity-90'
-                          : highlighted
-                          ? 'bg-[#B08D57] opacity-80'
-                          : 'bg-burgundy opacity-0 group-hover:opacity-100'
-                      }`}
-                      aria-hidden="true"
-                    />
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
+                      <img
+                        src={item.image}
+                        alt={`${item.brand} ${item.name} — ${item.model}`}
+                        loading="lazy"
+                        className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setActiveItem(item)}
-                      className="text-left flex flex-col flex-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-burgundy cursor-pointer"
-                      aria-label={`Inspect ${item.brand} ${item.name}`}
-                    >
-                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
-                        <img
-                          src={item.image}
-                          alt={`${item.brand} ${item.name} — ${item.model}`}
-                          loading="lazy"
-                          className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
-                        />
-                        {highlighted && (
-                          <span
-                            className={`absolute top-3 left-3 px-2.5 py-0.5 bg-[#080808]/85 border font-mono text-[10px] uppercase tracking-[0.16em] ${
-                              isPanatta
-                                ? 'border-[#8C2230]/80 text-[#F5F5F2]'
-                                : 'border-[#B08D57]/80 text-[#B08D57]'
-                            }`}
-                          >
-                            {isPanatta ? 'Panatta · Highlighted' : 'Plate-Loaded · Highlighted'}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="p-5 flex-1 flex flex-col justify-between gap-4 border-t border-hairline">
-                        <div>
-                          <div className="flex items-center justify-between gap-2 text-[11px] font-mono uppercase tracking-[0.16em]">
-                            <span className="text-[#B08D57]">{item.brand}</span>
-                            <span className="text-faint">{item.catalogRef}</span>
-                          </div>
-
-                          <h3 className="mt-2 t-h3 text-heading font-normal tracking-[-0.01em] group-hover:text-white transition-colors">
-                            {item.name}
-                          </h3>
-
-                          <p className="mt-1.5 text-xs text-muted line-clamp-2 leading-relaxed">
-                            {item.summary}
-                          </p>
+                    <div className="p-5 flex-1 flex flex-col justify-between gap-4 border-t border-hairline">
+                      <div>
+                        <div className="flex items-center justify-between gap-2 text-[11px] font-mono uppercase tracking-[0.16em]">
+                          <span className="text-[#B08D57]">{item.brand}</span>
+                          <span className="text-faint">{item.catalogRef}</span>
                         </div>
 
-                        <div className="pt-3 border-t border-hairline flex items-center justify-between gap-2 text-[11px] font-mono">
-                          <span className="text-faint truncate">
-                            Model: <span className="text-heading">{item.model}</span>
-                          </span>
-                          <span className="text-muted group-hover:text-heading inline-flex items-center gap-1 shrink-0 transition-colors">
-                            Inspect <span aria-hidden="true">→</span>
-                          </span>
-                        </div>
+                        <h3 className="mt-2 t-h3 text-heading font-normal tracking-[-0.01em] group-hover:text-white transition-colors">
+                          {item.name}
+                        </h3>
+
+                        <p className="mt-1.5 text-xs text-muted line-clamp-2 leading-relaxed">
+                          {item.summary}
+                        </p>
                       </div>
-                    </button>
-                  </article>
-                );
-              })}
+
+                      <div className="pt-3 border-t border-hairline flex items-center justify-between gap-2 text-[11px] font-mono">
+                        <span className="text-faint truncate">
+                          Model: <span className="text-heading">{item.model}</span>
+                        </span>
+                        <span className="text-muted group-hover:text-heading inline-flex items-center gap-1 shrink-0 transition-colors">
+                          Inspect <span aria-hidden="true">→</span>
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                </article>
+              ))}
             </div>
           )}
 
@@ -553,7 +634,7 @@ export default function StudioCatalogue() {
             </div>
           )}
 
-          {/* Authentic PDF Footer Attribution Note & Booking CTA */}
+          {/* Authentic Catalogue Note & Booking CTA */}
           <div className="mt-14 pt-8 border-t border-hairline flex flex-col md:flex-row md:items-center justify-between gap-6">
             <p className="text-xs font-mono text-faint max-w-2xl leading-relaxed">
               Catalogue source: Vyomi Fitness Club Vijayawada — SHUA, Panatta &amp; Realleader
@@ -581,7 +662,7 @@ export default function StudioCatalogue() {
       </section>
 
       {/* ========================================================================
-          LIGHTBOX INSPECTOR MODAL (QUIET LUXURY DARK THEME)
+          HI-RES LIGHTBOX INSPECTOR WITH 2.25x OPTICAL ZOOM & PAN
       ======================================================================== */}
       {activeItem && (
         <div
@@ -589,28 +670,60 @@ export default function StudioCatalogue() {
           aria-modal="true"
           aria-labelledby="catalogue-modal-title"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 bg-[#080808]/90 backdrop-blur-md"
-          onClick={() => setActiveItem(null)}
+          onClick={() => {
+            setZoomed(false);
+            setActiveItem(null);
+          }}
         >
           <div
             className="relative w-full max-w-5xl bg-charcoal border border-hairline-2 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="lg:col-span-7 bg-ink relative flex items-center justify-center border-b lg:border-b-0 lg:border-r border-hairline">
-              <div className="w-full aspect-[4/3]">
+            {/* Interactive Hi-Res 1600x1200 Zoom Viewport */}
+            <div
+              className={`lg:col-span-7 bg-ink relative flex items-center justify-center border-b lg:border-b-0 lg:border-r border-hairline overflow-hidden ${
+                zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
+              }`}
+              onClick={() => setZoomed((z) => !z)}
+              onMouseMove={(e) => {
+                if (!zoomed) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+                const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+                setPanOrigin({ x, y });
+              }}
+            >
+              <div className="w-full aspect-[4/3] overflow-hidden">
                 <img
                   src={activeItem.image}
                   alt={`${activeItem.brand} ${activeItem.name}`}
-                  className="h-full w-full object-cover object-center"
+                  className="h-full w-full object-cover object-center transition-transform duration-200 ease-out"
+                  style={{
+                    transform: zoomed ? 'scale(2.25)' : 'scale(1)',
+                    transformOrigin: `${panOrigin.x}% ${panOrigin.y}%`,
+                  }}
                 />
               </div>
+
               {activeIdx >= 0 && (
-                <div className="absolute bottom-4 left-4 bg-[#080808]/85 border border-hairline px-3 py-1 font-mono text-[11px] text-faint">
+                <div className="absolute bottom-4 left-4 bg-[#080808]/85 border border-hairline px-3 py-1 font-mono text-[11px] text-faint pointer-events-none">
                   <span className="text-heading nums">
                     {String(activeIdx + 1).padStart(2, '0')}
                   </span>{' '}
                   / {String(filteredItems.length).padStart(2, '0')}
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoomed((z) => !z);
+                }}
+                className="absolute bottom-4 right-4 bg-[#080808]/85 hover:bg-charcoal border border-hairline-2 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-heading cursor-pointer"
+              >
+                {zoomed ? 'Reset Zoom 1×' : 'Zoom 2.25× +'}
+              </button>
             </div>
 
             <div className="lg:col-span-5 p-6 md:p-8 flex flex-col justify-between gap-6">
@@ -621,7 +734,10 @@ export default function StudioCatalogue() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setActiveItem(null)}
+                    onClick={() => {
+                      setZoomed(false);
+                      setActiveItem(null);
+                    }}
                     aria-label="Close equipment inspector"
                     className="h-8 w-8 border border-hairline hover:border-hairline-2 text-muted hover:text-heading font-mono text-xs flex items-center justify-center cursor-pointer"
                   >
@@ -636,9 +752,7 @@ export default function StudioCatalogue() {
                   {activeItem.name}
                 </h3>
 
-                <p className="mt-4 t-small text-muted leading-relaxed">
-                  {activeItem.summary}
-                </p>
+                <p className="mt-4 t-small text-muted leading-relaxed">{activeItem.summary}</p>
 
                 <dl className="mt-6 border-t border-hairline divide-y divide-hairline text-xs font-mono">
                   <div className="py-3 flex justify-between gap-4">
