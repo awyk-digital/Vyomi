@@ -3,10 +3,7 @@
 import React, { useState, useId } from 'react';
 import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
-import Reveal from '@/components/Reveal';
-import Realistic3DGymPlayer from '@/components/Realistic3DGymPlayer';
-import GymVectorAnimation from '@/components/GymVectorAnimation';
-import { playMechanicalClick, toggleAudioMute, getAudioMuted } from '@/lib/haptics';
+import CinematicWorkoutPlayer, { Hotspot } from '@/components/CinematicWorkoutPlayer';
 
 export interface ExerciseGuide {
   id: string;
@@ -19,9 +16,10 @@ export interface ExerciseGuide {
   primaryMuscles: string[];
   secondaryMuscles: string[];
   cues: [string, string, string];
-  fault: string;
+  masteryPrinciple: string;
   accentColor: string;
-  model3dUid: string;
+  imageSrc: string;
+  hotspots: Hotspot[];
 }
 
 export const EXERCISE_GUIDES: ExerciseGuide[] = [
@@ -31,7 +29,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     disciplineId: 'fitness',
     name: 'Barbell Back Squat',
     subtitle: 'Compound Knee Extensor & Gluteal Biomechanics',
-    equipment: 'Olympic Barbell & Solid Steel Power Rack',
+    equipment: 'Olympic Competition Barbell & Solid Steel Power Rack',
     tempo: '3 · 1 · X (Controlled Descent · Depth Pause · Explosive Drive)',
     primaryMuscles: ['Quadriceps (Vastus Lateralis & Medialis)', 'Gluteus Maximus'],
     secondaryMuscles: ['Hamstrings', 'Erector Spinae', 'Transverse Abdominis'],
@@ -40,9 +38,33 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Break simultaneously at hips and knees, actively pushing knees outward in line with toes',
       'Descend smoothly until hip crease breaks below the top of the patella, then drive through midfoot',
     ],
-    fault: 'Allowing knees to cave inward (valgus collapse) or letting lower back round at bottom depth.',
+    masteryPrinciple:
+      'Prioritize thoracic extension and diaphragmatic bracing to ensure force transfers through the midfoot without anterior knee drift.',
     accentColor: '#8C2230',
-    model3dUid: '03d18f123daf428ba0aca04448eb396e',
+    imageSrc: '/img/workouts/barbell-squat.jpg',
+    hotspots: [
+      {
+        id: 'traps',
+        x: 50,
+        y: 35,
+        label: 'Upper Trapezius Shelf',
+        detail: 'Barbell rests firmly across rear deltoids and traps with wrists neutral and elbows pulled back.',
+      },
+      {
+        id: 'depth',
+        x: 50,
+        y: 68,
+        label: 'Parallel Depth Threshold',
+        detail: 'Hip crease breaks below the superior surface of the patella with spine fully neutral.',
+      },
+      {
+        id: 'feet',
+        x: 50,
+        y: 92,
+        label: 'Tripod Foot Contact',
+        detail: 'Even pressure through heel, first metatarsal, and fifth metatarsal rooted into the floor.',
+      },
+    ],
   },
   {
     id: 'deadlift',
@@ -59,9 +81,33 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Hinge hips, grip bar firmly outside knees, and pull the slack out while wedging lats tight',
       'Drive the floor away with the legs until bar clears knees, then thrust hips through to a tall lockout',
     ],
-    fault: 'Permitting lumbar spine flexion (rounding) off the floor or hyperextending lower back at top.',
+    masteryPrinciple:
+      'Treat the initial pull as a leg press into the earth; once past the knees, engage the glutes fully to achieve an effortless, tall vertical posture.',
     accentColor: '#8C2230',
-    model3dUid: '2aff1c3f0145403583a4e14655637d91',
+    imageSrc: '/img/workouts/deadlift.jpg',
+    hotspots: [
+      {
+        id: 'lats',
+        x: 50,
+        y: 22,
+        label: 'Scapular Lat Lock',
+        detail: 'Latissimus dorsi engaged and shoulder blades packed down like bent steel prior to liftoff.',
+      },
+      {
+        id: 'grip',
+        x: 50,
+        y: 58,
+        label: 'Chalked Precision Grip',
+        detail: 'Firm double-overhand grip directly outside legs to minimize moment arm distance.',
+      },
+      {
+        id: 'posture',
+        x: 50,
+        y: 76,
+        label: 'Vertical Alignment',
+        detail: 'Pelvis neutral with glutes fully clamped, avoiding excessive lumbar hyperextension.',
+      },
+    ],
   },
   {
     id: 'bench-press',
@@ -78,9 +124,33 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Unrack smoothly and lower the bar under control along a gentle diagonal arc to lower sternum',
       'Tuck elbows at ~45-70° from torso, drive feet into the turf, and press explosively up and back',
     ],
-    fault: 'Flaring elbows outward at 90° or bouncing the bar violently off the sternum.',
+    masteryPrinciple:
+      'Maintain continuous leg drive and a tight retracted upper back to establish an immovable platform for maximum power and shoulder longevity.',
     accentColor: '#8C2230',
-    model3dUid: '53319e9420994a3890ce3c8c76077a8b',
+    imageSrc: '/img/workouts/bench-press.jpg',
+    hotspots: [
+      {
+        id: 'scapulae',
+        x: 42,
+        y: 45,
+        label: 'Scapular Anchor',
+        detail: 'Shoulder blades pinched together and driven downward into the bench pad.',
+      },
+      {
+        id: 'touch',
+        x: 53,
+        y: 35,
+        label: 'Sternum Touch Plane',
+        detail: 'Bar contacts lower chest gently with forearms strictly vertical beneath the load.',
+      },
+      {
+        id: 'elbows',
+        x: 68,
+        y: 42,
+        label: '45° Elbow Tuck',
+        detail: 'Elbows tracked at an anatomical 45-degree angle protecting the rotator cuff.',
+      },
+    ],
   },
   {
     id: 'pull-up',
@@ -97,9 +167,33 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Initiate pull by aggressively packing shoulder blades down and back before bending elbows',
       'Drive elbows toward hips until clavicle approaches bar height; lower with control to dead hang',
     ],
-    fault: 'Kicking legs or utilizing momentum kipping rather than strict latissimus engagement.',
+    masteryPrinciple:
+      'Emphasize strict scapular depression at the start of every rep to recruit the entire back musculature without momentum or swinging.',
     accentColor: '#B08D57',
-    model3dUid: '43592d585f694f9aae975b5ba2435500',
+    imageSrc: '/img/workouts/pull-up.jpg',
+    hotspots: [
+      {
+        id: 'bar',
+        x: 50,
+        y: 26,
+        label: 'Pronated Wide Grip',
+        detail: 'Full hand wrap with knuckles stacked directly over the high-tensile steel bar.',
+      },
+      {
+        id: 'lats',
+        x: 50,
+        y: 48,
+        label: 'Latissimus Flare',
+        detail: 'Elbows pulled downward toward back pockets for complete latissimus shortening.',
+      },
+      {
+        id: 'core',
+        x: 50,
+        y: 92,
+        label: 'Hollow Body Tension',
+        detail: 'Anterior core braced with legs straight to prevent lower-body sway or kip.',
+      },
+    ],
   },
   {
     id: 'overhead-press',
@@ -116,9 +210,33 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Actively squeeze glutes and brace core to establish an immovable pelvic foundation',
       'Pull chin back slightly, press bar directly overhead in a straight line, and push head through at top',
     ],
-    fault: 'Arching lower back excessively (backward lean) to compensate for insufficient shoulder mobility.',
+    masteryPrinciple:
+      'A true military press is a whole-body compound movement: clamp your glutes and brace the abdominal cylinder to provide a rock-solid foundation.',
     accentColor: '#B08D57',
-    model3dUid: '3760ad8780e14bd4a4bdf22e48c9b87f',
+    imageSrc: '/img/workouts/overhead-press.jpg',
+    hotspots: [
+      {
+        id: 'lockout',
+        x: 50,
+        y: 15,
+        label: 'Overhead Lockout Apex',
+        detail: 'Bar stacked over glenohumeral joint, cervical spine, and midfoot in a plumb line.',
+      },
+      {
+        id: 'deltoids',
+        x: 50,
+        y: 36,
+        label: 'Shoulder Engagement',
+        detail: 'Deltoids and upper traps contract to stabilize the heavy load overhead.',
+      },
+      {
+        id: 'foundation',
+        x: 50,
+        y: 62,
+        label: 'Gluteal Foundation',
+        detail: 'Posterior chain locked tight to prevent compensatory lumbar hyperextension.',
+      },
+    ],
   },
   {
     id: 'bent-over-row',
@@ -135,9 +253,33 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Grip bar shoulder-width; pull through elbows directly toward the lower ribcage / belly button',
       'Pause and firmly pinch shoulder blades together at top without heaving torso upright',
     ],
-    fault: 'Jerking with leg and hip momentum to swing the barbell up instead of rowing with back muscles.',
+    masteryPrinciple:
+      'Anchor into the hamstrings and maintain a rigid 45-degree spine; row with the elbows rather than biceps to fully recruit the rhomboids and mid-traps.',
     accentColor: '#8C2230',
-    model3dUid: 'c6fccd943ec14d5db22e679beed7bef1',
+    imageSrc: '/img/workouts/bent-over-row.jpg',
+    hotspots: [
+      {
+        id: 'hinge',
+        x: 52,
+        y: 36,
+        label: '45° Neutral Spine Hinge',
+        detail: 'Torso remains steady at 45 degrees without rocking or swinging with the barbell.',
+      },
+      {
+        id: 'row',
+        x: 48,
+        y: 58,
+        label: 'Elbow Pull Vector',
+        detail: 'Bar drawn smoothly toward the junction of the lower ribcage and abdomen.',
+      },
+      {
+        id: 'hamstrings',
+        x: 48,
+        y: 84,
+        label: 'Posterior Anchor',
+        detail: 'Ischial tuberosities pushed back with hamstring tension counterbalancing bar weight.',
+      },
+    ],
   },
   {
     id: 'lunge',
@@ -154,9 +296,33 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Keep front knee stacked directly over the midfoot, avoiding medial drift or collapse',
       'Drive powerfully through the front heel to stand tall and immediately transition into the next stride',
     ],
-    fault: 'Slamming the rear knee into the floor or allowing the torso to pitch forward.',
+    masteryPrinciple:
+      'Control the eccentric descent so the back knee lightly kisses the turf margin rather than impacting, maximizing unilateral tension and hip stability.',
     accentColor: '#B08D57',
-    model3dUid: 'a6b82107d2ef411fa86276ce211a1f65',
+    imageSrc: '/img/workouts/lunge.jpg',
+    hotspots: [
+      {
+        id: 'torso',
+        x: 52,
+        y: 32,
+        label: 'Vertical Torso Carriage',
+        detail: 'Spine perpendicular to floor with core clamped to absorb vertical compression.',
+      },
+      {
+        id: 'knee',
+        x: 58,
+        y: 64,
+        label: '90° Front Knee Angle',
+        detail: 'Front patella tracking directly in line with second toe, avoiding medial valgus.',
+      },
+      {
+        id: 'depth',
+        x: 36,
+        y: 80,
+        label: 'Decelerated Depth Hover',
+        detail: 'Back knee hovers 1 inch above turf to keep constant tension on working musculature.',
+      },
+    ],
   },
   {
     id: 'plank',
@@ -173,52 +339,44 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Tuck pelvis into slight posterior tilt; actively lock kneecaps and clamp glutes with maximum tension',
       'Push floor away with forearms to prevent shoulder blades from winging; keep gaze just ahead of hands',
     ],
-    fault: 'Allowing hips to sag down into lumbar hyperextension or hiking glutes upward into a pike.',
+    masteryPrinciple:
+      'Envision pulling your elbows toward your toes and toes toward elbows to activate the high-threshold motor units of the deep abdominal cylinder.',
     accentColor: '#D6F55B',
-    model3dUid: '7eeb551c908b4787b6249a3bdc3d8528',
+    imageSrc: '/img/workouts/plank.jpg',
+    hotspots: [
+      {
+        id: 'shoulders',
+        x: 25,
+        y: 58,
+        label: 'Glenohumeral Stack',
+        detail: 'Elbows perpendicular directly beneath shoulders; serratus pushing ribcage high.',
+      },
+      {
+        id: 'core',
+        x: 52,
+        y: 52,
+        label: 'Pelvic Anti-Extension',
+        detail: 'Slight posterior pelvic tilt locks transverse abdominis without lumbar sagging.',
+      },
+      {
+        id: 'ankles',
+        x: 82,
+        y: 68,
+        label: 'Dorsiflexed Kinetic Lock',
+        detail: 'Heels driven backward with quadriceps locked tight to preserve full body tension.',
+      },
+    ],
   },
 ];
 
 /**
- * Studio Workout 3D Micro-Animations Guide Section.
- * Features realistic, photorealistic 3D human character animations with rotatable 360° controls.
+ * Studio Workout Guide Section — 4K Single-Athlete Masterclass.
+ * Delivers an ultra-premium, quiet luxury fitness experience with zero clutter.
  */
 export default function StudioWorkoutGuide() {
   const [activeTab, setActiveTab] = useState(0);
-  const [viewMode, setViewMode] = useState<'3d' | 'vector'>('3d');
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [playbackSpeed, setPlaybackSpeed] = useState<0.5 | 1.0 | 1.5>(1.0);
-  const [manualPhase, setManualPhase] = useState(0);
-  const [isScrubbing, setIsScrubbing] = useState(false);
-  const [audioMuted, setAudioMuted] = useState(getAudioMuted());
-
   const baseId = useId();
   const current = EXERCISE_GUIDES[activeTab];
-
-  const handleTabSelect = (idx: number) => {
-    setActiveTab(idx);
-    setIsPlaying(true);
-    setIsScrubbing(false);
-    setManualPhase(0);
-    playMechanicalClick(1400, 0.035);
-  };
-
-  const handlePlayToggle = () => {
-    setIsPlaying(!isPlaying);
-    setIsScrubbing(false);
-    playMechanicalClick(1100, 0.03);
-  };
-
-  const handleSpeedChange = (speed: 0.5 | 1.0 | 1.5) => {
-    setPlaybackSpeed(speed);
-    playMechanicalClick(950, 0.03);
-  };
-
-  const toggleSound = () => {
-    const next = toggleAudioMute();
-    setAudioMuted(next);
-    if (!next) playMechanicalClick(1600, 0.02);
-  };
 
   return (
     <section
@@ -231,21 +389,21 @@ export default function StudioWorkoutGuide() {
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <span className="accent-tick" aria-hidden="true" />
           <span className="t-label tracking-[0.22em] uppercase text-muted">
-            Biomechanics & Form Laboratory
+            Biomechanics & Masterclass
           </span>
           <span className="h-3 w-px bg-hairline-2" aria-hidden="true" />
           <span className="nums text-xs tracking-wider text-muted">
-            REALISTIC 3D KINEMATICS
+            4K ATHLETE SERIES
           </span>
         </div>
 
         <SectionHeading id="workout-guide-heading" className="t-h2 uppercase text-heading">
-          Precision Gym 3D Micro-Animations.
+          Foundational Kinematics in 4K.
         </SectionHeading>
         <p className="t-body mt-4 max-w-measure text-muted">
-          Photorealistic, textured 3D anatomical human models with full skeletal motion capture.
-          Rotate 360° in real-time, inspect bar path mechanics, and study muscular fiber recruitment
-          across the eight foundational compound lifts.
+          Study textbook execution across the eight cornerstone compound movements. Photorealistic
+          4K resolution, kinetic muscle recruitment analysis, and elite biomechanical cues featuring
+          our master athlete.
         </p>
         <div className="mt-8 max-w-shell">
           <AccentRule />
@@ -253,7 +411,7 @@ export default function StudioWorkoutGuide() {
       </div>
 
       {/* Exercise Navigation Tabs (8 Exercises) */}
-      <div className="mb-6 flex flex-wrap gap-2 pb-2" role="tablist">
+      <div className="mb-8 flex flex-wrap gap-2 pb-2" role="tablist">
         {EXERCISE_GUIDES.map((ex, idx) => {
           const isSelected = activeTab === idx;
           return (
@@ -263,7 +421,7 @@ export default function StudioWorkoutGuide() {
               role="tab"
               aria-selected={isSelected}
               aria-controls={`${baseId}-panel-${idx}`}
-              onClick={() => handleTabSelect(idx)}
+              onClick={() => setActiveTab(idx)}
               className={`t-ui group relative inline-flex items-center gap-2 rounded-full px-4 py-2 transition-all duration-300 ${
                 isSelected
                   ? 'border border-hairline-2 bg-charcoal text-heading shadow-lg'
@@ -287,50 +445,6 @@ export default function StudioWorkoutGuide() {
         })}
       </div>
 
-      {/* Status Bar & View Mode Switcher */}
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-4">
-        {/* View Mode Toggle: Realistic 3D vs Vector */}
-        <div className="flex items-center gap-1.5 p-1 bg-charcoal/80 rounded-sm border border-hairline">
-          <button
-            type="button"
-            onClick={() => {
-              setViewMode('3d');
-              playMechanicalClick(1300, 0.03);
-            }}
-            className={`px-3 py-1 text-xs font-mono rounded-sm transition-all ${
-              viewMode === '3d'
-                ? 'bg-hairline-2 text-heading shadow font-medium'
-                : 'text-muted hover:text-heading'
-            }`}
-          >
-            ✦ Realistic 3D Character (360°)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setViewMode('vector');
-              playMechanicalClick(1100, 0.03);
-            }}
-            className={`px-3 py-1 text-xs font-mono rounded-sm transition-all ${
-              viewMode === 'vector'
-                ? 'bg-hairline-2 text-heading shadow font-medium'
-                : 'text-muted hover:text-heading'
-            }`}
-          >
-            ⌖ Kinetic Vector Blueprints
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" aria-hidden="true" />
-            <span className="nums text-[11px] font-mono text-muted uppercase tracking-wider">
-              {viewMode === '3d' ? 'Interactive 3D WebGL Mesh' : '100% Transparent Kinetic Vector'}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* Main Interactive Stage */}
       <div
         id={`${baseId}-panel-${activeTab}`}
@@ -338,106 +452,26 @@ export default function StudioWorkoutGuide() {
         aria-labelledby={`${baseId}-tab-${activeTab}`}
         className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12"
       >
-        {/* Left Column: Animation Player & Kinetic Controls */}
+        {/* Left Column: 4K Ultra-HD Cinematic Player */}
         <div className="flex flex-col gap-4 lg:col-span-7">
-          {viewMode === '3d' ? (
-            <Realistic3DGymPlayer
-              modelUid={current.model3dUid}
-              name={current.name}
-              discipline={current.discipline}
-              accentColor={current.accentColor}
-              className="h-[380px] sm:h-[440px] md:h-[480px] w-full shadow-2xl"
-            />
-          ) : (
-            <GymVectorAnimation
-              exerciseId={current.id}
-              name={current.name}
-              accentColor={current.accentColor}
-              isPlaying={isPlaying}
-              speed={playbackSpeed}
-              manualPhase={manualPhase}
-              isScrubbing={isScrubbing}
-              className="h-[380px] sm:h-[440px] md:h-[480px] w-full shadow-2xl"
-            />
-          )}
+          <CinematicWorkoutPlayer
+            exerciseId={current.id}
+            name={current.name}
+            discipline={current.discipline}
+            accentColor={current.accentColor}
+            imageSrc={current.imageSrc}
+            tempo={current.tempo}
+            hotspots={current.hotspots}
+            className="w-full shadow-2xl"
+          />
 
-          {/* Kinetic Controls Toolbar (shown in Vector mode or as auxiliary in 3D) */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-hairline bg-charcoal/60 px-4 py-3">
-            <div className="flex items-center gap-2">
-              {/* Play / Pause Toggle (for Vector mode) */}
-              {viewMode === 'vector' && (
-                <button
-                  type="button"
-                  onClick={handlePlayToggle}
-                  className="btn-line !py-1 !px-3 font-mono text-xs uppercase text-heading hover:bg-hairline"
-                  aria-label={isPlaying ? 'Pause animation' : 'Play animation'}
-                >
-                  {isPlaying ? '⏸ Pause' : '▶ Play'}
-                </button>
-              )}
-
-              {/* Speed Controls (for Vector mode) */}
-              {viewMode === 'vector' && (
-                <div className="flex items-center border border-hairline rounded-sm">
-                  {([0.5, 1.0, 1.5] as const).map((spd) => (
-                    <button
-                      key={spd}
-                      type="button"
-                      onClick={() => handleSpeedChange(spd)}
-                      className={`px-2.5 py-1 font-mono text-xs transition-colors ${
-                        playbackSpeed === spd
-                          ? 'bg-hairline-2 text-heading font-medium'
-                          : 'text-muted hover:text-heading'
-                      }`}
-                    >
-                      {spd}x
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {viewMode === '3d' && (
-                <div className="flex items-center gap-2 font-mono text-xs text-muted">
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" />
-                  <span>360° ROTATABLE 3D SCENE</span>
-                </div>
-              )}
-            </div>
-
-            {/* Rep Phase Interactive Scrubber (in Vector mode) */}
-            {viewMode === 'vector' && (
-              <div className="flex flex-1 items-center gap-2 min-w-[130px] max-w-[200px]">
-                <span className="t-label text-[10px] text-faint">SCRUB</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={isScrubbing ? manualPhase : 0.5}
-                  onChange={(e) => {
-                    setIsScrubbing(true);
-                    setIsPlaying(false);
-                    setManualPhase(parseFloat(e.target.value));
-                  }}
-                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-hairline accent-[#8C2230]"
-                  aria-label="Rep cycle position scrubber"
-                />
-              </div>
-            )}
-
-            {/* Audio Feedback Button */}
-            <button
-              type="button"
-              onClick={toggleSound}
-              className="t-ui text-xs text-muted hover:text-heading transition-colors"
-              title={audioMuted ? 'Unmute mechanical click sounds' : 'Mute mechanical click sounds'}
-            >
-              {audioMuted ? '🔇 Audio Off' : '🔊 Mechanical Audio'}
-            </button>
+          <div className="flex items-center justify-between px-1 py-1 text-xs text-faint font-mono">
+            <span>TAP IMAGE TO INSPECT 4K MUSCLE CONTRACTION</span>
+            <span>SINGLE ATHLETE PROTOCOL</span>
           </div>
         </div>
 
-        {/* Right Column: Biomechanical Analysis & Coaching Cues */}
+        {/* Right Column: Biomechanical Analysis & Coaching Protocol */}
         <div className="flex flex-col gap-6 lg:col-span-5">
           {/* Header Info Card */}
           <div className="border border-hairline bg-charcoal/40 p-5 rounded-sm">
@@ -450,10 +484,18 @@ export default function StudioWorkoutGuide() {
             <h3 className="t-h3 text-heading">{current.name}</h3>
             <p className="t-small mt-1 text-muted">{current.subtitle}</p>
 
+            <div className="mt-3 pt-3 border-t border-hairline/60">
+              <span className="t-label text-[10px] uppercase tracking-wider text-faint">Equipment:</span>
+              <span className="text-xs text-heading ml-2 font-mono">{current.equipment}</span>
+            </div>
+
             {/* Muscle Recruitment Matrix */}
             <div className="mt-5 border-t border-hairline pt-4">
               <div className="mb-2 text-[11px] font-mono uppercase tracking-wider text-faint flex items-center gap-1.5">
-                <span className="inline-block h-2 w-2 rounded-full bg-[#8C2230]" />
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ backgroundColor: current.accentColor }}
+                />
                 <span>Primary Target Activation</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -500,12 +542,17 @@ export default function StudioWorkoutGuide() {
             </ol>
           </div>
 
-          {/* Common Biomechanical Fault */}
-          <div className="border border-burgundy/30 bg-burgundy/10 p-4 rounded-sm">
-            <div className="flex items-center gap-2 mb-1.5 text-xs font-mono uppercase tracking-wider text-[#FF8595]">
-              <span aria-hidden="true">⚠</span> Critical Fault to Avoid
+          {/* Execution Mastery Principle */}
+          <div className="border border-hairline bg-charcoal/30 p-4 rounded-sm">
+            <div className="flex items-center gap-2 mb-1.5 text-xs font-mono uppercase tracking-wider text-muted">
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: current.accentColor }}
+                aria-hidden="true"
+              />
+              Execution Mastery Principle
             </div>
-            <p className="t-small text-muted text-xs leading-relaxed">{current.fault}</p>
+            <p className="t-small text-muted text-xs leading-relaxed">{current.masteryPrinciple}</p>
           </div>
         </div>
       </div>

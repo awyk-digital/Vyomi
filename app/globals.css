@@ -485,6 +485,34 @@
   will-change: transform;
 }
 
+/* ---------- Studio 4K Workout Animations ---------- */
+
+@keyframes slowBreathe {
+  0%, 100% {
+    transform: scale(1.0);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes cadenceLine {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-slow-breathe {
+  animation: slowBreathe 6s ease-in-out infinite;
+}
+
+.animate-cadence-line {
+  animation: cadenceLine 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 /* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
