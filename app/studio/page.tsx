@@ -287,8 +287,11 @@ export default function StudioPage() {
 
             <div className="mt-6 sm:mt-8 grid grid-cols-1 gap-6 sm:grid-cols-12">
               <Reveal className="sm:col-span-7">
-                <AssetSlot
-                  slot={STUDIO_IMAGES.zumba}
+                <ChapterVideo
+                  src="/video/zumba.mp4"
+                  poster="/video/zumba-poster.jpg"
+                  ratio="16 / 9"
+                  label="Zumba dance fitness class mid-movement in the main studio"
                   sizes="(max-width: 639px) 100vw, 56vw"
                   className="w-full"
                 />
