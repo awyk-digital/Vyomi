@@ -4,6 +4,7 @@ import React, { useState, useId } from 'react';
 import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
 import Reveal from '@/components/Reveal';
+import Realistic3DGymPlayer from '@/components/Realistic3DGymPlayer';
 import GymVectorAnimation from '@/components/GymVectorAnimation';
 import { playMechanicalClick, toggleAudioMute, getAudioMuted } from '@/lib/haptics';
 
@@ -20,6 +21,7 @@ export interface ExerciseGuide {
   cues: [string, string, string];
   fault: string;
   accentColor: string;
+  model3dUid: string;
 }
 
 export const EXERCISE_GUIDES: ExerciseGuide[] = [
@@ -40,6 +42,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     ],
     fault: 'Allowing knees to cave inward (valgus collapse) or letting lower back round at bottom depth.',
     accentColor: '#8C2230',
+    model3dUid: '03d18f123daf428ba0aca04448eb396e',
   },
   {
     id: 'deadlift',
@@ -58,6 +61,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     ],
     fault: 'Permitting lumbar spine flexion (rounding) off the floor or hyperextending lower back at top.',
     accentColor: '#8C2230',
+    model3dUid: '2aff1c3f0145403583a4e14655637d91',
   },
   {
     id: 'bench-press',
@@ -76,6 +80,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     ],
     fault: 'Flaring elbows outward at 90° or bouncing the bar violently off the sternum.',
     accentColor: '#8C2230',
+    model3dUid: '53319e9420994a3890ce3c8c76077a8b',
   },
   {
     id: 'pull-up',
@@ -94,6 +99,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     ],
     fault: 'Kicking legs or utilizing momentum kipping rather than strict latissimus engagement.',
     accentColor: '#B08D57',
+    model3dUid: '43592d585f694f9aae975b5ba2435500',
   },
   {
     id: 'overhead-press',
@@ -112,6 +118,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     ],
     fault: 'Arching lower back excessively (backward lean) to compensate for insufficient shoulder mobility.',
     accentColor: '#B08D57',
+    model3dUid: '3760ad8780e14bd4a4bdf22e48c9b87f',
   },
   {
     id: 'bent-over-row',
@@ -130,6 +137,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     ],
     fault: 'Jerking with leg and hip momentum to swing the barbell up instead of rowing with back muscles.',
     accentColor: '#8C2230',
+    model3dUid: 'c6fccd943ec14d5db22e679beed7bef1',
   },
   {
     id: 'lunge',
@@ -148,6 +156,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     ],
     fault: 'Slamming the rear knee into the floor or allowing the torso to pitch forward.',
     accentColor: '#B08D57',
+    model3dUid: 'a6b82107d2ef411fa86276ce211a1f65',
   },
   {
     id: 'plank',
@@ -166,15 +175,17 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     ],
     fault: 'Allowing hips to sag down into lumbar hyperextension or hiking glutes upward into a pike.',
     accentColor: '#D6F55B',
+    model3dUid: '7eeb551c908b4787b6249a3bdc3d8528',
   },
 ];
 
 /**
- * Studio Workout Micro-Animations Guide Section.
- * Comprehensive, interactive biomechanical laboratory across the 8 essential gym movements.
+ * Studio Workout 3D Micro-Animations Guide Section.
+ * Features realistic, photorealistic 3D human character animations with rotatable 360° controls.
  */
 export default function StudioWorkoutGuide() {
   const [activeTab, setActiveTab] = useState(0);
+  const [viewMode, setViewMode] = useState<'3d' | 'vector'>('3d');
   const [isPlaying, setIsPlaying] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState<0.5 | 1.0 | 1.5>(1.0);
   const [manualPhase, setManualPhase] = useState(0);
@@ -224,17 +235,17 @@ export default function StudioWorkoutGuide() {
           </span>
           <span className="h-3 w-px bg-hairline-2" aria-hidden="true" />
           <span className="nums text-xs tracking-wider text-muted">
-            3D MOVEMENT BLUEPRINTS
+            REALISTIC 3D KINEMATICS
           </span>
         </div>
 
         <SectionHeading id="workout-guide-heading" className="t-h2 uppercase text-heading">
-          Precision Gym Micro-Animations.
+          Precision Gym 3D Micro-Animations.
         </SectionHeading>
         <p className="t-body mt-4 max-w-measure text-muted">
-          High-definition anatomical motion kinematics. Study exact joint articulation, barbell
-          pathways, cadence tempo, and physiological muscle fiber recruitment across the eight
-          foundational compound lifts.
+          Photorealistic, textured 3D anatomical human models with full skeletal motion capture.
+          Rotate 360° in real-time, inspect bar path mechanics, and study muscular fiber recruitment
+          across the eight foundational compound lifts.
         </p>
         <div className="mt-8 max-w-shell">
           <AccentRule />
@@ -276,24 +287,45 @@ export default function StudioWorkoutGuide() {
         })}
       </div>
 
-      {/* Status Bar */}
+      {/* Status Bar & View Mode Switcher */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-4">
-        <div className="flex items-center gap-2">
-          <span
-            className="h-2 w-2 rounded-full animate-pulse"
-            style={{ backgroundColor: current.accentColor }}
-            aria-hidden="true"
-          />
-          <span className="font-mono text-xs text-heading uppercase tracking-wider">
-            {current.equipment}
-          </span>
+        {/* View Mode Toggle: Realistic 3D vs Vector */}
+        <div className="flex items-center gap-1.5 p-1 bg-charcoal/80 rounded-sm border border-hairline">
+          <button
+            type="button"
+            onClick={() => {
+              setViewMode('3d');
+              playMechanicalClick(1300, 0.03);
+            }}
+            className={`px-3 py-1 text-xs font-mono rounded-sm transition-all ${
+              viewMode === '3d'
+                ? 'bg-hairline-2 text-heading shadow font-medium'
+                : 'text-muted hover:text-heading'
+            }`}
+          >
+            ✦ Realistic 3D Character (360°)
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setViewMode('vector');
+              playMechanicalClick(1100, 0.03);
+            }}
+            className={`px-3 py-1 text-xs font-mono rounded-sm transition-all ${
+              viewMode === 'vector'
+                ? 'bg-hairline-2 text-heading shadow font-medium'
+                : 'text-muted hover:text-heading'
+            }`}
+          >
+            ⌖ Kinetic Vector Blueprints
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" aria-hidden="true" />
             <span className="nums text-[11px] font-mono text-muted uppercase tracking-wider">
-              100% Vector Kinetic Transparency
+              {viewMode === '3d' ? 'Interactive 3D WebGL Mesh' : '100% Transparent Kinetic Vector'}
             </span>
           </div>
         </div>
@@ -308,67 +340,90 @@ export default function StudioWorkoutGuide() {
       >
         {/* Left Column: Animation Player & Kinetic Controls */}
         <div className="flex flex-col gap-4 lg:col-span-7">
-          <GymVectorAnimation
-            exerciseId={current.id}
-            name={current.name}
-            accentColor={current.accentColor}
-            isPlaying={isPlaying}
-            speed={playbackSpeed}
-            manualPhase={manualPhase}
-            isScrubbing={isScrubbing}
-            className="h-[360px] sm:h-[420px] md:h-[460px] w-full shadow-2xl"
-          />
+          {viewMode === '3d' ? (
+            <Realistic3DGymPlayer
+              modelUid={current.model3dUid}
+              name={current.name}
+              discipline={current.discipline}
+              accentColor={current.accentColor}
+              className="h-[380px] sm:h-[440px] md:h-[480px] w-full shadow-2xl"
+            />
+          ) : (
+            <GymVectorAnimation
+              exerciseId={current.id}
+              name={current.name}
+              accentColor={current.accentColor}
+              isPlaying={isPlaying}
+              speed={playbackSpeed}
+              manualPhase={manualPhase}
+              isScrubbing={isScrubbing}
+              className="h-[380px] sm:h-[440px] md:h-[480px] w-full shadow-2xl"
+            />
+          )}
 
-          {/* Kinetic Playback Controls Toolbar */}
+          {/* Kinetic Controls Toolbar (shown in Vector mode or as auxiliary in 3D) */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-hairline bg-charcoal/60 px-4 py-3">
             <div className="flex items-center gap-2">
-              {/* Play / Pause Toggle */}
-              <button
-                type="button"
-                onClick={handlePlayToggle}
-                className="btn-line !py-1 !px-3 font-mono text-xs uppercase text-heading hover:bg-hairline"
-                aria-label={isPlaying ? 'Pause animation' : 'Play animation'}
-              >
-                {isPlaying ? '⏸ Pause' : '▶ Play'}
-              </button>
+              {/* Play / Pause Toggle (for Vector mode) */}
+              {viewMode === 'vector' && (
+                <button
+                  type="button"
+                  onClick={handlePlayToggle}
+                  className="btn-line !py-1 !px-3 font-mono text-xs uppercase text-heading hover:bg-hairline"
+                  aria-label={isPlaying ? 'Pause animation' : 'Play animation'}
+                >
+                  {isPlaying ? '⏸ Pause' : '▶ Play'}
+                </button>
+              )}
 
-              {/* Speed Controls */}
-              <div className="flex items-center border border-hairline rounded-sm">
-                {([0.5, 1.0, 1.5] as const).map((spd) => (
-                  <button
-                    key={spd}
-                    type="button"
-                    onClick={() => handleSpeedChange(spd)}
-                    className={`px-2.5 py-1 font-mono text-xs transition-colors ${
-                      playbackSpeed === spd
-                        ? 'bg-hairline-2 text-heading font-medium'
-                        : 'text-muted hover:text-heading'
-                    }`}
-                  >
-                    {spd}x
-                  </button>
-                ))}
+              {/* Speed Controls (for Vector mode) */}
+              {viewMode === 'vector' && (
+                <div className="flex items-center border border-hairline rounded-sm">
+                  {([0.5, 1.0, 1.5] as const).map((spd) => (
+                    <button
+                      key={spd}
+                      type="button"
+                      onClick={() => handleSpeedChange(spd)}
+                      className={`px-2.5 py-1 font-mono text-xs transition-colors ${
+                        playbackSpeed === spd
+                          ? 'bg-hairline-2 text-heading font-medium'
+                          : 'text-muted hover:text-heading'
+                      }`}
+                    >
+                      {spd}x
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {viewMode === '3d' && (
+                <div className="flex items-center gap-2 font-mono text-xs text-muted">
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" />
+                  <span>360° ROTATABLE 3D SCENE</span>
+                </div>
+              )}
+            </div>
+
+            {/* Rep Phase Interactive Scrubber (in Vector mode) */}
+            {viewMode === 'vector' && (
+              <div className="flex flex-1 items-center gap-2 min-w-[130px] max-w-[200px]">
+                <span className="t-label text-[10px] text-faint">SCRUB</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={isScrubbing ? manualPhase : 0.5}
+                  onChange={(e) => {
+                    setIsScrubbing(true);
+                    setIsPlaying(false);
+                    setManualPhase(parseFloat(e.target.value));
+                  }}
+                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-hairline accent-[#8C2230]"
+                  aria-label="Rep cycle position scrubber"
+                />
               </div>
-            </div>
-
-            {/* Rep Phase Interactive Scrubber */}
-            <div className="flex flex-1 items-center gap-2 min-w-[130px] max-w-[200px]">
-              <span className="t-label text-[10px] text-faint">SCRUB</span>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={isScrubbing ? manualPhase : 0.5}
-                onChange={(e) => {
-                  setIsScrubbing(true);
-                  setIsPlaying(false);
-                  setManualPhase(parseFloat(e.target.value));
-                }}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-hairline accent-[#8C2230]"
-                aria-label="Rep cycle position scrubber"
-              />
-            </div>
+            )}
 
             {/* Audio Feedback Button */}
             <button
