@@ -142,7 +142,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Engage lower abdominals and serratus to glide carriage back under control',
     ],
     fault: 'Sagging hips or hyperextending neck collapses the lumbar stability cylinder.',
-    lottiePath: '/lottie/reformer.json',
+    lottiePath: '/lottie/reformer-stretch.json',
     renderType: 'reformer-stretch',
     accentColor: '#D6F55B',
   },
@@ -1098,9 +1098,6 @@ export default function StudioWorkoutGuide() {
   const [manualPhase, setManualPhase] = useState(0);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [audioMuted, setAudioMuted] = useState(getAudioMuted());
-  const [customLottieUrl, setCustomLottieUrl] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
-  const [lottieFrames, setLottieFrames] = useState({ current: 0, total: 120 });
 
   const baseId = useId();
   const current = EXERCISE_GUIDES[activeTab];
@@ -1229,43 +1226,13 @@ export default function StudioWorkoutGuide() {
           </button>
         </div>
 
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => setShowCustomInput(!showCustomInput)}
-            className="text-xs font-mono text-muted hover:text-heading transition-colors inline-flex items-center gap-1.5"
-          >
-            <span>{showCustomInput ? '✕ Close URL Input' : '+ Custom LottieFiles URL'}</span>
-          </button>
-          {engineMode === 'lottie' && (
-            <span className="nums text-[11px] font-mono text-faint">
-              FRAME {Math.round(lottieFrames.current)} / {Math.round(lottieFrames.total || 120)}
-            </span>
-          )}
+        <div className="hidden sm:flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" aria-hidden="true" />
+          <span className="nums text-[11px] font-mono text-muted uppercase tracking-wider">
+            Vector Kinetic Motion
+          </span>
         </div>
       </div>
-
-      {showCustomInput && (
-        <div className="mb-8 p-4 rounded-sm border border-hairline bg-charcoal/50 flex flex-col sm:flex-row gap-3 items-center">
-          <span className="font-mono text-xs text-faint whitespace-nowrap">LottieFiles JSON URL:</span>
-          <input
-            type="url"
-            placeholder="https://assets.lottiefiles.com/.../workout.json"
-            value={customLottieUrl}
-            onChange={(e) => setCustomLottieUrl(e.target.value)}
-            className="w-full bg-[#080808] border border-hairline px-3 py-1.5 text-xs text-heading font-mono rounded-sm focus:outline-none focus:border-hairline-2"
-          />
-          {customLottieUrl && (
-            <button
-              type="button"
-              onClick={() => setCustomLottieUrl('')}
-              className="text-xs text-muted hover:text-heading whitespace-nowrap"
-            >
-              Reset
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Main Interactive Stage */}
       <div
@@ -1279,13 +1246,12 @@ export default function StudioWorkoutGuide() {
           <div className="relative overflow-hidden rounded-sm border border-hairline bg-[#0A0A0A] shadow-2xl">
             {engineMode === 'lottie' ? (
               <LottieWorkoutPlayer
-                animationPath={customLottieUrl || current.lottiePath}
+                animationPath={current.lottiePath}
                 name={current.name}
                 discipline={current.discipline}
                 accentColor={current.accentColor}
                 isPlaying={isPlaying}
                 speed={playbackSpeed}
-                onFrameUpdate={(c, t) => setLottieFrames({ current: c, total: t })}
                 className="h-[360px] sm:h-[420px] md:h-[460px] w-full"
               />
             ) : (

@@ -53,15 +53,23 @@ export default function LottieWorkoutPlayer({
           loop: true,
           autoplay: isPlaying,
           path: animationPath,
+          rendererSettings: {
+            preserveAspectRatio: 'xMidYMid meet',
+            progressiveLoad: true,
+          },
         });
 
         anim.setSpeed(speed);
 
-        anim.addEventListener('DOMLoaded', () => {
+        const handleReady = () => {
           if (isMounted) setIsLoaded(true);
-        });
+        };
+
+        anim.addEventListener('DOMLoaded', handleReady);
+        anim.addEventListener('data_ready', handleReady);
 
         anim.addEventListener('enterFrame', () => {
+          if (isMounted) setIsLoaded(true);
           if (onFrameUpdate && anim.totalFrames) {
             onFrameUpdate(anim.currentFrame, anim.totalFrames);
           }
@@ -117,8 +125,8 @@ export default function LottieWorkoutPlayer({
       {/* Lottie Container */}
       <div
         ref={containerRef}
-        className="h-full w-full max-w-[480px] max-h-[440px] flex items-center justify-center p-4 transition-opacity duration-300"
-        style={{ opacity: isLoaded ? 1 : 0.2 }}
+        className="h-full w-full max-w-[500px] max-h-[460px] flex items-center justify-center p-4 transition-opacity duration-300 [&_svg]:max-h-full [&_svg]:max-w-full [&_svg]:w-auto [&_svg]:h-auto [&_svg]:object-contain"
+        style={{ opacity: isLoaded ? 1 : 0 }}
       />
 
       {/* Loading state indicator */}
