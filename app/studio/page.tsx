@@ -406,10 +406,12 @@ export default function StudioPage() {
           </div>
 
           <Reveal className="mt-4 sm:mt-6 block">
-            <AssetSlot
-              slot={STUDIO_IMAGES.pilates}
-              sizes="100vw"
+            <ChapterVideo
+              src="/video/pilates.mp4"
+              poster="/video/pilates-poster.jpg"
               ratio="21 / 9"
+              label="Dedicated reformer Pilates studio with carriages, footbars and spring resistance at Vyomi Fitness Club"
+              sizes="100vw"
               className="w-full"
             />
           </Reveal>
