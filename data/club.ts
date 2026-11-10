@@ -13,6 +13,7 @@ import {
   TRAINER_PORTRAITS,
   CLASS_IMAGES,
   WELLNESS_IMAGES,
+  WELLNESS_AMENITY_IMAGES,
   type ImageSlot,
 } from '@/config/assets';
 
@@ -253,13 +254,81 @@ export const DISCIPLINES: Discipline[] = [
   },
 ];
 
-/** Compact amenities list — confirmed offerings only. */
-export const AMENITIES: string[] = [
-  'Spa',
-  'Salt bath',
-  'Recovery suite',
-  'Changing rooms',
-  'Showers',
-  'Dedicated lift',
-  'Parking',
+export interface AmenityDetail {
+  id: string;
+  name: string;
+  left: {
+    slot: ImageSlot;
+    caption: string;
+  };
+  right: {
+    slot: ImageSlot;
+    caption: string;
+  };
+}
+
+export const AMENITY_DETAILS: AmenityDetail[] = [
+  {
+    id: 'spa',
+    name: 'Spa',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES.spa.left,
+      caption: 'Finnish cedar sauna & vitality spa',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES.spa.right,
+      caption: 'Hydrotherapy vitality pool',
+    },
+  },
+  {
+    id: 'salt-bath',
+    name: 'Salt bath',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['salt-bath'].left,
+      caption: 'Himalayan salt sanctuary',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['salt-bath'].right,
+      caption: 'Salt crystal therapy detail',
+    },
+  },
+  {
+    id: 'recovery-suite',
+    name: 'Recovery suite',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['recovery-suite'].left,
+      caption: 'Zero-gravity compression lounge',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['recovery-suite'].right,
+      caption: 'Infrared & percussive therapy',
+    },
+  },
+  {
+    id: 'changing-rooms',
+    name: 'Changing rooms',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['changing-rooms'].left,
+      caption: 'Executive changing salon',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['changing-rooms'].right,
+      caption: 'Private grooming vanity',
+    },
+  },
+  {
+    id: 'showers',
+    name: 'Showers',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES.showers.left,
+      caption: 'Charcoal slate rainfall shower',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES.showers.right,
+      caption: 'Changing & showers detail',
+    },
+  },
 ];
+
+/** Compact amenities list — confirmed offerings only. Parking & dedicated lift removed per brief. */
+export const AMENITIES: string[] = AMENITY_DETAILS.map((a) => a.name);

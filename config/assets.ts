@@ -333,6 +333,123 @@ export const WELLNESS_IMAGES: ImageSlot[] = [
   }),
 ];
 
+export const WELLNESS_AMENITY_IMAGES = {
+  spa: {
+    left: slot({
+      id: 'wellness-spa-left',
+      need: 'Finnish cedar sauna & vitality spa with amber lighting',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-spa-left.jpg',
+      alt: 'Vyomi Finnish cedar sauna and vitality spa',
+    }),
+    right: slot({
+      id: 'wellness-spa-right',
+      need: 'Vitality hydrotherapy pool with cascading brass spout',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-spa-right.jpg',
+      alt: 'Vitality hydrotherapy pool',
+    }),
+  },
+  'salt-bath': {
+    left: slot({
+      id: 'wellness-salt-left',
+      need: 'Salt bath — glowing Himalayan salt brick wall relaxation room',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-salt-left.png',
+      alt: 'Himalayan salt bath room',
+    }),
+    right: slot({
+      id: 'wellness-salt-right',
+      need: 'Salt sanctuary detail with backlit crystal bricks and river stones',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-salt-right.jpg',
+      alt: 'Himalayan salt crystals and river stones',
+    }),
+  },
+  'recovery-suite': {
+    left: slot({
+      id: 'wellness-recovery-left',
+      need: 'Sports recovery suite with zero-gravity loungers and compression therapy',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-recovery-left.jpg',
+      alt: 'Athletic recovery lounge with zero-gravity loungers',
+    }),
+    right: slot({
+      id: 'wellness-recovery-right',
+      need: 'Infrared therapy panel and percussive recovery equipment',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-recovery-right.jpg',
+      alt: 'Infrared therapy and percussive recovery station',
+    }),
+  },
+  'changing-rooms': {
+    left: slot({
+      id: 'wellness-changing-left',
+      need: 'Executive locker room and changing salon with dark fluted oak',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-changing-left.jpg',
+      alt: 'Executive changing salon and fluted oak lockers',
+    }),
+    right: slot({
+      id: 'wellness-changing-right',
+      need: 'Luxury grooming vanity with circular backlit bronze mirror',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-changing-right.jpg',
+      alt: 'Luxury private grooming vanity',
+    }),
+  },
+  showers: {
+    left: slot({
+      id: 'wellness-showers-left',
+      need: 'Walk-in rainfall shower sanctuary with dark charcoal slate slabs',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-showers-left.jpg',
+      alt: 'Walk-in dark slate rainfall shower',
+    }),
+    right: slot({
+      id: 'wellness-showers-right',
+      need: 'Folded waffle cotton towels on timber bench with brass fittings',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-showers-right.png',
+      alt: 'Changing and shower details with waffle towels',
+    }),
+  },
+} as const;
+
+export const WELLNESS_AMENITY_SLOTS: ImageSlot[] = Object.values(
+  WELLNESS_AMENITY_IMAGES
+).flatMap((a) => [a.left, a.right]);
+
 /* ------------------------------------------------------------------
    Studio page — one wide plate per chapter
    ------------------------------------------------------------------ */
@@ -483,6 +600,7 @@ export const ALL_SLOTS: ImageSlot[] = [
   ...TRAINER_PORTRAITS,
   ...CLASS_IMAGES,
   ...WELLNESS_IMAGES,
+  ...WELLNESS_AMENITY_SLOTS,
   ...Object.values(STUDIO_IMAGES),
 ];
 
