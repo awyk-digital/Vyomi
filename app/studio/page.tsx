@@ -206,24 +206,26 @@ export default function StudioPage() {
           </div>
         </section>
 
-        {/* ---------- 02 · HYROX — full-bleed, heading overlaid ---------- */}
+        {/* ---------- 02 · HYROX — full-bleed video plate, heading overlaid ---------- */}
         <section
           id={hyrox.id}
           className="scroll-mt-0 border-b border-hairline bg-ink"
           aria-labelledby="hyrox-heading"
         >
           <div className="relative">
-            <AssetSlot
-              slot={STUDIO_IMAGES.hyrox}
-              sizes="100vw"
+            <ChapterVideo
+              src="/video/hyrox.mp4"
+              poster="/video/hyrox-poster.jpg"
               ratio="21 / 9"
+              label="HYROX race conditioning lane at Vyomi Fitness Club"
+              sizes="100vw"
               className="w-full"
             />
 
             {/* Legibility wash under the overlaid type */}
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
+              className="pointer-events-none absolute inset-0 z-10"
               style={{
                 background:
                   'linear-gradient(to top, rgba(8,8,8,0.88) 0%, rgba(8,8,8,0.45) 38%, rgba(8,8,8,0.08) 72%)',
@@ -231,7 +233,7 @@ export default function StudioPage() {
             />
 
             <div
-              className={`absolute inset-x-0 bottom-0 pb-[clamp(1.5rem,4vw,3.5rem)] ${GUTTER}`}
+              className={`absolute inset-x-0 bottom-0 pb-[clamp(1.5rem,4vw,3.5rem)] ${GUTTER} z-20`}
             >
               <div className="relative">
                 <GhostNumeral numeral="02" className="-left-3 -top-10 md:-top-14" />
