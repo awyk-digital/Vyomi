@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import gsap from 'gsap';
 import { site, presaleDisplay } from '@/config/site';
 import { useIntroDone } from '@/lib/intro';
@@ -36,7 +35,6 @@ export default function StatusMark() {
   const [time, setTime] = useState<string | null>(null);
   const introDone = useIntroDone();
   const presale = presaleDisplay();
-  const isLightPage = usePathname() === '/catalogue';
 
   useEffect(() => {
     setTime(istNow());
@@ -102,11 +100,11 @@ export default function StatusMark() {
         opacity: introDone ? 1 : 0,
       }}
     >
-      <p className={`t-label flex items-center justify-end gap-2 ${isLightPage ? 'text-[#6D665C]' : 'text-faint'}`}>
+      <p className="t-label flex items-center justify-end gap-2 text-faint">
         <span>{site.city}</span>
         <span className="accent-tick" aria-hidden="true" />
         <span
-          className={`nums tabular-nums ${isLightPage ? 'text-[#181614]' : 'text-muted'}`}
+          className="nums tabular-nums text-muted"
           /* Keeps the row from reflowing as digits change width */
           style={{ minWidth: '3.2ch', display: 'inline-block', textAlign: 'left' }}
         >
@@ -115,7 +113,7 @@ export default function StatusMark() {
       </p>
 
       {presale && (
-        <p className={`t-label mt-2 flex items-center justify-end gap-2 ${isLightPage ? 'text-[#6D665C]' : 'text-faint'}`}>
+        <p className="t-label mt-2 flex items-center justify-end gap-2 text-faint">
           <span className="accent-pulse" aria-hidden="true" />
           <span>Pre-sale {presale.replace(/ \d{4}$/, '')}</span>
         </p>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import AccentRule from '@/components/AccentRule';
 import {
   CATALOGUE_BRAND_TABS,
   CATALOGUE_CATEGORIES,
@@ -31,6 +32,10 @@ function pickByIds(ids: readonly string[]): CatalogueItem[] {
   return ids
     .map((id) => CATALOGUE_ITEMS.find((item) => item.id === id))
     .filter((item): item is CatalogueItem => Boolean(item));
+}
+
+function isHighlightedStation(item: CatalogueItem): boolean {
+  return item.brand === 'Panatta' || item.category === 'Plate-Loaded';
 }
 
 export default function StudioCatalogue() {
@@ -124,53 +129,66 @@ export default function StudioCatalogue() {
   };
 
   return (
-    <div className="bg-[#F7F5F0] text-[#171513]">
+    <div className="bg-ink text-muted">
       {/* ========================================================================
-          SECTION 1 · FEATURED SPOTLIGHTS FIRST (PANATTA & PLATE-LOADED)
+          SECTION 1 · FEATURED HIGHLIGHTS FIRST (PANATTA & PLATE-LOADED)
       ======================================================================== */}
       <section
         id="featured-highlights"
         aria-labelledby="spotlights-heading"
-        className="border-b border-[#181614]/12 bg-gradient-to-b from-[#FCFBF8] via-[#F7F5F0] to-[#F2EFE8]"
+        className="border-b border-hairline bg-ink"
       >
         <div className="mx-auto max-w-[1440px] px-6 md:px-14 lg:px-20 pt-14 pb-20 md:pt-20 md:pb-24">
-          <div className="max-w-3xl pb-12 border-b border-[#181614]/12">
-            <div className="flex flex-wrap items-center gap-3 text-xs font-mono uppercase tracking-[0.22em] text-[#6E675D]">
-              <span className="h-px w-8 bg-[#8C2230] inline-block" aria-hidden="true" />
-              <span>Vyomi Fitness Club · Equipment Showroom</span>
-              <span aria-hidden="true">·</span>
-              <span className="text-[#9A7440]">Daylight Edition</span>
+          {/* Page Intro */}
+          <div className="max-w-3xl">
+            <div className="flex flex-wrap items-center gap-3 text-xs font-mono uppercase tracking-[0.22em] text-faint">
+              <span className="h-px w-8 bg-burgundy inline-block" aria-hidden="true" />
+              <span>Vyomi Fitness Club · Vijayawada</span>
+              <span className="text-hairline-2">·</span>
+              <span className="text-[#B08D57]">SHUA · Panatta · Realleader</span>
             </div>
 
             <h1
               id="spotlights-heading"
-              className="mt-4 t-hero text-[#141210] font-normal tracking-[-0.025em] uppercase"
+              className="mt-4 t-hero uppercase text-heading font-normal tracking-[-0.025em]"
             >
               Fitness Catalogue.
             </h1>
 
-            <p className="mt-4 t-body text-[#4E4942] leading-relaxed">
-              Built around Italian Panatta biomechanical frames and heavy-gauge Plate-Loaded
-              strength stations, alongside SHUA commercial selectorized and endurance lines.
+            <p className="mt-4 t-body text-muted leading-relaxed">
+              Every machine in its architectural training bay — spotlighting our flagship Italian{' '}
+              <span className="text-heading">Panatta</span> biomechanical range and heavy{' '}
+              <span className="text-heading">Plate-Loaded</span> iron first, followed by the full
+              46-station floor directory.
             </p>
+
+            <div className="mt-8 max-w-shell">
+              <AccentRule />
+            </div>
           </div>
 
-          {/* 01 · PANATTA SPOTLIGHT + 02 · PLATE-LOADED SPOTLIGHT */}
-          <div className="mt-14 space-y-16">
-            {/* ---- 01 · Panatta Highlight ---- */}
-            <div className="rounded-sm border border-[#181614]/12 bg-[#FFFFFF] p-6 sm:p-8 lg:p-10 shadow-[0_12px_40px_rgba(24,20,16,0.05)]">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-[#181614]/10">
+          {/* 01 · PANATTA HIGHLIGHT + 02 · PLATE-LOADED HIGHLIGHT */}
+          <div className="mt-14 space-y-12">
+            {/* ---- 01 · Panatta Highlighted Showcase ---- */}
+            <div
+              className="relative overflow-hidden border border-[#8C2230]/55 bg-charcoal p-6 sm:p-8 lg:p-10 shadow-[0_0_50px_rgba(140,34,48,0.12)]"
+              style={{
+                background:
+                  'radial-gradient(ellipse at top right, rgba(140,34,48,0.14), rgba(20,20,20,0.98) 62%)',
+              }}
+            >
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-hairline">
                 <div className="max-w-2xl">
-                  <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-[#8C2230]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#8C2230]" aria-hidden="true" />
-                    01 · Highlight Pillar · Italian Engineering
-                  </span>
-                  <h2 className="mt-3 t-h2 text-[#141210] font-normal tracking-[-0.02em]">
+                  <div className="inline-flex items-center gap-2.5 px-3 py-1 border border-[#8C2230]/60 bg-[#8C2230]/20 text-[11px] font-mono uppercase tracking-[0.2em] text-[#F5F5F2]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#B08D57]" aria-hidden="true" />
+                    <span>Highlighted Series 01 · Italian Biomechanics</span>
+                  </div>
+                  <h2 className="mt-4 t-h2 text-heading font-normal tracking-[-0.02em]">
                     Panatta Signature Series.
                   </h2>
-                  <p className="mt-3 t-small text-[#565048] leading-relaxed">
-                    Physiological joint curves milled in Apiro, Italy — spotlighting the Super
-                    Pendulum Squat (1FW080), Standing Multi Flight (1FE028), Super Declined Press,
+                  <p className="mt-3 t-small text-muted leading-relaxed">
+                    Precision joint curves in Vyomi burgundy frames — featuring the Super Pendulum
+                    Squat (1FW080), Standing Multi Flight (1FE028), Super Declined Chest Press,
                     and Super High Row.
                   </p>
                 </div>
@@ -178,7 +196,7 @@ export default function StudioCatalogue() {
                 <button
                   type="button"
                   onClick={() => jumpToFilter('Panatta', 'All')}
-                  className="shrink-0 px-5 py-2.5 border border-[#8C2230] text-[#8C2230] hover:bg-[#8C2230] hover:text-white font-mono text-xs uppercase tracking-[0.16em] transition-colors cursor-pointer"
+                  className="btn-line shine shrink-0 !py-2.5 !px-5 font-mono text-xs uppercase tracking-[0.16em] border-[#8C2230] text-heading hover:bg-[#8C2230] cursor-pointer"
                 >
                   Browse All 17 Panatta ↓
                 </button>
@@ -190,25 +208,28 @@ export default function StudioCatalogue() {
                     key={item.id}
                     type="button"
                     onClick={() => setActiveItem(item)}
-                    className="group text-left border border-[#181614]/12 bg-[#FAF8F4] hover:border-[#8C2230]/55 hover:shadow-[0_10px_28px_rgba(140,34,48,0.08)] transition-all overflow-hidden flex flex-col cursor-pointer"
+                    className="group relative text-left border border-[#8C2230]/45 bg-charcoal-2 hover:border-[#B08D57] transition-all overflow-hidden flex flex-col cursor-pointer"
                   >
-                    <div className="aspect-[4/3] w-full overflow-hidden bg-[#EFECE5]">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
                       <img
                         src={item.image}
                         alt={`${item.brand} ${item.name} — ${item.model}`}
                         className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
                       />
+                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#080808]/85 border border-[#8C2230]/70 font-mono text-[10px] uppercase tracking-[0.16em] text-[#F5F5F2]">
+                        Highlighted
+                      </span>
                     </div>
-                    <div className="p-4 border-t border-[#181614]/10 bg-white flex-1 flex flex-col justify-between gap-2">
+                    <div className="p-4 border-t border-hairline flex-1 flex flex-col justify-between gap-2">
                       <div>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#8C2230]">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#B08D57]">
                           Panatta · {item.model}
                         </span>
-                        <h3 className="mt-1 text-base font-medium text-[#141210] leading-snug">
+                        <h3 className="mt-1.5 text-base font-normal text-heading group-hover:text-white leading-snug">
                           {item.name}
                         </h3>
                       </div>
-                      <span className="font-mono text-[11px] text-[#756E63] group-hover:text-[#141210] transition-colors">
+                      <span className="font-mono text-[11px] text-faint group-hover:text-[#B08D57] transition-colors">
                         Inspect station →
                       </span>
                     </div>
@@ -217,27 +238,33 @@ export default function StudioCatalogue() {
               </div>
             </div>
 
-            {/* ---- 02 · Plate-Loaded Highlight ---- */}
-            <div className="rounded-sm border border-[#181614]/12 bg-[#FFFFFF] p-6 sm:p-8 lg:p-10 shadow-[0_12px_40px_rgba(24,20,16,0.05)]">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-[#181614]/10">
+            {/* ---- 02 · Plate-Loaded Highlighted Showcase ---- */}
+            <div
+              className="relative overflow-hidden border border-[#B08D57]/55 bg-charcoal p-6 sm:p-8 lg:p-10 shadow-[0_0_50px_rgba(176,141,87,0.10)]"
+              style={{
+                background:
+                  'radial-gradient(ellipse at top right, rgba(176,141,87,0.12), rgba(20,20,20,0.98) 62%)',
+              }}
+            >
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-hairline">
                 <div className="max-w-2xl">
-                  <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-[#9A7440]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#9A7440]" aria-hidden="true" />
-                    02 · Highlight Pillar · Pure Resistance
-                  </span>
-                  <h2 className="mt-3 t-h2 text-[#141210] font-normal tracking-[-0.02em]">
-                    Plate-Loaded Heavy Iron.
+                  <div className="inline-flex items-center gap-2.5 px-3 py-1 border border-[#B08D57]/60 bg-[#B08D57]/15 text-[11px] font-mono uppercase tracking-[0.2em] text-[#F5F5F2]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#D6F55B]" aria-hidden="true" />
+                    <span>Highlighted Series 02 · Iso-Lateral Iron</span>
+                  </div>
+                  <h2 className="mt-4 t-h2 text-heading font-normal tracking-[-0.02em]">
+                    Plate-Loaded Series.
                   </h2>
-                  <p className="mt-3 t-small text-[#565048] leading-relaxed">
-                    Independent converging lever arms, 45° linear sleds, and Olympic loading pegs
-                    across Panatta FreeWeight HP, Realleader HS Series, and SHUA heavy frames.
+                  <p className="mt-3 t-small text-muted leading-relaxed">
+                    Free-plate loading across Panatta FreeWeight HP, Realleader HS heavy frames, and
+                    SHUA linear 45° sleds — engineered for raw progressive overload.
                   </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => jumpToFilter('All', 'Plate-Loaded')}
-                  className="shrink-0 px-5 py-2.5 border border-[#141210] text-[#141210] hover:bg-[#141210] hover:text-white font-mono text-xs uppercase tracking-[0.16em] transition-colors cursor-pointer"
+                  className="btn-line shine shrink-0 !py-2.5 !px-5 font-mono text-xs uppercase tracking-[0.16em] border-[#B08D57] text-heading hover:bg-[#B08D57] hover:text-ink cursor-pointer"
                 >
                   Filter Plate-Loaded ↓
                 </button>
@@ -249,25 +276,28 @@ export default function StudioCatalogue() {
                     key={item.id}
                     type="button"
                     onClick={() => setActiveItem(item)}
-                    className="group text-left border border-[#181614]/12 bg-[#FAF8F4] hover:border-[#9A7440] hover:shadow-[0_10px_28px_rgba(154,116,64,0.10)] transition-all overflow-hidden flex flex-col cursor-pointer"
+                    className="group relative text-left border border-[#B08D57]/45 bg-charcoal-2 hover:border-[#D6F55B]/75 transition-all overflow-hidden flex flex-col cursor-pointer"
                   >
-                    <div className="aspect-[4/3] w-full overflow-hidden bg-[#EFECE5]">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
                       <img
                         src={item.image}
                         alt={`${item.brand} ${item.name} — ${item.model}`}
                         className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
                       />
+                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#080808]/85 border border-[#B08D57]/70 font-mono text-[10px] uppercase tracking-[0.16em] text-[#B08D57]">
+                        Highlighted · Plate-Loaded
+                      </span>
                     </div>
-                    <div className="p-4 border-t border-[#181614]/10 bg-white flex-1 flex flex-col justify-between gap-2">
+                    <div className="p-4 border-t border-hairline flex-1 flex flex-col justify-between gap-2">
                       <div>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#9A7440]">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#B08D57]">
                           {item.brand} · {item.model}
                         </span>
-                        <h3 className="mt-1 text-base font-medium text-[#141210] leading-snug">
+                        <h3 className="mt-1.5 text-base font-normal text-heading group-hover:text-white leading-snug">
                           {item.name}
                         </h3>
                       </div>
-                      <span className="font-mono text-[11px] text-[#756E63] group-hover:text-[#141210] transition-colors">
+                      <span className="font-mono text-[11px] text-faint group-hover:text-[#B08D57] transition-colors">
                         Inspect station →
                       </span>
                     </div>
@@ -280,31 +310,31 @@ export default function StudioCatalogue() {
       </section>
 
       {/* ========================================================================
-          SECTION 2 · COMPLETE INTERACTIVE FLOOR CATALOGUE (NORMAL AS BEFORE)
+          SECTION 2 · COMPLETE INTERACTIVE FLOOR CATALOGUE
       ======================================================================== */}
       <section
         id="full-equipment-floor"
         aria-labelledby="catalogue-heading"
-        className="scroll-mt-12 bg-[#F4F1EA]"
+        className="scroll-mt-12 bg-ink border-b border-hairline"
       >
         <div className="mx-auto max-w-[1440px] px-6 md:px-14 lg:px-20 py-20 md:py-28">
-          {/* Header + Search */}
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-[#181614]/12">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-hairline">
             <div className="max-w-2xl">
-              <div className="flex items-center gap-4 text-xs font-mono uppercase tracking-[0.22em] text-[#6E675D]">
-                <span className="h-px w-8 bg-[#8C2230] inline-block" aria-hidden="true" />
+              <div className="flex items-center gap-4 text-xs font-mono uppercase tracking-[0.22em] text-faint">
+                <span className="h-px w-8 bg-burgundy inline-block" aria-hidden="true" />
                 <span>Complete Floor Index</span>
-                <span aria-hidden="true">·</span>
-                <span className="text-[#9A7440]">SHUA · Panatta · Realleader</span>
+                <span className="text-hairline-2">·</span>
+                <span className="text-[#B08D57]">46 Architectural Bay Shots</span>
               </div>
               <h2
                 id="catalogue-heading"
-                className="mt-4 t-h2 text-[#141210] font-normal tracking-[-0.02em]"
+                className="mt-4 t-h2 text-heading font-normal tracking-[-0.02em]"
               >
-                All 46 Strength &amp; Cardio Stations.
+                All Strength &amp; Cardio Stations.
               </h2>
-              <p className="mt-4 t-body text-[#4E4942] leading-relaxed">
-                Explore every machine by manufacturer, loading resistance type, or muscle target.
+              <p className="mt-4 t-body text-muted leading-relaxed">
+                Panatta and Plate-Loaded stations are flagged with bronze/crimson accents across
+                the full directory.
               </p>
             </div>
 
@@ -319,13 +349,13 @@ export default function StudioCatalogue() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search machine, brand, or model..."
-                  className="w-full bg-white border border-[#181614]/15 focus:border-[#8C2230] px-4 py-3 text-sm text-[#141210] placeholder:text-[#8A8276] outline-none transition-colors shadow-sm"
+                  className="w-full bg-charcoal border border-hairline focus:border-[#B08D57] px-4 py-3 text-sm text-heading placeholder:text-faint outline-none transition-colors"
                 />
                 {query && (
                   <button
                     type="button"
                     onClick={() => setQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[11px] uppercase tracking-wider text-[#756E63] hover:text-[#141210] cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[11px] uppercase tracking-wider text-faint hover:text-heading cursor-pointer"
                   >
                     Clear
                   </button>
@@ -355,8 +385,8 @@ export default function StudioCatalogue() {
                     }}
                     className={`px-4 py-2.5 text-xs font-mono uppercase tracking-[0.16em] border transition-colors cursor-pointer ${
                       active
-                        ? 'bg-[#141210] text-white border-[#141210] font-medium'
-                        : 'bg-white text-[#4E4942] border-[#181614]/15 hover:border-[#141210]/45 hover:text-[#141210]'
+                        ? 'bg-heading text-ink border-heading font-medium'
+                        : 'bg-charcoal text-muted border-hairline hover:border-hairline-2 hover:text-heading'
                     }`}
                   >
                     {tab.label}
@@ -365,9 +395,9 @@ export default function StudioCatalogue() {
               })}
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-3 border-y border-[#181614]/12">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-3 border-y border-hairline">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#756E63] mr-2">
+                <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-faint mr-2">
                   Zone:
                 </span>
                 {CATALOGUE_CATEGORIES.map((cat) => {
@@ -381,8 +411,8 @@ export default function StudioCatalogue() {
                       onClick={() => setSelectedCategory(cat)}
                       className={`px-3 py-1 text-[11px] font-mono uppercase tracking-[0.14em] transition-colors border cursor-pointer ${
                         active
-                          ? 'border-[#8C2230] bg-[#8C2230]/10 text-[#8C2230] font-medium'
-                          : 'border-transparent text-[#6B645A] hover:text-[#141210] hover:border-[#181614]/15'
+                          ? 'border-burgundy bg-[#8C2230]/15 text-heading'
+                          : 'border-transparent text-faint hover:text-heading hover:border-hairline'
                       }`}
                     >
                       {cat} ({count})
@@ -391,23 +421,22 @@ export default function StudioCatalogue() {
                 })}
               </div>
 
-              <p className="font-mono text-xs text-[#6B645A]">
-                Showing <span className="text-[#141210] font-medium nums">{visibleItems.length}</span>{' '}
-                of <span className="text-[#141210] font-medium nums">{filteredItems.length}</span>{' '}
-                stations
+              <p className="font-mono text-xs text-faint">
+                Showing <span className="text-heading nums">{visibleItems.length}</span> of{' '}
+                <span className="text-heading nums">{filteredItems.length}</span> stations
               </p>
             </div>
 
-            <p className="text-sm text-[#4E4942]">{activeBrandMeta.subtitle}</p>
+            <p className="text-sm text-muted">{activeBrandMeta.subtitle}</p>
           </div>
 
           {/* Grid */}
           {visibleItems.length === 0 ? (
-            <div className="mt-12 border border-[#181614]/12 bg-white p-12 text-center">
-              <p className="font-mono text-xs uppercase tracking-[0.18em] text-[#756E63]">
+            <div className="mt-12 border border-hairline bg-charcoal p-12 text-center">
+              <p className="font-mono text-xs uppercase tracking-[0.18em] text-faint">
                 No matching equipment
               </p>
-              <p className="mt-2 t-body text-[#4E4942]">
+              <p className="mt-2 t-body text-muted">
                 No stations matched &ldquo;{query}&rdquo; under the current filter.
               </p>
               <button
@@ -417,76 +446,102 @@ export default function StudioCatalogue() {
                   setSelectedCategory('All');
                   setQuery('');
                 }}
-                className="mt-6 px-5 py-2 border border-[#141210] text-[#141210] hover:bg-[#141210] hover:text-white font-mono text-xs uppercase tracking-[0.16em] transition-colors cursor-pointer"
+                className="mt-6 btn-line !py-2 !px-5 font-mono text-xs uppercase tracking-[0.16em] cursor-pointer"
               >
                 Reset Catalogue Filters
               </button>
             </div>
           ) : (
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {visibleItems.map((item) => (
-                <article
-                  key={item.id}
-                  className="group relative border border-[#181614]/12 bg-white hover:border-[#181614]/35 hover:shadow-[0_14px_34px_rgba(24,20,16,0.08)] transition-all flex flex-col overflow-hidden"
-                >
-                  <div
-                    className="h-[2px] w-0 group-hover:w-full bg-[#8C2230] transition-all duration-300"
-                    aria-hidden="true"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveItem(item)}
-                    className="text-left flex flex-col flex-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#8C2230] cursor-pointer"
-                    aria-label={`Inspect ${item.brand} ${item.name}`}
+              {visibleItems.map((item) => {
+                const highlighted = isHighlightedStation(item);
+                const isPanatta = item.brand === 'Panatta';
+                return (
+                  <article
+                    key={item.id}
+                    className={`group relative border transition-all flex flex-col overflow-hidden bg-charcoal ${
+                      isPanatta
+                        ? 'border-[#8C2230]/55 hover:border-[#8C2230]'
+                        : highlighted
+                        ? 'border-[#B08D57]/45 hover:border-[#B08D57]'
+                        : 'border-hairline hover:border-hairline-2'
+                    }`}
                   >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#EFECE5]">
-                      <img
-                        src={item.image}
-                        alt={`${item.brand} ${item.name} — ${item.model}`}
-                        loading="lazy"
-                        className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
-                      />
-                    </div>
+                    <div
+                      className={`h-[2px] w-full transition-opacity duration-300 ${
+                        isPanatta
+                          ? 'bg-burgundy opacity-90'
+                          : highlighted
+                          ? 'bg-[#B08D57] opacity-80'
+                          : 'bg-burgundy opacity-0 group-hover:opacity-100'
+                      }`}
+                      aria-hidden="true"
+                    />
 
-                    <div className="p-5 flex-1 flex flex-col justify-between gap-4 border-t border-[#181614]/10 bg-white">
-                      <div>
-                        <div className="flex items-center justify-between gap-2 text-[11px] font-mono uppercase tracking-[0.16em]">
-                          <span className="text-[#9A7440] font-medium">{item.brand}</span>
-                          <span className="text-[#787064]">{item.catalogRef}</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveItem(item)}
+                      className="text-left flex flex-col flex-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-burgundy cursor-pointer"
+                      aria-label={`Inspect ${item.brand} ${item.name}`}
+                    >
+                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
+                        <img
+                          src={item.image}
+                          alt={`${item.brand} ${item.name} — ${item.model}`}
+                          loading="lazy"
+                          className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
+                        />
+                        {highlighted && (
+                          <span
+                            className={`absolute top-3 left-3 px-2.5 py-0.5 bg-[#080808]/85 border font-mono text-[10px] uppercase tracking-[0.16em] ${
+                              isPanatta
+                                ? 'border-[#8C2230]/80 text-[#F5F5F2]'
+                                : 'border-[#B08D57]/80 text-[#B08D57]'
+                            }`}
+                          >
+                            {isPanatta ? 'Panatta · Highlighted' : 'Plate-Loaded · Highlighted'}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="p-5 flex-1 flex flex-col justify-between gap-4 border-t border-hairline">
+                        <div>
+                          <div className="flex items-center justify-between gap-2 text-[11px] font-mono uppercase tracking-[0.16em]">
+                            <span className="text-[#B08D57]">{item.brand}</span>
+                            <span className="text-faint">{item.catalogRef}</span>
+                          </div>
+
+                          <h3 className="mt-2 t-h3 text-heading font-normal tracking-[-0.01em] group-hover:text-white transition-colors">
+                            {item.name}
+                          </h3>
+
+                          <p className="mt-1.5 text-xs text-muted line-clamp-2 leading-relaxed">
+                            {item.summary}
+                          </p>
                         </div>
 
-                        <h3 className="mt-2 t-h3 text-[#141210] font-normal tracking-[-0.01em]">
-                          {item.name}
-                        </h3>
-
-                        <p className="mt-1.5 text-xs text-[#575148] line-clamp-2 leading-relaxed">
-                          {item.summary}
-                        </p>
+                        <div className="pt-3 border-t border-hairline flex items-center justify-between gap-2 text-[11px] font-mono">
+                          <span className="text-faint truncate">
+                            Model: <span className="text-heading">{item.model}</span>
+                          </span>
+                          <span className="text-muted group-hover:text-heading inline-flex items-center gap-1 shrink-0 transition-colors">
+                            Inspect <span aria-hidden="true">→</span>
+                          </span>
+                        </div>
                       </div>
-
-                      <div className="pt-3 border-t border-[#181614]/10 flex items-center justify-between gap-2 text-[11px] font-mono">
-                        <span className="text-[#787064] truncate">
-                          Model: <span className="text-[#141210] font-medium">{item.model}</span>
-                        </span>
-                        <span className="text-[#4E4942] group-hover:text-[#8C2230] inline-flex items-center gap-1 shrink-0 transition-colors">
-                          Inspect <span aria-hidden="true">→</span>
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                </article>
-              ))}
+                    </button>
+                  </article>
+                );
+              })}
             </div>
           )}
 
-          {/* Expand / Collapse */}
           {!isFiltered && filteredItems.length > INITIAL_VISIBLE_COUNT && (
             <div className="mt-12 flex justify-center">
               <button
                 type="button"
                 onClick={() => setShowAll((prev) => !prev)}
-                className="px-7 py-3 border border-[#141210] text-[#141210] hover:bg-[#141210] hover:text-white font-mono text-xs uppercase tracking-[0.18em] inline-flex items-center gap-3 transition-colors cursor-pointer"
+                className="btn-line !py-3 !px-7 font-mono text-xs uppercase tracking-[0.18em] inline-flex items-center gap-3 hover:bg-hairline cursor-pointer"
               >
                 <span>
                   {showAll
@@ -498,9 +553,9 @@ export default function StudioCatalogue() {
             </div>
           )}
 
-          {/* Authentic Manufacturer Attribution Note & Booking CTA */}
-          <div className="mt-14 pt-8 border-t border-[#181614]/12 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <p className="text-xs font-mono text-[#6E675D] max-w-2xl leading-relaxed">
+          {/* Authentic PDF Footer Attribution Note & Booking CTA */}
+          <div className="mt-14 pt-8 border-t border-hairline flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <p className="text-xs font-mono text-faint max-w-2xl leading-relaxed">
               Catalogue source: Vyomi Fitness Club Vijayawada — SHUA, Panatta &amp; Realleader
               floor range. Model numbers and technical specifications are shown where supplied;
               manufacturer series codes reflect verified OEM hardware.
@@ -514,7 +569,7 @@ export default function StudioCatalogue() {
                   href={tourHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-5 py-2.5 bg-[#141210] hover:bg-[#8C2230] text-white font-mono text-xs uppercase tracking-[0.16em] inline-flex items-center gap-2 shrink-0 transition-colors"
+                  className="btn-line !py-2.5 !px-5 font-mono text-xs uppercase tracking-[0.16em] inline-flex items-center gap-2 shrink-0 hover:bg-hairline"
                 >
                   <span>Book Equipment Walkthrough</span>
                   <span aria-hidden="true">↗</span>
@@ -526,21 +581,21 @@ export default function StudioCatalogue() {
       </section>
 
       {/* ========================================================================
-          LIGHTBOX INSPECTOR MODAL (LIGHT ARCHITECTURAL THEME)
+          LIGHTBOX INSPECTOR MODAL (QUIET LUXURY DARK THEME)
       ======================================================================== */}
       {activeItem && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="catalogue-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 bg-[#141210]/70 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 bg-[#080808]/90 backdrop-blur-md"
           onClick={() => setActiveItem(null)}
         >
           <div
-            className="relative w-full max-w-5xl bg-[#FFFFFF] border border-[#181614]/15 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12"
+            className="relative w-full max-w-5xl bg-charcoal border border-hairline-2 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="lg:col-span-7 bg-[#EFECE5] relative flex items-center justify-center border-b lg:border-b-0 lg:border-r border-[#181614]/10">
+            <div className="lg:col-span-7 bg-ink relative flex items-center justify-center border-b lg:border-b-0 lg:border-r border-hairline">
               <div className="w-full aspect-[4/3]">
                 <img
                   src={activeItem.image}
@@ -549,8 +604,8 @@ export default function StudioCatalogue() {
                 />
               </div>
               {activeIdx >= 0 && (
-                <div className="absolute bottom-4 left-4 bg-white/95 border border-[#181614]/15 px-3 py-1 font-mono text-[11px] text-[#6E675D] shadow-sm">
-                  <span className="text-[#141210] font-medium nums">
+                <div className="absolute bottom-4 left-4 bg-[#080808]/85 border border-hairline px-3 py-1 font-mono text-[11px] text-faint">
+                  <span className="text-heading nums">
                     {String(activeIdx + 1).padStart(2, '0')}
                   </span>{' '}
                   / {String(filteredItems.length).padStart(2, '0')}
@@ -558,17 +613,17 @@ export default function StudioCatalogue() {
               )}
             </div>
 
-            <div className="lg:col-span-5 p-6 md:p-8 flex flex-col justify-between gap-6 bg-white">
+            <div className="lg:col-span-5 p-6 md:p-8 flex flex-col justify-between gap-6">
               <div>
                 <div className="flex items-center justify-between gap-4">
-                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#9A7440] font-medium">
+                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B08D57]">
                     {activeItem.brand} · {activeItem.series}
                   </span>
                   <button
                     type="button"
                     onClick={() => setActiveItem(null)}
                     aria-label="Close equipment inspector"
-                    className="h-8 w-8 border border-[#181614]/15 hover:border-[#141210] text-[#575148] hover:text-[#141210] font-mono text-xs flex items-center justify-center cursor-pointer"
+                    className="h-8 w-8 border border-hairline hover:border-hairline-2 text-muted hover:text-heading font-mono text-xs flex items-center justify-center cursor-pointer"
                   >
                     ✕
                   </button>
@@ -576,43 +631,43 @@ export default function StudioCatalogue() {
 
                 <h3
                   id="catalogue-modal-title"
-                  className="mt-4 t-h2 text-[#141210] font-normal tracking-[-0.02em]"
+                  className="mt-4 t-h2 text-heading font-normal tracking-[-0.02em]"
                 >
                   {activeItem.name}
                 </h3>
 
-                <p className="mt-4 t-small text-[#4E4942] leading-relaxed">
+                <p className="mt-4 t-small text-muted leading-relaxed">
                   {activeItem.summary}
                 </p>
 
-                <dl className="mt-6 border-t border-[#181614]/12 divide-y divide-[#181614]/12 text-xs font-mono">
+                <dl className="mt-6 border-t border-hairline divide-y divide-hairline text-xs font-mono">
                   <div className="py-3 flex justify-between gap-4">
-                    <dt className="text-[#787064] uppercase tracking-wider">Model Ref</dt>
-                    <dd className="text-[#141210] font-medium text-right">{activeItem.model}</dd>
+                    <dt className="text-faint uppercase tracking-wider">Model Ref</dt>
+                    <dd className="text-heading text-right">{activeItem.model}</dd>
                   </div>
                   <div className="py-3 flex justify-between gap-4">
-                    <dt className="text-[#787064] uppercase tracking-wider">Catalogue Entry</dt>
-                    <dd className="text-[#141210] text-right">{activeItem.catalogRef}</dd>
+                    <dt className="text-faint uppercase tracking-wider">Catalogue Entry</dt>
+                    <dd className="text-heading text-right">{activeItem.catalogRef}</dd>
                   </div>
                   <div className="py-3 flex justify-between gap-4">
-                    <dt className="text-[#787064] uppercase tracking-wider">Zone / Category</dt>
-                    <dd className="text-[#141210] text-right">{activeItem.category}</dd>
+                    <dt className="text-faint uppercase tracking-wider">Zone / Category</dt>
+                    <dd className="text-heading text-right">{activeItem.category}</dd>
                   </div>
                   <div className="py-3 flex justify-between gap-4">
-                    <dt className="text-[#787064] uppercase tracking-wider">Resistance Type</dt>
-                    <dd className="text-[#141210] text-right">{activeItem.loadingType}</dd>
+                    <dt className="text-faint uppercase tracking-wider">Resistance Type</dt>
+                    <dd className="text-heading text-right">{activeItem.loadingType}</dd>
                   </div>
                 </dl>
 
                 <div className="mt-5">
-                  <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-[#787064]">
+                  <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-faint">
                     Primary Target Zones
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {activeItem.primaryZones.map((z) => (
                       <span
                         key={z}
-                        className="px-2.5 py-1 bg-[#F4F1EA] border border-[#181614]/12 font-mono text-[11px] text-[#3F3A34]"
+                        className="px-2.5 py-1 bg-charcoal-2 border border-hairline font-mono text-[11px] text-muted"
                       >
                         {z}
                       </span>
@@ -621,7 +676,7 @@ export default function StudioCatalogue() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[#181614]/12 flex flex-col gap-3">
+              <div className="pt-4 border-t border-hairline flex flex-col gap-3">
                 {(() => {
                   const loc = site.address?.line1 ?? site.city;
                   const inquiryHref = whatsappLink(
@@ -632,7 +687,7 @@ export default function StudioCatalogue() {
                       href={inquiryHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-3 px-4 bg-[#8C2230] hover:bg-[#6E1A25] text-white font-mono text-xs uppercase tracking-[0.16em] text-center transition-colors"
+                      className="w-full py-3 px-4 bg-burgundy hover:bg-burgundy-dark text-white font-mono text-xs uppercase tracking-[0.16em] text-center transition-colors"
                     >
                       Inquire About Floor &amp; Pre-Sale Access ↗
                     </a>
@@ -643,14 +698,14 @@ export default function StudioCatalogue() {
                   <button
                     type="button"
                     onClick={() => stepModal(-1)}
-                    className="flex-1 py-2 px-3 border border-[#181614]/15 hover:border-[#141210] font-mono text-[11px] uppercase tracking-wider text-[#4E4942] hover:text-[#141210] transition-colors cursor-pointer"
+                    className="flex-1 py-2 px-3 border border-hairline hover:border-hairline-2 font-mono text-[11px] uppercase tracking-wider text-muted hover:text-heading transition-colors cursor-pointer"
                   >
                     ← Prev Station
                   </button>
                   <button
                     type="button"
                     onClick={() => stepModal(1)}
-                    className="flex-1 py-2 px-3 border border-[#181614]/15 hover:border-[#141210] font-mono text-[11px] uppercase tracking-wider text-[#4E4942] hover:text-[#141210] transition-colors cursor-pointer"
+                    className="flex-1 py-2 px-3 border border-hairline hover:border-hairline-2 font-mono text-[11px] uppercase tracking-wider text-muted hover:text-heading transition-colors cursor-pointer"
                   >
                     Next Station →
                   </button>
