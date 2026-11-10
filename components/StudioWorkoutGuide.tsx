@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useId } from 'react';
+import React, { useState, useId } from 'react';
 import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
 import Reveal from '@/components/Reveal';
-import LottieWorkoutPlayer from '@/components/LottieWorkoutPlayer';
+import GymAnimationPlayer from '@/components/GymAnimationPlayer';
 import { playMechanicalClick, toggleAudioMute, getAudioMuted } from '@/lib/haptics';
 
 export interface ExerciseGuide {
@@ -13,1090 +13,179 @@ export interface ExerciseGuide {
   disciplineId: 'fitness' | 'hyrox' | 'pilates';
   name: string;
   subtitle: string;
-  machine: string;
-  tempo: string; // e.g., "3 · 1 · 1"
+  equipment: string;
+  tempo: string;
   primaryMuscles: string[];
   secondaryMuscles: string[];
   cues: [string, string, string];
   fault: string;
-  lottiePath: string;
-  // Kinematic render parameters
-  renderType: 'incline-press' | 'hack-squat' | 'sled-push' | 'skierg' | 'reformer-footwork' | 'reformer-stretch';
+  animationPath: string;
   accentColor: string;
 }
 
 export const EXERCISE_GUIDES: ExerciseGuide[] = [
   {
-    id: 'incline-press',
+    id: 'barbell-squat',
     discipline: 'Fitness',
     disciplineId: 'fitness',
-    name: 'Converging Incline Chest Press',
-    subtitle: 'Upper Pectoral Arc & Humeral Adduction',
-    machine: 'Panatta Monolith Series',
-    tempo: '3 · 1 · 1 (Eccentric · Pause · Concentric)',
-    primaryMuscles: ['Clavicular Pectoralis Major', 'Anterior Deltoid'],
-    secondaryMuscles: ['Triceps Brachii', 'Serratus Anterior'],
+    name: 'Barbell Back Squat',
+    subtitle: 'Compound Knee Extensor & Gluteal Biomechanics',
+    equipment: 'Olympic Barbell & Solid Steel Power Rack',
+    tempo: '3 · 1 · X (Controlled Descent · Depth Pause · Explosive Drive)',
+    primaryMuscles: ['Quadriceps (Vastus Lateralis & Medialis)', 'Gluteus Maximus'],
+    secondaryMuscles: ['Hamstrings', 'Erector Spinae', 'Transverse Abdominis'],
     cues: [
-      'Pin scapulae into the 30° backrest; maintain a proud thoracic cage',
-      'Track elbows at ~45° from the torso, avoiding perpendicular 90° shoulder flares',
-      'Drive upward along the natural converging arc without unlocking shoulder blades',
+      'Position barbell across upper trapezius; pull elbows back to create a rigid muscular shelf',
+      'Break simultaneously at hips and knees, actively pushing knees outward in line with toes',
+      'Descend smoothly until hip crease breaks below the top of the patella, then drive through midfoot',
     ],
-    fault: 'Flaring elbows outward at 90° impinges the rotator cuff tendons.',
-    lottiePath: '/lottie/incline-press.json',
-    renderType: 'incline-press',
+    fault: 'Allowing knees to cave inward (valgus collapse) or letting lower back round at bottom depth.',
+    animationPath: '/animations/barbell-squat.gif',
     accentColor: '#8C2230',
   },
   {
-    id: 'hack-squat',
+    id: 'deadlift',
     discipline: 'Fitness',
     disciplineId: 'fitness',
-    name: 'Pendulum Hack Squat',
-    subtitle: 'Vastus Medialis & Gluteal Biomechanics',
-    machine: 'Panatta Plate-Loaded Arc',
-    tempo: '3 · 1 · 1 (Controlled Descent · Depth · Drive)',
+    name: 'Conventional Barbell Deadlift',
+    subtitle: 'Posterior Chain Kinetic Recruitment & Hip Hinge',
+    equipment: 'Olympic Competition Barbell & Urethane Bumper Plates',
+    tempo: '1 · 1 · 2 (Explosive Pull · Lockout · Controlled Hinge)',
+    primaryMuscles: ['Gluteus Maximus', 'Hamstrings (Biceps Femoris)', 'Spinal Erectors'],
+    secondaryMuscles: ['Latissimus Dorsi', 'Trapezius', 'Forearm Grip Flexors'],
+    cues: [
+      'Address the barbell directly over midfoot (~1 inch from shins) with shoulder-width stance',
+      'Hinge hips, grip bar firmly outside knees, and pull the slack out while wedging lats tight',
+      'Drive the floor away with the legs until bar clears knees, then thrust hips through to a tall lockout',
+    ],
+    fault: 'Permitting lumbar spine flexion (rounding) off the floor or hyperextending lower back at top.',
+    animationPath: '/animations/deadlift.gif',
+    accentColor: '#8C2230',
+  },
+  {
+    id: 'bench-press',
+    discipline: 'Fitness',
+    disciplineId: 'fitness',
+    name: 'Barbell Flat Bench Press',
+    subtitle: 'Horizontal Pectoral Drive & Humeral Adduction',
+    equipment: 'Competition Olympic Bench & Eleiko Barbell',
+    tempo: '3 · 1 · 1 (Controlled Negative · Sternum Touch · Powerful Press)',
+    primaryMuscles: ['Pectoralis Major (Sternal & Clavicular)', 'Anterior Deltoids'],
+    secondaryMuscles: ['Triceps Brachii', 'Serratus Anterior', 'Latissimus Dorsi'],
+    cues: [
+      'Retract and depress scapulae firmly into the bench; maintain active 5-point body contact',
+      'Unrack smoothly and lower the bar under control along a gentle diagonal arc to lower sternum',
+      'Tuck elbows at ~45-70° from torso, drive feet into the turf, and press explosively up and back',
+    ],
+    fault: 'Flaring elbows outward at 90° or bouncing the bar violently off the sternum.',
+    animationPath: '/animations/bench-press.gif',
+    accentColor: '#8C2230',
+  },
+  {
+    id: 'pull-up',
+    discipline: 'HYROX',
+    disciplineId: 'hyrox',
+    name: 'Strict Bodyweight Pull-Up',
+    subtitle: 'Vertical Latissimus Dorsi & Humeral Depression',
+    equipment: 'Multi-Grip Ceiling Rig Pull-Up Bar',
+    tempo: '1 · 1 · 2 (Powerful Ascent · Apex Hold · Full Hang Return)',
+    primaryMuscles: ['Latissimus Dorsi', 'Teres Major', 'Biceps Brachii'],
+    secondaryMuscles: ['Rhomboids', 'Lower Trapezius', 'Brachioradialis', 'Abdominal Core'],
+    cues: [
+      'Grip the bar slightly wider than shoulder width with a secure overhand pronated grip',
+      'Initiate pull by aggressively packing shoulder blades down and back before bending elbows',
+      'Drive elbows toward hips until clavicle approaches bar height; lower with control to dead hang',
+    ],
+    fault: 'Kicking legs or utilizing momentum kipping rather than strict latissimus engagement.',
+    animationPath: '/animations/pull-up.gif',
+    accentColor: '#B08D57',
+  },
+  {
+    id: 'overhead-press',
+    discipline: 'HYROX',
+    disciplineId: 'hyrox',
+    name: 'Standing Barbell Overhead Press',
+    subtitle: 'Vertical Deltoid Power & Full-Body Kinetic Transfer',
+    equipment: 'Olympic Barbell & Squat Stand',
+    tempo: '1 · 1 · 2 (Vertical Drive · Overhead Stabilization · Controlled Lower)',
+    primaryMuscles: ['Anterior & Lateral Deltoids', 'Upper Trapezius'],
+    secondaryMuscles: ['Triceps Brachii', 'Core Abdominals', 'Gluteal Complex'],
+    cues: [
+      'Rest bar across anterior clavicle with vertical forearms and tight neutral wrists',
+      'Actively squeeze glutes and brace core to establish an immovable pelvic foundation',
+      'Pull chin back slightly, press bar directly overhead in a straight line, and push head through at top',
+    ],
+    fault: 'Arching lower back excessively (backward lean) to compensate for insufficient shoulder mobility.',
+    animationPath: '/animations/overhead-press.gif',
+    accentColor: '#B08D57',
+  },
+  {
+    id: 'bent-over-row',
+    discipline: 'Fitness',
+    disciplineId: 'fitness',
+    name: 'Barbell Bent-Over Row',
+    subtitle: 'Scapular Retraction & Mid-Back Posterior Density',
+    equipment: 'Olympic Barbell & Textured Iron Plates',
+    tempo: '2 · 1 · 2 (Controlled Pull · Peak Squeeze · Deep Stretch)',
+    primaryMuscles: ['Latissimus Dorsi', 'Rhomboids', 'Middle & Lower Trapezius'],
+    secondaryMuscles: ['Posterior Deltoids', 'Biceps Brachii', 'Spinal Erectors'],
+    cues: [
+      'Hinge back into a stable 45° torso angle with flat neutral spine and soft knees',
+      'Grip bar shoulder-width; pull through elbows directly toward the lower ribcage / belly button',
+      'Pause and firmly pinch shoulder blades together at top without heaving torso upright',
+    ],
+    fault: 'Jerking with leg and hip momentum to swing the barbell up instead of rowing with back muscles.',
+    animationPath: '/animations/bent-over-row.gif',
+    accentColor: '#8C2230',
+  },
+  {
+    id: 'lunge',
+    discipline: 'HYROX',
+    disciplineId: 'hyrox',
+    name: 'Barbell Walking Lunge',
+    subtitle: 'Unilateral Pelvic Stability & Quadriceps/Glute Drive',
+    equipment: 'Olympic Barbell across Trapezius',
+    tempo: '2 · 1 · 1 (Controlled Step · Depth Pause · Forward Drive)',
     primaryMuscles: ['Quadriceps (Rectus Femoris & VMO)', 'Gluteus Maximus'],
-    secondaryMuscles: ['Adductor Magnus', 'Soleus'],
+    secondaryMuscles: ['Hamstrings', 'Adductor Magnus', 'Soleus & Gastrocnemius', 'Core'],
     cues: [
-      'Firmly anchor lumbar spine and upper back against the high-density bolster',
-      'Descend smoothly until femur breaks parallel (90° knee angle), tracking over midfoot',
-      'Drive through the heels and mid-foot; avoid hyperextending knees at top lockout',
+      'Step forward decisively; lower hips vertically until back knee hovers 1 inch above turf',
+      'Keep front knee stacked directly over the midfoot, avoiding medial drift or collapse',
+      'Drive powerfully through the front heel to stand tall and immediately transition into the next stride',
     ],
-    fault: 'Allowing lower back to peel off the bolster causes excessive lumbar shear.',
-    lottiePath: '/lottie/hack-squat.json',
-    renderType: 'hack-squat',
-    accentColor: '#8C2230',
-  },
-  {
-    id: 'sled-push',
-    discipline: 'HYROX',
-    disciplineId: 'hyrox',
-    name: 'Power Sled Drive',
-    subtitle: '45° Rigid Torso Force Vector & Triple Extension',
-    machine: 'Vyomi Sprint Turf & Heavy Plate Sled',
-    tempo: 'Continuous Piston Drive (High Cadence)',
-    primaryMuscles: ['Gluteus Complex', 'Quadriceps', 'Calves (Gastrocnemius)'],
-    secondaryMuscles: ['Core Stabilizers', 'Anterior Deltoids'],
-    cues: [
-      'Maintain an unbroken 45° angle from ears through hips to back heels',
-      'Keep arms extended with elbows soft; transfer force through stiff locked torso',
-      'Short, explosive piston strides driving off the balls of the feet into the turf',
-    ],
-    fault: 'Arching or rounding the lumbar spine dissipates forward momentum.',
-    lottiePath: '/lottie/sled-push.json',
-    renderType: 'sled-push',
+    fault: 'Slamming the rear knee into the floor or allowing the torso to pitch forward.',
+    animationPath: '/animations/lunge.gif',
     accentColor: '#B08D57',
   },
   {
-    id: 'skierg',
-    discipline: 'HYROX',
-    disciplineId: 'hyrox',
-    name: 'SkiErg Triple Extension',
-    subtitle: 'Latissimus Dorsi & Posterior Chain Velocity',
-    machine: 'Performance Air-Resistance Ergometer',
-    tempo: '1 · 0 · 2 (Explosive Pull · Instant Pivot · Smooth Return)',
-    primaryMuscles: ['Latissimus Dorsi', 'Rectus Abdominis', 'Triceps'],
-    secondaryMuscles: ['Hamstrings', 'Glutes', 'Hip Flexors'],
-    cues: [
-      'Start tall on balls of feet with high elbows and hands near eye level',
-      'Initiate pull by dropping bodyweight into a deep hip hinge, driving handles down',
-      'Finish stroke past knees with straight wrists, then smoothly rise tall to reset',
-    ],
-    fault: 'Squatting with vertical torso rather than hinging hips wastes posterior recruitment.',
-    lottiePath: '/lottie/skierg.json',
-    renderType: 'skierg',
-    accentColor: '#B08D57',
-  },
-  {
-    id: 'reformer-footwork',
+    id: 'plank',
     discipline: 'Pilates',
     disciplineId: 'pilates',
-    name: 'Reformer Footwork & Glide',
-    subtitle: 'Plantar Articulation & Controlled Carriage Glide',
-    machine: 'Balanced Body Studio Reformer (3 Springs)',
-    tempo: '3 · 1 · 3 (Eccentric Return · Pause · Smooth Press)',
-    primaryMuscles: ['Transverse Abdominis', 'Quadriceps', 'Deep Pelvic Floor'],
-    secondaryMuscles: ['Hamstrings', 'Calves', 'Adductors'],
+    name: 'Isometric Front Forearm Plank',
+    subtitle: 'Transverse Abdominis & Deep Cylinder Anti-Extension',
+    equipment: 'Vyomi High-Density Studio Mat',
+    tempo: 'Isometric Maximum Tension Hold (45–60 Seconds)',
+    primaryMuscles: ['Transverse Abdominis', 'Rectus Abdominis (Anterior Core)'],
+    secondaryMuscles: ['Internal & External Obliques', 'Serratus Anterior', 'Gluteus Complex'],
     cues: [
-      'Keep pelvis neutral with natural lumbar arch; headrest flat and shoulders quiet',
-      'Connect heels or balls of feet to the footbar with equal bilateral pressure',
-      'Extend legs to smooth long carriage glide, then resist springs on the return',
+      'Position forearms parallel on mat with elbows situated directly under glenohumeral shoulder joints',
+      'Tuck pelvis into slight posterior tilt; actively lock kneecaps and clamp glutes with maximum tension',
+      'Push floor away with forearms to prevent shoulder blades from winging; keep gaze just ahead of hands',
     ],
-    fault: 'Tucking pelvis and flattening back against carriage compromises spinal shock absorption.',
-    lottiePath: '/lottie/reformer.json',
-    renderType: 'reformer-footwork',
-    accentColor: '#D6F55B',
-  },
-  {
-    id: 'reformer-stretch',
-    discipline: 'Pilates',
-    disciplineId: 'pilates',
-    name: 'Reformer Long Stretch',
-    subtitle: 'Scapular Depression & Core Anti-Extension',
-    machine: 'Balanced Body Studio Reformer (2 Springs)',
-    tempo: '2 · 1 · 2 (Outward Glide · Hold · Pull Return)',
-    primaryMuscles: ['Transverse Abdominis', 'Serratus Anterior', 'Latissimus Dorsi'],
-    secondaryMuscles: ['Gluteus Maximus', 'Pectoralis Major', 'Triceps'],
-    cues: [
-      'Establish a rigid high plank with hands resting on footbar and heels at shoulder blocks',
-      'Maintain an unbroken head-to-heel diagonal line as shoulders hinge carriage outward',
-      'Engage lower abdominals and serratus to glide carriage back under control',
-    ],
-    fault: 'Sagging hips or hyperextending neck collapses the lumbar stability cylinder.',
-    lottiePath: '/lottie/reformer-stretch.json',
-    renderType: 'reformer-stretch',
+    fault: 'Allowing hips to sag down into lumbar hyperextension or hiking glutes upward into a pike.',
+    animationPath: '/animations/plank.gif',
     accentColor: '#D6F55B',
   },
 ];
 
 /**
- * High-Precision Vector Micro-Animation Canvas.
- * Renders smooth 60fps kinetic motion of human anatomy and gym machinery.
- */
-function WorkoutCanvas({
-  exercise,
-  isPlaying,
-  playbackSpeed,
-  manualPhase,
-  isScrubbing,
-}: {
-  exercise: ExerciseGuide;
-  isPlaying: boolean;
-  playbackSpeed: number;
-  manualPhase: number;
-  isScrubbing: boolean;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const phaseRef = useRef<number>(0);
-
-  useEffect(() => {
-    if (isScrubbing) {
-      phaseRef.current = manualPhase;
-    }
-  }, [manualPhase, isScrubbing]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    let lastTime = performance.now();
-
-    const dpr = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2);
-
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-    };
-    resize();
-    window.addEventListener('resize', resize);
-
-    const render = (now: number) => {
-      const dt = (now - lastTime) * 0.001;
-      lastTime = now;
-
-      if (isPlaying && !isScrubbing) {
-        // Full rep cycle is ~3.5 seconds at 1.0x
-        phaseRef.current = (phaseRef.current + (dt * playbackSpeed) / 3.5) % 1.0;
-      }
-
-      const t = phaseRef.current; // 0..1
-      const w = canvas.width;
-      const h = canvas.height;
-
-      ctx.clearRect(0, 0, w, h);
-      ctx.save();
-      ctx.scale(dpr, dpr);
-
-      const renderW = w / dpr;
-      const renderH = h / dpr;
-
-      // Subtle architectural grid background
-      ctx.strokeStyle = 'rgba(245, 245, 242, 0.035)';
-      ctx.lineWidth = 1;
-      const gridStep = 40;
-      for (let x = 0; x < renderW; x += gridStep) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, renderH);
-        ctx.stroke();
-      }
-      for (let y = 0; y < renderH; y += gridStep) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(renderW, y);
-        ctx.stroke();
-      }
-
-      // Smooth kinematic easing calculation (0 -> 1 -> 0 cyclic motion)
-      // Cycle: 0 -> 0.4 (eccentric stretch), 0.4 -> 0.5 (isometric pause), 0.5 -> 0.9 (concentric push), 0.9 -> 1.0 (lockout)
-      let cycleProgress = 0;
-      let phaseLabel = 'ECCENTRIC';
-      let phaseSub = 'Lengthening Phase (3s Controlled)';
-      let forceAlpha = 0.2;
-
-      if (t < 0.45) {
-        // Eccentric phase
-        const subT = t / 0.45;
-        cycleProgress = Math.cos(subT * Math.PI) * 0.5 + 0.5; // 1 down to 0
-        phaseLabel = 'ECCENTRIC (STRETCH)';
-        phaseSub = 'Controlled 3s Muscle Elongation';
-        forceAlpha = 0.25 + (1 - subT) * 0.2;
-      } else if (t < 0.55) {
-        // Isometric transition pause
-        cycleProgress = 0;
-        phaseLabel = 'ISOMETRIC HOLD';
-        phaseSub = 'Peak Stretch & Zero Momentum Turn';
-        forceAlpha = 0.6;
-      } else if (t < 0.9) {
-        // Concentric drive phase
-        const subT = (t - 0.55) / 0.35;
-        // Smooth sine ease in-out
-        cycleProgress = Math.sin((subT * Math.PI) / 2); // 0 up to 1
-        phaseLabel = 'CONCENTRIC (DRIVE)';
-        phaseSub = 'Explosive Neural Recruitment';
-        forceAlpha = 0.9;
-      } else {
-        // Top lockout / transition
-        cycleProgress = 1;
-        phaseLabel = 'LOCKOUT / RESET';
-        phaseSub = 'Scapular Stability & Breathing Reset';
-        forceAlpha = 0.4;
-      }
-
-      // Render Kinematics according to exercise type
-      const cx = renderW * 0.5;
-      const cy = renderH * 0.55;
-
-      switch (exercise.renderType) {
-        case 'incline-press':
-          drawInclinePress(ctx, cx, cy, cycleProgress, forceAlpha);
-          break;
-        case 'hack-squat':
-          drawHackSquat(ctx, cx, cy, cycleProgress, forceAlpha);
-          break;
-        case 'sled-push':
-          drawSledPush(ctx, cx, cy, t, forceAlpha);
-          break;
-        case 'skierg':
-          drawSkiErg(ctx, cx, cy, cycleProgress, forceAlpha);
-          break;
-        case 'reformer-footwork':
-          drawReformerFootwork(ctx, cx, cy, cycleProgress, forceAlpha);
-          break;
-        case 'reformer-stretch':
-          drawReformerStretch(ctx, cx, cy, cycleProgress, forceAlpha);
-          break;
-      }
-
-      // Telemetry HUD overlay in canvas corner
-      drawTelemetryHUD(ctx, renderW, renderH, t, phaseLabel, phaseSub, cycleProgress);
-
-      ctx.restore();
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    animationFrameId = requestAnimationFrame(render);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', resize);
-    };
-  }, [exercise, isPlaying, playbackSpeed, isScrubbing]);
-
-  // --- KINEMATIC DRAWING ROUTINES ---
-
-  function drawInclinePress(
-    ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
-    progress: number,
-    forceAlpha: number
-  ) {
-    // 30 degree incline bench
-    const benchAngle = (30 * Math.PI) / 180;
-    const benchLength = 220;
-
-    ctx.save();
-    ctx.translate(cx - 40, cy + 30);
-
-    // Bench frame
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.22)';
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(-benchLength * 0.3 * Math.cos(benchAngle), benchLength * 0.3 * Math.sin(benchAngle));
-    ctx.lineTo(benchLength * 0.7 * Math.cos(benchAngle), -benchLength * 0.7 * Math.sin(benchAngle));
-    ctx.stroke();
-
-    // Bench support strut
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.12)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, 110);
-    ctx.lineTo(-70, 110);
-    ctx.stroke();
-
-    // Human torso resting on bench (inclined)
-    const hipX = -20 * Math.cos(benchAngle);
-    const hipY = 20 * Math.sin(benchAngle);
-    const shoulderX = 110 * Math.cos(benchAngle);
-    const shoulderY = -110 * Math.sin(benchAngle);
-
-    // Torso line
-    ctx.strokeStyle = '#F5F5F2';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(hipX, hipY);
-    ctx.lineTo(shoulderX, shoulderY);
-    ctx.stroke();
-
-    // Head
-    const headX = shoulderX + 28 * Math.cos(benchAngle);
-    const headY = shoulderY - 28 * Math.sin(benchAngle);
-    ctx.fillStyle = '#F5F5F2';
-    ctx.beginPath();
-    ctx.arc(headX, headY, 14, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Legs on floor
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.5)';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(hipX, hipY);
-    ctx.lineTo(hipX - 30, hipY + 60);
-    ctx.lineTo(hipX - 30, hipY + 110);
-    ctx.stroke();
-
-    // Arms & Press Movement Kinematics
-    // At progress = 0 (bottom of press), elbows bent, hands close to chest
-    // At progress = 1 (top of press), arms extended along converging angle
-    const pressArmLength = 80;
-    const pressAngle = benchAngle + Math.PI / 2 + 0.15 - progress * 0.1;
-
-    // Hand position travels from (shoulder + 35) to (shoulder + 95)
-    const reach = 40 + progress * 65;
-    const handX = shoulderX + reach * Math.cos(pressAngle);
-    const handY = shoulderY - reach * Math.sin(pressAngle);
-
-    // Elbow calculates via 2-bone IK
-    const upperArm = 48;
-    const forearm = 48;
-    const elbowAngle = Math.PI * 0.45 - progress * 0.85;
-    const elbowX = shoulderX + upperArm * Math.cos(benchAngle + elbowAngle);
-    const elbowY = shoulderY - upperArm * Math.sin(benchAngle + elbowAngle);
-
-    // Draw arm bones
-    ctx.strokeStyle = '#E0DFDB';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY);
-    ctx.lineTo(elbowX, elbowY);
-    ctx.lineTo(handX, handY);
-    ctx.stroke();
-
-    // Barbell / Machine Handle & Converging Axis Bar
-    ctx.strokeStyle = '#8C2230';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(handX - 25, handY - 10);
-    ctx.lineTo(handX + 25, handY + 10);
-    ctx.stroke();
-
-    // Motion Trajectory Phosphor Arc
-    ctx.strokeStyle = 'rgba(140, 34, 48, 0.45)';
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX + 40 * Math.cos(pressAngle), shoulderY - 40 * Math.sin(pressAngle));
-    ctx.lineTo(shoulderX + 105 * Math.cos(pressAngle), shoulderY - 105 * Math.sin(pressAngle));
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Dynamic Force Vector
-    if (progress > 0.1) {
-      ctx.strokeStyle = `rgba(214, 245, 91, ${forceAlpha})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(handX, handY);
-      ctx.lineTo(handX + 35 * Math.cos(pressAngle), handY - 35 * Math.sin(pressAngle));
-      ctx.stroke();
-      // Arrowhead
-      const ahX = handX + 35 * Math.cos(pressAngle);
-      const ahY = handY - 35 * Math.sin(pressAngle);
-      ctx.fillStyle = `rgba(214, 245, 91, ${forceAlpha})`;
-      ctx.beginPath();
-      ctx.arc(ahX, ahY, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Active Pectoral Muscle Heatmap Glow
-    const pecGlow = ctx.createRadialGradient(
-      shoulderX - 10,
-      shoulderY + 15,
-      2,
-      shoulderX - 10,
-      shoulderY + 15,
-      28
-    );
-    pecGlow.addColorStop(0, `rgba(140, 34, 48, ${0.4 + forceAlpha * 0.5})`);
-    pecGlow.addColorStop(1, 'rgba(140, 34, 48, 0)');
-    ctx.fillStyle = pecGlow;
-    ctx.beginPath();
-    ctx.arc(shoulderX - 10, shoulderY + 15, 28, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  function drawHackSquat(
-    ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
-    progress: number,
-    forceAlpha: number
-  ) {
-    // 45 degree hack rail
-    const railAngle = (45 * Math.PI) / 180;
-    const railLength = 260;
-
-    ctx.save();
-    ctx.translate(cx, cy + 20);
-
-    // Guide Rails
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.15)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(-railLength * 0.5 * Math.cos(railAngle), -railLength * 0.5 * Math.sin(railAngle));
-    ctx.lineTo(railLength * 0.5 * Math.cos(railAngle), railLength * 0.5 * Math.sin(railAngle));
-    ctx.stroke();
-
-    // Footplate at base
-    const footplateX = railLength * 0.45 * Math.cos(railAngle);
-    const footplateY = railLength * 0.45 * Math.sin(railAngle);
-    ctx.strokeStyle = '#8C2230';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(footplateX - 30 * Math.sin(railAngle), footplateY + 30 * Math.cos(railAngle));
-    ctx.lineTo(footplateX + 30 * Math.sin(railAngle), footplateY - 30 * Math.cos(railAngle));
-    ctx.stroke();
-
-    // Sled displacement along rail (progress = 0 is deep bottom, progress = 1 is standing)
-    const sledDist = (progress * 0.4 - 0.2) * railLength;
-    const sledX = sledDist * Math.cos(railAngle);
-    const sledY = sledDist * Math.sin(railAngle);
-
-    // Sled backrest
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.4)';
-    ctx.lineWidth = 10;
-    ctx.beginPath();
-    ctx.moveTo(sledX - 45 * Math.cos(railAngle), sledY - 45 * Math.sin(railAngle));
-    ctx.lineTo(sledX + 30 * Math.cos(railAngle), sledY + 30 * Math.sin(railAngle));
-    ctx.stroke();
-
-    // Shoulder pads
-    ctx.fillStyle = '#8C2230';
-    ctx.fillRect(
-      sledX - 45 * Math.cos(railAngle) - 8,
-      sledY - 45 * Math.sin(railAngle) - 14,
-      18,
-      28
-    );
-
-    // Lifter torso against sled
-    const shoulderX = sledX - 35 * Math.cos(railAngle);
-    const shoulderY = sledY - 35 * Math.sin(railAngle);
-    const hipX = sledX + 25 * Math.cos(railAngle);
-    const hipY = sledY + 25 * Math.sin(railAngle);
-
-    ctx.strokeStyle = '#F5F5F2';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY);
-    ctx.lineTo(hipX, hipY);
-    ctx.stroke();
-
-    // Head
-    const headX = shoulderX - 16 * Math.cos(railAngle);
-    const headY = shoulderY - 16 * Math.sin(railAngle);
-    ctx.fillStyle = '#F5F5F2';
-    ctx.beginPath();
-    ctx.arc(headX, headY, 13, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Feet fixed on footplate
-    const footX = footplateX - 8 * Math.sin(railAngle);
-    const footY = footplateY + 8 * Math.cos(railAngle);
-
-    // Knee joint kinematics
-    // When progress = 0 (bottom squat), knee flexes outward to side
-    const kneeOffset = (1 - progress) * 45;
-    const kneeX = (hipX + footX) * 0.5 - kneeOffset;
-    const kneeY = (hipY + footY) * 0.5 + kneeOffset * 0.7;
-
-    // Femur & Tibia
-    ctx.strokeStyle = '#E0DFDB';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(hipX, hipY);
-    ctx.lineTo(kneeX, kneeY);
-    ctx.lineTo(footX, footY);
-    ctx.stroke();
-
-    // VMO / Quad muscle engagement glow
-    const quadGlow = ctx.createRadialGradient(
-      (hipX + kneeX) * 0.5,
-      (hipY + kneeY) * 0.5,
-      2,
-      (hipX + kneeX) * 0.5,
-      (hipY + kneeY) * 0.5,
-      32
-    );
-    quadGlow.addColorStop(0, `rgba(140, 34, 48, ${0.35 + forceAlpha * 0.5})`);
-    quadGlow.addColorStop(1, 'rgba(140, 34, 48, 0)');
-    ctx.fillStyle = quadGlow;
-    ctx.beginPath();
-    ctx.arc((hipX + kneeX) * 0.5, (hipY + kneeY) * 0.5, 32, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Force vector through heels
-    if (progress > 0.05) {
-      ctx.strokeStyle = `rgba(214, 245, 91, ${forceAlpha})`;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(footX, footY);
-      ctx.lineTo(footX - 45 * Math.cos(railAngle), footY - 45 * Math.sin(railAngle));
-      ctx.stroke();
-    }
-
-    ctx.restore();
-  }
-
-  function drawSledPush(
-    ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
-    t: number,
-    forceAlpha: number
-  ) {
-    ctx.save();
-    ctx.translate(cx - 70, cy + 30);
-
-    // Turf floor track
-    ctx.strokeStyle = 'rgba(176, 141, 87, 0.4)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(-160, 90);
-    ctx.lineTo(240, 90);
-    ctx.stroke();
-
-    // Sled base & vertical push uprights
-    const sledX = 120;
-    const sledY = 90;
-    ctx.strokeStyle = '#B08D57';
-    ctx.lineWidth = 6;
-    // Skids
-    ctx.beginPath();
-    ctx.moveTo(sledX - 30, sledY);
-    ctx.lineTo(sledX + 50, sledY);
-    ctx.lineTo(sledX + 60, sledY - 15);
-    ctx.stroke();
-
-    // Upright push bars
-    ctx.strokeStyle = '#F5F5F2';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(sledX, sledY);
-    ctx.lineTo(sledX, sledY - 110);
-    ctx.moveTo(sledX + 25, sledY);
-    ctx.lineTo(sledX + 25, sledY - 110);
-    ctx.stroke();
-
-    // Heavy weight plates on sled
-    ctx.fillStyle = '#1C1C1C';
-    ctx.strokeStyle = '#8C2230';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(sledX + 5, sledY - 70, 16, 70, 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Athlete in continuous 45° forward drive
-    // Cyclic leg piston stride based on t * 4
-    const stride = (t * 6) % 1; // 6 strides per full cycle
-    const leg1Phase = Math.sin(stride * Math.PI * 2);
-    const leg2Phase = Math.sin((stride + 0.5) * Math.PI * 2);
-
-    const handX = sledX;
-    const handY = sledY - 75;
-
-    // Athlete torso (constant 45 deg angle)
-    const torsoAngle = (42 * Math.PI) / 180;
-    const shoulderX = handX - 55;
-    const shoulderY = handY + 12;
-    const hipX = shoulderX - 70 * Math.cos(torsoAngle);
-    const hipY = shoulderY + 70 * Math.sin(torsoAngle);
-
-    // Head
-    ctx.fillStyle = '#F5F5F2';
-    ctx.beginPath();
-    ctx.arc(shoulderX + 10, shoulderY - 10, 13, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Torso spine
-    ctx.strokeStyle = '#F5F5F2';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY);
-    ctx.lineTo(hipX, hipY);
-    ctx.stroke();
-
-    // Arms locked to poles
-    ctx.strokeStyle = '#E0DFDB';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY);
-    ctx.lineTo(handX, handY);
-    ctx.stroke();
-
-    // Leg 1 (Front drive)
-    const knee1X = hipX + 30 * Math.cos(torsoAngle) + leg1Phase * 20;
-    const knee1Y = hipY + 30 * Math.sin(torsoAngle) - leg1Phase * 15;
-    const foot1X = hipX + 15 + leg1Phase * 35;
-    const foot1Y = 90;
-
-    // Leg 2 (Rear push off)
-    const knee2X = hipX - 25 - leg2Phase * 18;
-    const knee2Y = hipY + 35 - leg2Phase * 10;
-    const foot2X = hipX - 55 - leg2Phase * 25;
-    const foot2Y = 90;
-
-    ctx.strokeStyle = '#B8B8B8';
-    ctx.lineWidth = 5;
-    // Leg 2
-    ctx.beginPath();
-    ctx.moveTo(hipX, hipY);
-    ctx.lineTo(knee2X, knee2Y);
-    ctx.lineTo(foot2X, foot2Y);
-    ctx.stroke();
-
-    // Leg 1
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.moveTo(hipX, hipY);
-    ctx.lineTo(knee1X, knee1Y);
-    ctx.lineTo(foot1X, foot1Y);
-    ctx.stroke();
-
-    // Forward kinetic propulsion arrows
-    ctx.strokeStyle = `rgba(176, 141, 87, ${forceAlpha})`;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(handX + 15, handY);
-    ctx.lineTo(handX + 65, handY);
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  function drawSkiErg(
-    ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
-    progress: number,
-    forceAlpha: number
-  ) {
-    ctx.save();
-    ctx.translate(cx, cy + 20);
-
-    // Ergometer column
-    const colX = -90;
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.18)';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(colX, 110);
-    ctx.lineTo(colX, -140);
-    ctx.stroke();
-
-    // Top flywheel & pulleys
-    ctx.fillStyle = '#1C1C1C';
-    ctx.strokeStyle = '#B08D57';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(colX, 60, 24, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Athlete standing / hinging
-    // progress = 0 is bottom finished hinge pull; progress = 1 is top reach
-    const hinge = 1 - progress; // 1 at deep pull, 0 at top reach
-    const hipX = 20 + hinge * 40;
-    const hipY = 20 + hinge * 15;
-    const shoulderX = hipX - 40 * Math.sin(hinge * 0.9);
-    const shoulderY = -60 + hinge * 40;
-
-    // Head
-    ctx.fillStyle = '#F5F5F2';
-    ctx.beginPath();
-    ctx.arc(shoulderX + 5, shoulderY - 18, 13, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Spine
-    ctx.strokeStyle = '#F5F5F2';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY);
-    ctx.lineTo(hipX, hipY);
-    ctx.stroke();
-
-    // Legs (soft knee hinge)
-    const footX = 15;
-    const footY = 110;
-    const kneeX = 25 - hinge * 15;
-    const kneeY = 65;
-
-    ctx.strokeStyle = '#B8B8B8';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(hipX, hipY);
-    ctx.lineTo(kneeX, kneeY);
-    ctx.lineTo(footX, footY);
-    ctx.stroke();
-
-    // Drive arms pulling cables from top pulley
-    const cableTopX = colX + 15;
-    const cableTopY = -135;
-
-    const handX = shoulderX - 10 - hinge * 30;
-    const handY = shoulderY + 40 + hinge * 45;
-
-    // Drive cords
-    ctx.strokeStyle = 'rgba(176, 141, 87, 0.7)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(cableTopX, cableTopY);
-    ctx.lineTo(handX, handY);
-    ctx.stroke();
-
-    // Arms
-    ctx.strokeStyle = '#E0DFDB';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY);
-    ctx.lineTo(shoulderX + 15 - hinge * 20, shoulderY + 25);
-    ctx.lineTo(handX, handY);
-    ctx.stroke();
-
-    // Core / Lat activation glow
-    const coreGlow = ctx.createRadialGradient(
-      (shoulderX + hipX) * 0.5,
-      (shoulderY + hipY) * 0.5,
-      2,
-      (shoulderX + hipX) * 0.5,
-      (shoulderY + hipY) * 0.5,
-      35
-    );
-    coreGlow.addColorStop(0, `rgba(176, 141, 87, ${0.25 + forceAlpha * 0.5})`);
-    coreGlow.addColorStop(1, 'rgba(176, 141, 87, 0)');
-    ctx.fillStyle = coreGlow;
-    ctx.beginPath();
-    ctx.arc((shoulderX + hipX) * 0.5, (shoulderY + hipY) * 0.5, 35, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  function drawReformerFootwork(
-    ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
-    progress: number,
-    forceAlpha: number
-  ) {
-    ctx.save();
-    ctx.translate(cx, cy + 30);
-
-    // Reformer wooden frame & rails
-    const frameLength = 340;
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.2)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(-frameLength * 0.5, 50);
-    ctx.lineTo(frameLength * 0.5, 50);
-    ctx.stroke();
-
-    // Footbar on the left
-    const footbarX = -frameLength * 0.46;
-    ctx.strokeStyle = '#D6F55B';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(footbarX, 50);
-    ctx.lineTo(footbarX + 15, -25);
-    ctx.lineTo(footbarX + 25, -25);
-    ctx.stroke();
-
-    // Carriage displacement (progress = 0 is home position, progress = 1 is fully extended out)
-    const carriageTravel = progress * 95;
-    const carriageX = -60 + carriageTravel;
-    const carriageY = 40;
-    const carriageW = 160;
-
-    // Carriage bed & shoulder blocks
-    ctx.fillStyle = '#141414';
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.4)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(carriageX - carriageW * 0.5, carriageY - 14, carriageW, 14, 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Shoulder block & headrest
-    ctx.fillStyle = '#D6F55B';
-    ctx.fillRect(carriageX + carriageW * 0.5 - 35, carriageY - 26, 8, 14);
-
-    // Reformer Springs underneath carriage
-    ctx.strokeStyle = 'rgba(214, 245, 91, 0.5)';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    const springStartX = footbarX + 35;
-    const springEndX = carriageX - carriageW * 0.5;
-    ctx.moveTo(springStartX, 44);
-    // Spring coiled look
-    for (let sx = springStartX; sx < springEndX; sx += 6) {
-      ctx.lineTo(sx + 3, 40);
-      ctx.lineTo(sx + 6, 48);
-    }
-    ctx.stroke();
-
-    // Athlete supine lying on carriage
-    const shoulderX = carriageX + carriageW * 0.5 - 40;
-    const shoulderY = carriageY - 22;
-    const hipX = carriageX - 15;
-    const hipY = carriageY - 22;
-
-    // Head on headrest
-    ctx.fillStyle = '#F5F5F2';
-    ctx.beginPath();
-    ctx.arc(shoulderX + 18, shoulderY - 4, 12, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Torso (neutral spine)
-    ctx.strokeStyle = '#F5F5F2';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY);
-    ctx.lineTo(hipX, hipY);
-    ctx.stroke();
-
-    // Arms resting long by sides
-    ctx.strokeStyle = '#A0A09C';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY);
-    ctx.lineTo(shoulderX - 45, shoulderY);
-    ctx.stroke();
-
-    // Legs: feet planted on footbar, knees bending / extending
-    const footX = footbarX + 22;
-    const footY = -25;
-
-    // Knee calculation based on leg extension
-    const kneeX = (hipX + footX) * 0.5 + (1 - progress) * 20;
-    const kneeY = Math.min(hipY, footY) - 30 - (1 - progress) * 35;
-
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(hipX, hipY);
-    ctx.lineTo(kneeX, kneeY);
-    ctx.lineTo(footX, footY);
-    ctx.stroke();
-
-    // Pelvic neutral & deep core highlight
-    const coreGlow = ctx.createRadialGradient(hipX + 10, hipY, 2, hipX + 10, hipY, 24);
-    coreGlow.addColorStop(0, `rgba(214, 245, 91, ${0.4 + forceAlpha * 0.4})`);
-    coreGlow.addColorStop(1, 'rgba(214, 245, 91, 0)');
-    ctx.fillStyle = coreGlow;
-    ctx.beginPath();
-    ctx.arc(hipX + 10, hipY, 24, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  function drawReformerStretch(
-    ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
-    progress: number,
-    forceAlpha: number
-  ) {
-    ctx.save();
-    ctx.translate(cx, cy + 30);
-
-    const frameLength = 340;
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.2)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(-frameLength * 0.5, 50);
-    ctx.lineTo(frameLength * 0.5, 50);
-    ctx.stroke();
-
-    const footbarX = -frameLength * 0.46;
-    ctx.strokeStyle = '#D6F55B';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(footbarX, 50);
-    ctx.lineTo(footbarX + 15, -25);
-    ctx.lineTo(footbarX + 25, -25);
-    ctx.stroke();
-
-    // Carriage displacement in plank (carriage travels away as shoulders flex)
-    const carriageTravel = progress * 65;
-    const carriageX = 10 + carriageTravel;
-    const carriageY = 40;
-    const carriageW = 160;
-
-    ctx.fillStyle = '#141414';
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.4)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(carriageX - carriageW * 0.5, carriageY - 14, carriageW, 14, 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // High plank posture: hands on footbar, feet braced against shoulder blocks
-    const handX = footbarX + 20;
-    const handY = -25;
-    const footX = carriageX + carriageW * 0.5 - 35;
-    const footY = carriageY - 20;
-
-    // Shoulder articulates back as carriage moves
-    const shoulderX = handX + 45 + progress * 25;
-    const shoulderY = handY - 45 + progress * 15;
-
-    // Head
-    ctx.fillStyle = '#F5F5F2';
-    ctx.beginPath();
-    ctx.arc(shoulderX - 14, shoulderY - 8, 12, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Arms
-    ctx.strokeStyle = '#E0DFDB';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(handX, handY);
-    ctx.lineTo(shoulderX, shoulderY);
-    ctx.stroke();
-
-    // Hip maintained in rigid plank diagonal
-    const hipX = (shoulderX + footX) * 0.52;
-    const hipY = (shoulderY + footY) * 0.5;
-
-    // Torso & Legs rigid plank
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY);
-    ctx.lineTo(hipX, hipY);
-    ctx.lineTo(footX, footY);
-    ctx.stroke();
-
-    // Serratus & core anti-extension line
-    ctx.strokeStyle = `rgba(214, 245, 91, ${0.4 + forceAlpha * 0.5})`;
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash([3, 3]);
-    ctx.beginPath();
-    ctx.moveTo(shoulderX, shoulderY + 8);
-    ctx.lineTo(hipX, hipY + 8);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.restore();
-  }
-
-  function drawTelemetryHUD(
-    ctx: CanvasRenderingContext2D,
-    w: number,
-    h: number,
-    t: number,
-    phaseLabel: string,
-    phaseSub: string,
-    cycleProgress: number
-  ) {
-    // Top-left live phase indicator
-    ctx.font = '500 11px monospace';
-    ctx.fillStyle = 'rgba(245, 245, 242, 0.4)';
-    ctx.fillText('BIOMECHANICAL KINETICS // 60 FPS', 24, 30);
-
-    ctx.font = '600 13px monospace';
-    ctx.fillStyle = '#F5F5F2';
-    ctx.fillText(phaseLabel, 24, 48);
-
-    ctx.font = '400 10.5px "General Sans", sans-serif';
-    ctx.fillStyle = 'rgba(245, 245, 242, 0.6)';
-    ctx.fillText(phaseSub, 24, 65);
-
-    // Top-right cadence dial ring
-    const rx = w - 45;
-    const ry = 42;
-    const radius = 18;
-
-    ctx.strokeStyle = 'rgba(245, 245, 242, 0.12)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(rx, ry, radius, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Active progress arc
-    ctx.strokeStyle = exercise.accentColor;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(rx, ry, radius, -Math.PI / 2, -Math.PI / 2 + t * Math.PI * 2);
-    ctx.stroke();
-
-    // Percent readout in center
-    ctx.font = '500 9.5px monospace';
-    ctx.fillStyle = '#F5F5F2';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`${Math.round(t * 100)}%`, rx, ry);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-
-    // Bottom telemetry strip
-    const barW = w - 48;
-    const barY = h - 24;
-
-    ctx.fillStyle = 'rgba(245, 245, 242, 0.08)';
-    ctx.fillRect(24, barY, barW, 4);
-
-    ctx.fillStyle = exercise.accentColor;
-    ctx.fillRect(24, barY, barW * cycleProgress, 4);
-  }
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="h-[360px] w-full rounded-sm bg-[#0A0A0A] sm:h-[420px] md:h-[460px]"
-    />
-  );
-}
-
-/**
  * Studio Workout Micro-Animations Guide Section.
- * Comprehensive, interactive biomechanical laboratory across Fitness, HYROX, and Pilates.
+ * Comprehensive, interactive biomechanical laboratory across the 8 essential gym movements.
  */
 export default function StudioWorkoutGuide() {
   const [activeTab, setActiveTab] = useState(0);
-  const [engineMode, setEngineMode] = useState<'lottie' | 'kinematic'>('lottie');
   const [isPlaying, setIsPlaying] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState<0.5 | 1.0 | 1.5>(1.0);
-  const [manualPhase, setManualPhase] = useState(0);
-  const [isScrubbing, setIsScrubbing] = useState(false);
   const [audioMuted, setAudioMuted] = useState(getAudioMuted());
 
   const baseId = useId();
@@ -1104,14 +193,12 @@ export default function StudioWorkoutGuide() {
 
   const handleTabSelect = (idx: number) => {
     setActiveTab(idx);
-    setManualPhase(0);
-    setIsScrubbing(false);
+    setIsPlaying(true);
     playMechanicalClick(1400, 0.035);
   };
 
   const handlePlayToggle = () => {
     setIsPlaying(!isPlaying);
-    setIsScrubbing(false);
     playMechanicalClick(1100, 0.03);
   };
 
@@ -1141,25 +228,25 @@ export default function StudioWorkoutGuide() {
           </span>
           <span className="h-3 w-px bg-hairline-2" aria-hidden="true" />
           <span className="nums text-xs tracking-wider text-muted">
-            STUDIO KINETIC BLUEPRINTS
+            3D MOVEMENT BLUEPRINTS
           </span>
         </div>
 
         <SectionHeading id="workout-guide-heading" className="t-h2 uppercase text-heading">
-          Precision Workout Micro-Animations.
+          Precision Gym Micro-Animations.
         </SectionHeading>
         <p className="t-body mt-4 max-w-measure text-muted">
-          Interactive real-time biomechanical kinematics. Examine exact force vectors, joint angles,
-          cadence tempos, and physiological muscle recruitment across Vyomi&apos;s primary studio
-          disciplines.
+          High-definition anatomical motion kinematics. Study exact joint articulation, barbell
+          pathways, cadence tempo, and physiological muscle fiber recruitment across the eight
+          foundational compound lifts.
         </p>
         <div className="mt-8 max-w-shell">
           <AccentRule />
         </div>
       </div>
 
-      {/* Exercise Navigation Tabs */}
-      <div className="mb-4 flex flex-wrap gap-2 pb-2" role="tablist">
+      {/* Exercise Navigation Tabs (8 Exercises) */}
+      <div className="mb-6 flex flex-wrap gap-2 pb-2" role="tablist">
         {EXERCISE_GUIDES.map((ex, idx) => {
           const isSelected = activeTab === idx;
           return (
@@ -1193,44 +280,26 @@ export default function StudioWorkoutGuide() {
         })}
       </div>
 
-      {/* Engine Switcher & Utility Toolbar */}
+      {/* Status Bar */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-4">
-        <div className="flex items-center gap-1.5 p-1 bg-charcoal/80 rounded-sm border border-hairline">
-          <button
-            type="button"
-            onClick={() => {
-              setEngineMode('lottie');
-              playMechanicalClick(1300, 0.03);
-            }}
-            className={`px-3 py-1 text-xs font-mono rounded-sm transition-all ${
-              engineMode === 'lottie'
-                ? 'bg-hairline-2 text-heading shadow font-medium'
-                : 'text-muted hover:text-heading'
-            }`}
-          >
-            ✦ LottieFiles Vector Engine
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setEngineMode('kinematic');
-              playMechanicalClick(1100, 0.03);
-            }}
-            className={`px-3 py-1 text-xs font-mono rounded-sm transition-all ${
-              engineMode === 'kinematic'
-                ? 'bg-hairline-2 text-heading shadow font-medium'
-                : 'text-muted hover:text-heading'
-            }`}
-          >
-            ⌖ Biomechanical HUD Engine
-          </button>
+        <div className="flex items-center gap-2">
+          <span
+            className="h-2 w-2 rounded-full animate-pulse"
+            style={{ backgroundColor: current.accentColor }}
+            aria-hidden="true"
+          />
+          <span className="font-mono text-xs text-heading uppercase tracking-wider">
+            {current.equipment}
+          </span>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" aria-hidden="true" />
-          <span className="nums text-[11px] font-mono text-muted uppercase tracking-wider">
-            Vector Kinetic Motion
-          </span>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" aria-hidden="true" />
+            <span className="nums text-[11px] font-mono text-muted uppercase tracking-wider">
+              High-Fidelity 3D Kinematics
+            </span>
+          </div>
         </div>
       </div>
 
@@ -1243,37 +312,15 @@ export default function StudioWorkoutGuide() {
       >
         {/* Left Column: Animation Player & Kinetic Controls */}
         <div className="flex flex-col gap-4 lg:col-span-7">
-          <div className="relative overflow-hidden rounded-sm border border-hairline bg-[#0A0A0A] shadow-2xl">
-            {engineMode === 'lottie' ? (
-              <LottieWorkoutPlayer
-                animationPath={current.lottiePath}
-                name={current.name}
-                discipline={current.discipline}
-                accentColor={current.accentColor}
-                isPlaying={isPlaying}
-                speed={playbackSpeed}
-                className="h-[360px] sm:h-[420px] md:h-[460px] w-full"
-              />
-            ) : (
-              <WorkoutCanvas
-                exercise={current}
-                isPlaying={isPlaying}
-                playbackSpeed={playbackSpeed}
-                manualPhase={manualPhase}
-                isScrubbing={isScrubbing}
-              />
-            )}
-
-            {/* In-canvas Header Overlay */}
-            <div className="pointer-events-none absolute left-4 bottom-14 flex items-center gap-2 rounded bg-ink/70 px-2.5 py-1 text-xs backdrop-blur-sm">
-              <span
-                className="h-2 w-2 rounded-full animate-pulse"
-                style={{ backgroundColor: current.accentColor }}
-                aria-hidden="true"
-              />
-              <span className="font-mono text-heading">{current.machine}</span>
-            </div>
-          </div>
+          <GymAnimationPlayer
+            animationPath={current.animationPath}
+            name={current.name}
+            discipline={current.discipline}
+            accentColor={current.accentColor}
+            isPlaying={isPlaying}
+            speed={playbackSpeed}
+            className="h-[360px] sm:h-[420px] md:h-[460px] w-full shadow-2xl"
+          />
 
           {/* Kinetic Playback Controls Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-hairline bg-charcoal/60 px-4 py-3">
@@ -1307,23 +354,10 @@ export default function StudioWorkoutGuide() {
               </div>
             </div>
 
-            {/* Rep Phase Scrubber */}
-            <div className="flex flex-1 items-center gap-2 min-w-[140px] max-w-[220px]">
-              <span className="t-label text-[10px] text-faint">SCRUB</span>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={isScrubbing ? manualPhase : 0.5}
-                onChange={(e) => {
-                  setIsScrubbing(true);
-                  setIsPlaying(false);
-                  setManualPhase(parseFloat(e.target.value));
-                }}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-hairline accent-[#8C2230]"
-                aria-label="Rep cycle position scrubber"
-              />
+            {/* Tempo Badge */}
+            <div className="flex items-center gap-1.5 font-mono text-xs text-muted">
+              <span className="t-label text-[10px] text-faint">TEMPO:</span>
+              <span className="text-heading">{current.tempo.split(' ')[0]}</span>
             </div>
 
             {/* Audio Feedback Button */}
@@ -1353,8 +387,9 @@ export default function StudioWorkoutGuide() {
 
             {/* Muscle Recruitment Matrix */}
             <div className="mt-5 border-t border-hairline pt-4">
-              <div className="mb-2 text-[11px] font-mono uppercase tracking-wider text-faint">
-                Primary Recruitment
+              <div className="mb-2 text-[11px] font-mono uppercase tracking-wider text-faint flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-[#D0715E]" />
+                <span>Primary Target Activation</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {current.primaryMuscles.map((m) => (
@@ -1367,8 +402,9 @@ export default function StudioWorkoutGuide() {
                 ))}
               </div>
 
-              <div className="mb-2 mt-3 text-[11px] font-mono uppercase tracking-wider text-faint">
-                Secondary Stabilizers
+              <div className="mb-2 mt-3 text-[11px] font-mono uppercase tracking-wider text-faint flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-[#8C8C8C]" />
+                <span>Secondary Stabilizers</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {current.secondaryMuscles.map((m) => (
@@ -1387,7 +423,7 @@ export default function StudioWorkoutGuide() {
           <div className="border border-hairline bg-charcoal/20 p-5 rounded-sm">
             <h4 className="t-label uppercase tracking-widest text-muted mb-3 flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-lime" aria-hidden="true" />
-              Elite Execution Protocol
+              Elite Form Protocol
             </h4>
             <ol className="flex flex-col gap-3">
               {current.cues.map((cue, i) => (
@@ -1402,7 +438,7 @@ export default function StudioWorkoutGuide() {
           {/* Common Biomechanical Fault */}
           <div className="border border-burgundy/30 bg-burgundy/10 p-4 rounded-sm">
             <div className="flex items-center gap-2 mb-1.5 text-xs font-mono uppercase tracking-wider text-[#FF8595]">
-              <span aria-hidden="true">⚠</span> Biomechanical Fault to Avoid
+              <span aria-hidden="true">⚠</span> Critical Fault to Avoid
             </div>
             <p className="t-small text-muted text-xs leading-relaxed">{current.fault}</p>
           </div>
@@ -1411,4 +447,3 @@ export default function StudioWorkoutGuide() {
     </section>
   );
 }
-
