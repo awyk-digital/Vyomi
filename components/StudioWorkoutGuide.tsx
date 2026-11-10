@@ -3,7 +3,7 @@
 import React, { useState, useId } from 'react';
 import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
-import CinematicWorkoutPlayer, { Hotspot } from '@/components/CinematicWorkoutPlayer';
+import Realistic3DGymPlayer from '@/components/Realistic3DGymPlayer';
 
 export interface ExerciseGuide {
   id: string;
@@ -18,8 +18,7 @@ export interface ExerciseGuide {
   cues: [string, string, string];
   masteryPrinciple: string;
   accentColor: string;
-  imageSrc: string;
-  hotspots: Hotspot[];
+  model3dUid: string;
 }
 
 export const EXERCISE_GUIDES: ExerciseGuide[] = [
@@ -41,30 +40,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     masteryPrinciple:
       'Prioritize thoracic extension and diaphragmatic bracing to ensure force transfers through the midfoot without anterior knee drift.',
     accentColor: '#8C2230',
-    imageSrc: '/img/workouts/barbell-squat.jpg',
-    hotspots: [
-      {
-        id: 'traps',
-        x: 50,
-        y: 35,
-        label: 'Upper Trapezius Shelf',
-        detail: 'Barbell rests firmly across rear deltoids and traps with wrists neutral and elbows pulled back.',
-      },
-      {
-        id: 'depth',
-        x: 50,
-        y: 68,
-        label: 'Parallel Depth Threshold',
-        detail: 'Hip crease breaks below the superior surface of the patella with spine fully neutral.',
-      },
-      {
-        id: 'feet',
-        x: 50,
-        y: 92,
-        label: 'Tripod Foot Contact',
-        detail: 'Even pressure through heel, first metatarsal, and fifth metatarsal rooted into the floor.',
-      },
-    ],
+    model3dUid: '03d18f123daf428ba0aca04448eb396e',
   },
   {
     id: 'deadlift',
@@ -82,32 +58,9 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Drive the floor away with the legs until bar clears knees, then thrust hips through to a tall lockout',
     ],
     masteryPrinciple:
-      'Treat the initial pull as a leg press into the earth; once past the knees, engage the glutes fully to achieve an effortless, tall vertical posture.',
+      'Treat the initial pull as a leg press into the floor; once the bar passes the knees, drive the hips through into an effortless, tall vertical posture.',
     accentColor: '#8C2230',
-    imageSrc: '/img/workouts/deadlift.jpg',
-    hotspots: [
-      {
-        id: 'lats',
-        x: 50,
-        y: 22,
-        label: 'Scapular Lat Lock',
-        detail: 'Latissimus dorsi engaged and shoulder blades packed down like bent steel prior to liftoff.',
-      },
-      {
-        id: 'grip',
-        x: 50,
-        y: 58,
-        label: 'Chalked Precision Grip',
-        detail: 'Firm double-overhand grip directly outside legs to minimize moment arm distance.',
-      },
-      {
-        id: 'posture',
-        x: 50,
-        y: 76,
-        label: 'Vertical Alignment',
-        detail: 'Pelvis neutral with glutes fully clamped, avoiding excessive lumbar hyperextension.',
-      },
-    ],
+    model3dUid: '2aff1c3f0145403583a4e14655637d91',
   },
   {
     id: 'bench-press',
@@ -125,32 +78,9 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Tuck elbows at ~45-70° from torso, drive feet into the turf, and press explosively up and back',
     ],
     masteryPrinciple:
-      'Maintain continuous leg drive and a tight retracted upper back to establish an immovable platform for maximum power and shoulder longevity.',
+      'Maintain continuous leg drive and a tight retracted upper back to establish an immovable foundation for maximum power and shoulder longevity.',
     accentColor: '#8C2230',
-    imageSrc: '/img/workouts/bench-press.jpg',
-    hotspots: [
-      {
-        id: 'scapulae',
-        x: 42,
-        y: 45,
-        label: 'Scapular Anchor',
-        detail: 'Shoulder blades pinched together and driven downward into the bench pad.',
-      },
-      {
-        id: 'touch',
-        x: 53,
-        y: 35,
-        label: 'Sternum Touch Plane',
-        detail: 'Bar contacts lower chest gently with forearms strictly vertical beneath the load.',
-      },
-      {
-        id: 'elbows',
-        x: 68,
-        y: 42,
-        label: '45° Elbow Tuck',
-        detail: 'Elbows tracked at an anatomical 45-degree angle protecting the rotator cuff.',
-      },
-    ],
+    model3dUid: '53319e9420994a3890ce3c8c76077a8b',
   },
   {
     id: 'pull-up',
@@ -170,30 +100,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     masteryPrinciple:
       'Emphasize strict scapular depression at the start of every rep to recruit the entire back musculature without momentum or swinging.',
     accentColor: '#B08D57',
-    imageSrc: '/img/workouts/pull-up.jpg',
-    hotspots: [
-      {
-        id: 'bar',
-        x: 50,
-        y: 26,
-        label: 'Pronated Wide Grip',
-        detail: 'Full hand wrap with knuckles stacked directly over the high-tensile steel bar.',
-      },
-      {
-        id: 'lats',
-        x: 50,
-        y: 48,
-        label: 'Latissimus Flare',
-        detail: 'Elbows pulled downward toward back pockets for complete latissimus shortening.',
-      },
-      {
-        id: 'core',
-        x: 50,
-        y: 92,
-        label: 'Hollow Body Tension',
-        detail: 'Anterior core braced with legs straight to prevent lower-body sway or kip.',
-      },
-    ],
+    model3dUid: '43592d585f694f9aae975b5ba2435500',
   },
   {
     id: 'overhead-press',
@@ -213,30 +120,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     masteryPrinciple:
       'A true military press is a whole-body compound movement: clamp your glutes and brace the abdominal cylinder to provide a rock-solid foundation.',
     accentColor: '#B08D57',
-    imageSrc: '/img/workouts/overhead-press.jpg',
-    hotspots: [
-      {
-        id: 'lockout',
-        x: 50,
-        y: 15,
-        label: 'Overhead Lockout Apex',
-        detail: 'Bar stacked over glenohumeral joint, cervical spine, and midfoot in a plumb line.',
-      },
-      {
-        id: 'deltoids',
-        x: 50,
-        y: 36,
-        label: 'Shoulder Engagement',
-        detail: 'Deltoids and upper traps contract to stabilize the heavy load overhead.',
-      },
-      {
-        id: 'foundation',
-        x: 50,
-        y: 62,
-        label: 'Gluteal Foundation',
-        detail: 'Posterior chain locked tight to prevent compensatory lumbar hyperextension.',
-      },
-    ],
+    model3dUid: '3760ad8780e14bd4a4bdf22e48c9b87f',
   },
   {
     id: 'bent-over-row',
@@ -254,32 +138,9 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Pause and firmly pinch shoulder blades together at top without heaving torso upright',
     ],
     masteryPrinciple:
-      'Anchor into the hamstrings and maintain a rigid 45-degree spine; row with the elbows rather than biceps to fully recruit the rhomboids and mid-traps.',
+      'Anchor firmly into the hamstrings and maintain a rigid 45-degree spine; row with the elbows rather than biceps to fully recruit the rhomboids and mid-traps.',
     accentColor: '#8C2230',
-    imageSrc: '/img/workouts/bent-over-row.jpg',
-    hotspots: [
-      {
-        id: 'hinge',
-        x: 52,
-        y: 36,
-        label: '45° Neutral Spine Hinge',
-        detail: 'Torso remains steady at 45 degrees without rocking or swinging with the barbell.',
-      },
-      {
-        id: 'row',
-        x: 48,
-        y: 58,
-        label: 'Elbow Pull Vector',
-        detail: 'Bar drawn smoothly toward the junction of the lower ribcage and abdomen.',
-      },
-      {
-        id: 'hamstrings',
-        x: 48,
-        y: 84,
-        label: 'Posterior Anchor',
-        detail: 'Ischial tuberosities pushed back with hamstring tension counterbalancing bar weight.',
-      },
-    ],
+    model3dUid: 'c6fccd943ec14d5db22e679beed7bef1',
   },
   {
     id: 'lunge',
@@ -297,32 +158,9 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Drive powerfully through the front heel to stand tall and immediately transition into the next stride',
     ],
     masteryPrinciple:
-      'Control the eccentric descent so the back knee lightly kisses the turf margin rather than impacting, maximizing unilateral tension and hip stability.',
+      'Control the eccentric descent so the back knee gently decelerates just above the turf margin rather than impacting, maximizing unilateral tension and hip stability.',
     accentColor: '#B08D57',
-    imageSrc: '/img/workouts/lunge.jpg',
-    hotspots: [
-      {
-        id: 'torso',
-        x: 52,
-        y: 32,
-        label: 'Vertical Torso Carriage',
-        detail: 'Spine perpendicular to floor with core clamped to absorb vertical compression.',
-      },
-      {
-        id: 'knee',
-        x: 58,
-        y: 64,
-        label: '90° Front Knee Angle',
-        detail: 'Front patella tracking directly in line with second toe, avoiding medial valgus.',
-      },
-      {
-        id: 'depth',
-        x: 36,
-        y: 80,
-        label: 'Decelerated Depth Hover',
-        detail: 'Back knee hovers 1 inch above turf to keep constant tension on working musculature.',
-      },
-    ],
+    model3dUid: 'a6b82107d2ef411fa86276ce211a1f65',
   },
   {
     id: 'plank',
@@ -342,36 +180,14 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     masteryPrinciple:
       'Envision pulling your elbows toward your toes and toes toward elbows to activate the high-threshold motor units of the deep abdominal cylinder.',
     accentColor: '#D6F55B',
-    imageSrc: '/img/workouts/plank.jpg',
-    hotspots: [
-      {
-        id: 'shoulders',
-        x: 25,
-        y: 58,
-        label: 'Glenohumeral Stack',
-        detail: 'Elbows perpendicular directly beneath shoulders; serratus pushing ribcage high.',
-      },
-      {
-        id: 'core',
-        x: 52,
-        y: 52,
-        label: 'Pelvic Anti-Extension',
-        detail: 'Slight posterior pelvic tilt locks transverse abdominis without lumbar sagging.',
-      },
-      {
-        id: 'ankles',
-        x: 82,
-        y: 68,
-        label: 'Dorsiflexed Kinetic Lock',
-        detail: 'Heels driven backward with quadriceps locked tight to preserve full body tension.',
-      },
-    ],
+    model3dUid: '7eeb551c908b4787b6249a3bdc3d8528',
   },
 ];
 
 /**
- * Studio Workout Guide Section — 4K Single-Athlete Masterclass.
- * Delivers an ultra-premium, quiet luxury fitness experience with zero clutter.
+ * Studio Workout 3D Biomechanics Guide Section.
+ * Features interactive 3D WebGL motion with 360° orbit controls.
+ * Clean, minimal quiet luxury presentation with zero audio or warning clutter.
  */
 export default function StudioWorkoutGuide() {
   const [activeTab, setActiveTab] = useState(0);
@@ -389,21 +205,21 @@ export default function StudioWorkoutGuide() {
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <span className="accent-tick" aria-hidden="true" />
           <span className="t-label tracking-[0.22em] uppercase text-muted">
-            Biomechanics & Masterclass
+            Biomechanics & Form Laboratory
           </span>
           <span className="h-3 w-px bg-hairline-2" aria-hidden="true" />
           <span className="nums text-xs tracking-wider text-muted">
-            4K ATHLETE SERIES
+            3D INTERACTIVE KINEMATICS
           </span>
         </div>
 
         <SectionHeading id="workout-guide-heading" className="t-h2 uppercase text-heading">
-          Foundational Kinematics in 4K.
+          Precision Gym 3D Micro-Animations.
         </SectionHeading>
         <p className="t-body mt-4 max-w-measure text-muted">
-          Study textbook execution across the eight cornerstone compound movements. Photorealistic
-          4K resolution, kinetic muscle recruitment analysis, and elite biomechanical cues featuring
-          our master athlete.
+          Interactive, high-fidelity 3D motion capture models. Rotate 360° in real-time,
+          inspect bar path mechanics, and study muscular fiber recruitment across the eight
+          foundational compound lifts.
         </p>
         <div className="mt-8 max-w-shell">
           <AccentRule />
@@ -452,22 +268,19 @@ export default function StudioWorkoutGuide() {
         aria-labelledby={`${baseId}-tab-${activeTab}`}
         className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12"
       >
-        {/* Left Column: 4K Ultra-HD Cinematic Player */}
+        {/* Left Column: 3D Motion Player */}
         <div className="flex flex-col gap-4 lg:col-span-7">
-          <CinematicWorkoutPlayer
-            exerciseId={current.id}
+          <Realistic3DGymPlayer
+            modelUid={current.model3dUid}
             name={current.name}
             discipline={current.discipline}
             accentColor={current.accentColor}
-            imageSrc={current.imageSrc}
-            tempo={current.tempo}
-            hotspots={current.hotspots}
-            className="w-full shadow-2xl"
+            className="h-[420px] sm:h-[480px] md:h-[540px] w-full shadow-2xl"
           />
 
           <div className="flex items-center justify-between px-1 py-1 text-xs text-faint font-mono">
-            <span>TAP IMAGE TO INSPECT 4K MUSCLE CONTRACTION</span>
-            <span>SINGLE ATHLETE PROTOCOL</span>
+            <span>DRAG TO ORBIT 360° · SCROLL TO ZOOM</span>
+            <span>REAL-TIME 3D WEBGL</span>
           </div>
         </div>
 
@@ -542,7 +355,7 @@ export default function StudioWorkoutGuide() {
             </ol>
           </div>
 
-          {/* Execution Mastery Principle */}
+          {/* Execution Mastery Principle (Positive Coaching - No Warning Tags) */}
           <div className="border border-hairline bg-charcoal/30 p-4 rounded-sm">
             <div className="flex items-center gap-2 mb-1.5 text-xs font-mono uppercase tracking-wider text-muted">
               <span
