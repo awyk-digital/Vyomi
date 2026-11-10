@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useId } from 'react';
 import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
 import Reveal from '@/components/Reveal';
+import LottieWorkoutPlayer from '@/components/LottieWorkoutPlayer';
 import { playMechanicalClick, toggleAudioMute, getAudioMuted } from '@/lib/haptics';
 
 export interface ExerciseGuide {
@@ -18,6 +19,7 @@ export interface ExerciseGuide {
   secondaryMuscles: string[];
   cues: [string, string, string];
   fault: string;
+  lottiePath: string;
   // Kinematic render parameters
   renderType: 'incline-press' | 'hack-squat' | 'sled-push' | 'skierg' | 'reformer-footwork' | 'reformer-stretch';
   accentColor: string;
@@ -40,6 +42,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Drive upward along the natural converging arc without unlocking shoulder blades',
     ],
     fault: 'Flaring elbows outward at 90° impinges the rotator cuff tendons.',
+    lottiePath: '/lottie/incline-press.json',
     renderType: 'incline-press',
     accentColor: '#8C2230',
   },
@@ -59,6 +62,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Drive through the heels and mid-foot; avoid hyperextending knees at top lockout',
     ],
     fault: 'Allowing lower back to peel off the bolster causes excessive lumbar shear.',
+    lottiePath: '/lottie/hack-squat.json',
     renderType: 'hack-squat',
     accentColor: '#8C2230',
   },
@@ -78,6 +82,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Short, explosive piston strides driving off the balls of the feet into the turf',
     ],
     fault: 'Arching or rounding the lumbar spine dissipates forward momentum.',
+    lottiePath: '/lottie/sled-push.json',
     renderType: 'sled-push',
     accentColor: '#B08D57',
   },
@@ -97,6 +102,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Finish stroke past knees with straight wrists, then smoothly rise tall to reset',
     ],
     fault: 'Squatting with vertical torso rather than hinging hips wastes posterior recruitment.',
+    lottiePath: '/lottie/skierg.json',
     renderType: 'skierg',
     accentColor: '#B08D57',
   },
@@ -116,6 +122,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Extend legs to smooth long carriage glide, then resist springs on the return',
     ],
     fault: 'Tucking pelvis and flattening back against carriage compromises spinal shock absorption.',
+    lottiePath: '/lottie/reformer.json',
     renderType: 'reformer-footwork',
     accentColor: '#D6F55B',
   },
@@ -135,6 +142,7 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Engage lower abdominals and serratus to glide carriage back under control',
     ],
     fault: 'Sagging hips or hyperextending neck collapses the lumbar stability cylinder.',
+    lottiePath: '/lottie/reformer.json',
     renderType: 'reformer-stretch',
     accentColor: '#D6F55B',
   },
@@ -1084,11 +1092,15 @@ function WorkoutCanvas({
  */
 export default function StudioWorkoutGuide() {
   const [activeTab, setActiveTab] = useState(0);
+  const [engineMode, setEngineMode] = useState<'lottie' | 'kinematic'>('lottie');
   const [isPlaying, setIsPlaying] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState<0.5 | 1.0 | 1.5>(1.0);
   const [manualPhase, setManualPhase] = useState(0);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [audioMuted, setAudioMuted] = useState(getAudioMuted());
+  const [customLottieUrl, setCustomLottieUrl] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [lottieFrames, setLottieFrames] = useState({ current: 0, total: 120 });
 
   const baseId = useId();
   const current = EXERCISE_GUIDES[activeTab];
@@ -1150,7 +1162,7 @@ export default function StudioWorkoutGuide() {
       </div>
 
       {/* Exercise Navigation Tabs */}
-      <div className="mb-8 flex flex-wrap gap-2 border-b border-hairline pb-4" role="tablist">
+      <div className="mb-4 flex flex-wrap gap-2 pb-2" role="tablist">
         {EXERCISE_GUIDES.map((ex, idx) => {
           const isSelected = activeTab === idx;
           return (
@@ -1184,6 +1196,77 @@ export default function StudioWorkoutGuide() {
         })}
       </div>
 
+      {/* Engine Switcher & Utility Toolbar */}
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-4">
+        <div className="flex items-center gap-1.5 p-1 bg-charcoal/80 rounded-sm border border-hairline">
+          <button
+            type="button"
+            onClick={() => {
+              setEngineMode('lottie');
+              playMechanicalClick(1300, 0.03);
+            }}
+            className={`px-3 py-1 text-xs font-mono rounded-sm transition-all ${
+              engineMode === 'lottie'
+                ? 'bg-hairline-2 text-heading shadow font-medium'
+                : 'text-muted hover:text-heading'
+            }`}
+          >
+            ✦ LottieFiles Vector Engine
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEngineMode('kinematic');
+              playMechanicalClick(1100, 0.03);
+            }}
+            className={`px-3 py-1 text-xs font-mono rounded-sm transition-all ${
+              engineMode === 'kinematic'
+                ? 'bg-hairline-2 text-heading shadow font-medium'
+                : 'text-muted hover:text-heading'
+            }`}
+          >
+            ⌖ Biomechanical HUD Engine
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setShowCustomInput(!showCustomInput)}
+            className="text-xs font-mono text-muted hover:text-heading transition-colors inline-flex items-center gap-1.5"
+          >
+            <span>{showCustomInput ? '✕ Close URL Input' : '+ Custom LottieFiles URL'}</span>
+          </button>
+          {engineMode === 'lottie' && (
+            <span className="nums text-[11px] font-mono text-faint">
+              FRAME {Math.round(lottieFrames.current)} / {Math.round(lottieFrames.total || 120)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {showCustomInput && (
+        <div className="mb-8 p-4 rounded-sm border border-hairline bg-charcoal/50 flex flex-col sm:flex-row gap-3 items-center">
+          <span className="font-mono text-xs text-faint whitespace-nowrap">LottieFiles JSON URL:</span>
+          <input
+            type="url"
+            placeholder="https://assets.lottiefiles.com/.../workout.json"
+            value={customLottieUrl}
+            onChange={(e) => setCustomLottieUrl(e.target.value)}
+            className="w-full bg-[#080808] border border-hairline px-3 py-1.5 text-xs text-heading font-mono rounded-sm focus:outline-none focus:border-hairline-2"
+          />
+          {customLottieUrl && (
+            <button
+              type="button"
+              onClick={() => setCustomLottieUrl('')}
+              className="text-xs text-muted hover:text-heading whitespace-nowrap"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Main Interactive Stage */}
       <div
         id={`${baseId}-panel-${activeTab}`}
@@ -1191,16 +1274,29 @@ export default function StudioWorkoutGuide() {
         aria-labelledby={`${baseId}-tab-${activeTab}`}
         className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12"
       >
-        {/* Left Column: Canvas Animation Player & Kinetic Controls */}
+        {/* Left Column: Animation Player & Kinetic Controls */}
         <div className="flex flex-col gap-4 lg:col-span-7">
           <div className="relative overflow-hidden rounded-sm border border-hairline bg-[#0A0A0A] shadow-2xl">
-            <WorkoutCanvas
-              exercise={current}
-              isPlaying={isPlaying}
-              playbackSpeed={playbackSpeed}
-              manualPhase={manualPhase}
-              isScrubbing={isScrubbing}
-            />
+            {engineMode === 'lottie' ? (
+              <LottieWorkoutPlayer
+                animationPath={customLottieUrl || current.lottiePath}
+                name={current.name}
+                discipline={current.discipline}
+                accentColor={current.accentColor}
+                isPlaying={isPlaying}
+                speed={playbackSpeed}
+                onFrameUpdate={(c, t) => setLottieFrames({ current: c, total: t })}
+                className="h-[360px] sm:h-[420px] md:h-[460px] w-full"
+              />
+            ) : (
+              <WorkoutCanvas
+                exercise={current}
+                isPlaying={isPlaying}
+                playbackSpeed={playbackSpeed}
+                manualPhase={manualPhase}
+                isScrubbing={isScrubbing}
+              />
+            )}
 
             {/* In-canvas Header Overlay */}
             <div className="pointer-events-none absolute left-4 bottom-14 flex items-center gap-2 rounded bg-ink/70 px-2.5 py-1 text-xs backdrop-blur-sm">
