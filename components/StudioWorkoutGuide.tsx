@@ -4,7 +4,7 @@ import React, { useState, useId } from 'react';
 import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
 import Reveal from '@/components/Reveal';
-import GymAnimationPlayer from '@/components/GymAnimationPlayer';
+import GymVectorAnimation from '@/components/GymVectorAnimation';
 import { playMechanicalClick, toggleAudioMute, getAudioMuted } from '@/lib/haptics';
 
 export interface ExerciseGuide {
@@ -19,7 +19,6 @@ export interface ExerciseGuide {
   secondaryMuscles: string[];
   cues: [string, string, string];
   fault: string;
-  animationPath: string;
   accentColor: string;
 }
 
@@ -40,7 +39,6 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Descend smoothly until hip crease breaks below the top of the patella, then drive through midfoot',
     ],
     fault: 'Allowing knees to cave inward (valgus collapse) or letting lower back round at bottom depth.',
-    animationPath: '/animations/barbell-squat.gif',
     accentColor: '#8C2230',
   },
   {
@@ -59,7 +57,6 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Drive the floor away with the legs until bar clears knees, then thrust hips through to a tall lockout',
     ],
     fault: 'Permitting lumbar spine flexion (rounding) off the floor or hyperextending lower back at top.',
-    animationPath: '/animations/deadlift.gif',
     accentColor: '#8C2230',
   },
   {
@@ -78,7 +75,6 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Tuck elbows at ~45-70° from torso, drive feet into the turf, and press explosively up and back',
     ],
     fault: 'Flaring elbows outward at 90° or bouncing the bar violently off the sternum.',
-    animationPath: '/animations/bench-press.gif',
     accentColor: '#8C2230',
   },
   {
@@ -97,7 +93,6 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Drive elbows toward hips until clavicle approaches bar height; lower with control to dead hang',
     ],
     fault: 'Kicking legs or utilizing momentum kipping rather than strict latissimus engagement.',
-    animationPath: '/animations/pull-up.gif',
     accentColor: '#B08D57',
   },
   {
@@ -116,7 +111,6 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Pull chin back slightly, press bar directly overhead in a straight line, and push head through at top',
     ],
     fault: 'Arching lower back excessively (backward lean) to compensate for insufficient shoulder mobility.',
-    animationPath: '/animations/overhead-press.gif',
     accentColor: '#B08D57',
   },
   {
@@ -135,7 +129,6 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Pause and firmly pinch shoulder blades together at top without heaving torso upright',
     ],
     fault: 'Jerking with leg and hip momentum to swing the barbell up instead of rowing with back muscles.',
-    animationPath: '/animations/bent-over-row.gif',
     accentColor: '#8C2230',
   },
   {
@@ -154,7 +147,6 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Drive powerfully through the front heel to stand tall and immediately transition into the next stride',
     ],
     fault: 'Slamming the rear knee into the floor or allowing the torso to pitch forward.',
-    animationPath: '/animations/lunge.gif',
     accentColor: '#B08D57',
   },
   {
@@ -173,7 +165,6 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
       'Push floor away with forearms to prevent shoulder blades from winging; keep gaze just ahead of hands',
     ],
     fault: 'Allowing hips to sag down into lumbar hyperextension or hiking glutes upward into a pike.',
-    animationPath: '/animations/plank.gif',
     accentColor: '#D6F55B',
   },
 ];
@@ -186,6 +177,8 @@ export default function StudioWorkoutGuide() {
   const [activeTab, setActiveTab] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState<0.5 | 1.0 | 1.5>(1.0);
+  const [manualPhase, setManualPhase] = useState(0);
+  const [isScrubbing, setIsScrubbing] = useState(false);
   const [audioMuted, setAudioMuted] = useState(getAudioMuted());
 
   const baseId = useId();
@@ -194,11 +187,14 @@ export default function StudioWorkoutGuide() {
   const handleTabSelect = (idx: number) => {
     setActiveTab(idx);
     setIsPlaying(true);
+    setIsScrubbing(false);
+    setManualPhase(0);
     playMechanicalClick(1400, 0.035);
   };
 
   const handlePlayToggle = () => {
     setIsPlaying(!isPlaying);
+    setIsScrubbing(false);
     playMechanicalClick(1100, 0.03);
   };
 
@@ -297,7 +293,7 @@ export default function StudioWorkoutGuide() {
           <div className="hidden sm:flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" aria-hidden="true" />
             <span className="nums text-[11px] font-mono text-muted uppercase tracking-wider">
-              High-Fidelity 3D Kinematics
+              100% Vector Kinetic Transparency
             </span>
           </div>
         </div>
@@ -312,13 +308,14 @@ export default function StudioWorkoutGuide() {
       >
         {/* Left Column: Animation Player & Kinetic Controls */}
         <div className="flex flex-col gap-4 lg:col-span-7">
-          <GymAnimationPlayer
-            animationPath={current.animationPath}
+          <GymVectorAnimation
+            exerciseId={current.id}
             name={current.name}
-            discipline={current.discipline}
             accentColor={current.accentColor}
             isPlaying={isPlaying}
             speed={playbackSpeed}
+            manualPhase={manualPhase}
+            isScrubbing={isScrubbing}
             className="h-[360px] sm:h-[420px] md:h-[460px] w-full shadow-2xl"
           />
 
@@ -354,10 +351,23 @@ export default function StudioWorkoutGuide() {
               </div>
             </div>
 
-            {/* Tempo Badge */}
-            <div className="flex items-center gap-1.5 font-mono text-xs text-muted">
-              <span className="t-label text-[10px] text-faint">TEMPO:</span>
-              <span className="text-heading">{current.tempo.split(' ')[0]}</span>
+            {/* Rep Phase Interactive Scrubber */}
+            <div className="flex flex-1 items-center gap-2 min-w-[130px] max-w-[200px]">
+              <span className="t-label text-[10px] text-faint">SCRUB</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={isScrubbing ? manualPhase : 0.5}
+                onChange={(e) => {
+                  setIsScrubbing(true);
+                  setIsPlaying(false);
+                  setManualPhase(parseFloat(e.target.value));
+                }}
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-hairline accent-[#8C2230]"
+                aria-label="Rep cycle position scrubber"
+              />
             </div>
 
             {/* Audio Feedback Button */}
@@ -388,7 +398,7 @@ export default function StudioWorkoutGuide() {
             {/* Muscle Recruitment Matrix */}
             <div className="mt-5 border-t border-hairline pt-4">
               <div className="mb-2 text-[11px] font-mono uppercase tracking-wider text-faint flex items-center gap-1.5">
-                <span className="inline-block h-2 w-2 rounded-full bg-[#D0715E]" />
+                <span className="inline-block h-2 w-2 rounded-full bg-[#8C2230]" />
                 <span>Primary Target Activation</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
