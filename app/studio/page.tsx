@@ -8,7 +8,6 @@ import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
 import StudioNav from '@/components/StudioNav';
 import ChapterVideo from '@/components/ChapterVideo';
-import StudioCatalogue from '@/components/StudioCatalogue';
 import { STUDIO_IMAGES } from '@/config/assets';
 import { EQUIPMENT_CATEGORIES, AMENITIES, DISCIPLINES } from '@/data/club';
 
@@ -172,12 +171,14 @@ export default function StudioPage() {
 
                   <div className="mt-6">
                     <a
-                      href="#equipment-catalogue"
+                      href="/catalogue"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="btn-line !py-1.5 !px-3.5 font-mono text-xs inline-flex items-center gap-2 border-hairline-2 text-heading hover:bg-hairline"
                     >
                       <span className="h-1.5 w-1.5 rounded-full bg-[#B08D57]" aria-hidden="true" />
-                      <span>Vyomi Equipment Catalogue (46)</span>
-                      <span aria-hidden="true">↓</span>
+                      <span>Fitness Catalogue</span>
+                      <span aria-hidden="true">↗</span>
                     </a>
                   </div>
                 </Reveal>
@@ -213,9 +214,6 @@ export default function StudioPage() {
             </div>
           </div>
         </section>
-
-        {/* ---------- 01B · Vyomi Equipment Catalogue (SHUA | Panatta | Realleader) ---------- */}
-        <StudioCatalogue />
 
         {/* ---------- 02 · HYROX — full-bleed, heading overlaid ---------- */}
         <section

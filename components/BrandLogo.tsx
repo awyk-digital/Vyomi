@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import gsap from 'gsap';
 import { SUPPLIED } from '@/config/assets';
 import { INTRO } from '@/lib/motion';
@@ -26,6 +27,7 @@ import { shouldRunIntro, markIntroDone } from '@/lib/intro';
  * a dark page, which is exactly the thing this mark must not look like.
  */
 export default function BrandLogo() {
+  const isLightPage = usePathname() === '/catalogue';
   const wrapRef = useRef<HTMLDivElement>(null);
   const sheenRef = useRef<HTMLSpanElement>(null);
   const sheen2Ref = useRef<HTMLSpanElement>(null);
@@ -256,8 +258,9 @@ export default function BrandLogo() {
              * one for edge definition, a wide soft one for separation.
              */
             style={{
-              filter:
-                'drop-shadow(0 1px 2px rgba(0,0,0,0.55)) drop-shadow(0 4px 18px rgba(0,0,0,0.45))',
+              filter: isLightPage
+                ? 'drop-shadow(0 2px 6px rgba(24,20,16,0.16))'
+                : 'drop-shadow(0 1px 2px rgba(0,0,0,0.55)) drop-shadow(0 4px 18px rgba(0,0,0,0.45))',
             }}
           />
 
