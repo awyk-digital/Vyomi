@@ -179,10 +179,10 @@ export default function StudioPage() {
             <div className="flex flex-col gap-6 lg:col-span-7">
               <Reveal>
                 <ChapterVideo
-                  src="/video/tour-fitness.mp4"
-                  poster="/video/tour-fitness-poster.jpg"
+                  src="/video/fitness.mp4"
+                  poster="/video/fitness-poster.jpg"
                   ratio="16 / 9"
-                  label="The Vyomi training floor: burgundy Panatta machines along the range, members training."
+                  label="The Vyomi training floor: Panatta machines and athletic gym training"
                   caption="Render — not club photography"
                   sizes="(max-width: 1023px) 100vw, 55vw"
                   className="w-full"
