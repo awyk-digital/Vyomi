@@ -231,8 +231,8 @@ export const TRAINER_PORTRAITS: ImageSlot[] = [
     ratio: '3 / 4',
     fit: 'cover',
     focal: '50% 25%',
-    src: '/img/trainer-l1.jpg',
-    alt: '',
+    src: '/img/trainer-l1-vyomi.jpg',
+    alt: 'Vyomi Level 1 Trainer',
   }),
   slot({
     id: 'trainer-l2',
@@ -241,8 +241,8 @@ export const TRAINER_PORTRAITS: ImageSlot[] = [
     ratio: '3 / 4',
     fit: 'cover',
     focal: '50% 25%',
-    src: '/img/trainer-l2.jpg',
-    alt: '',
+    src: '/img/trainer-l2-vyomi.jpg',
+    alt: 'Vyomi Level 2 Trainer',
   }),
   slot({
     id: 'trainer-l3',
@@ -251,8 +251,8 @@ export const TRAINER_PORTRAITS: ImageSlot[] = [
     ratio: '3 / 4',
     fit: 'cover',
     focal: '50% 25%',
-    src: '/img/trainer-l3.jpg',
-    alt: '',
+    src: '/img/trainer-l3-vyomi.jpg',
+    alt: 'Vyomi Level 3 Trainer',
   }),
 ];
 
