@@ -138,31 +138,6 @@ export default function StudioNav() {
               );
             })}
 
-            <li key="fitness-catalogue">
-              <a
-                href="/catalogue"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-3 py-1 cursor-pointer"
-                aria-label="Open Fitness Catalogue in a new tab"
-              >
-                <span
-                  aria-hidden="true"
-                  className="relative flex h-px w-[30px] shrink-0 items-center"
-                >
-                  <span
-                    className="block h-px w-[16px] group-hover:w-[30px] transition-all duration-300 ease-editorial"
-                    style={{
-                      background: 'linear-gradient(90deg, var(--bronze), var(--lime))',
-                    }}
-                  />
-                </span>
-                <span className="t-label text-[#B08D57] group-hover:text-heading transition-colors duration-300 inline-flex items-center gap-1.5">
-                  <span>Fitness Catalogue</span>
-                  <span aria-hidden="true">↗</span>
-                </span>
-              </a>
-            </li>
           </ul>
         </div>
       </nav>
@@ -190,19 +165,6 @@ export default function StudioNav() {
             </a>
           );
         })}
-        <a
-          href="/catalogue"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="t-label shrink-0 rounded-full border px-3.5 py-2 transition-colors duration-300 inline-flex items-center gap-1.5"
-          style={{
-            borderColor: 'var(--bronze-lo)',
-            color: 'var(--bronze)',
-          }}
-        >
-          <span>Fitness Catalogue</span>
-          <span aria-hidden="true">↗</span>
-        </a>
       </nav>
     </>
   );
