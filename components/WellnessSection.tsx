@@ -18,7 +18,7 @@ import { WELLNESS, AMENITY_DETAILS } from '@/data/club';
  */
 export default function WellnessSection() {
   const [main] = WELLNESS;
-  const [activeId, setActiveId] = useState<string>('spa');
+  const [activeId, setActiveId] = useState<string>('steam');
 
   const activeAmenity =
     AMENITY_DETAILS.find((a) => a.id === activeId) ?? AMENITY_DETAILS[0];

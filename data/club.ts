@@ -241,8 +241,8 @@ export const DISCIPLINES: Discipline[] = [
     label: 'Wellness',
     title: 'Recovery.',
     blurb:
-      'Spa, salt bath and a full recovery suite, kept separate from the training floor.',
-    pending: 'Spa & salt-bath session details',
+      'Steam, sauna bath, ice bath chiller, red light therapy, and salt sanctuary.',
+    pending: 'Thermal suite & recovery session details',
   },
   {
     id: 'pilates',
@@ -269,15 +269,51 @@ export interface AmenityDetail {
 
 export const AMENITY_DETAILS: AmenityDetail[] = [
   {
-    id: 'spa',
-    name: 'Spa',
+    id: 'steam',
+    name: 'Steam',
     left: {
-      slot: WELLNESS_AMENITY_IMAGES.spa.left,
-      caption: 'Finnish cedar sauna & vitality spa',
+      slot: WELLNESS_AMENITY_IMAGES.steam.left,
+      caption: 'Aromatherapy eucalyptus steam sanctuary',
     },
     right: {
-      slot: WELLNESS_AMENITY_IMAGES.spa.right,
-      caption: 'Hydrotherapy vitality pool',
+      slot: WELLNESS_AMENITY_IMAGES.steam.right,
+      caption: 'Basalt stone & warm vapor detail',
+    },
+  },
+  {
+    id: 'sauna-bath',
+    name: 'Sauna bath',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['sauna-bath'].left,
+      caption: 'Finnish dry cedar sauna sanctuary',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['sauna-bath'].right,
+      caption: 'Volcanic stone heater & walnut pail',
+    },
+  },
+  {
+    id: 'red-light',
+    name: 'Red light therapy',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['red-light'].left,
+      caption: 'Full-body photobiomodulation suite',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['red-light'].right,
+      caption: 'Medical-grade 660nm & 850nm LED matrix',
+    },
+  },
+  {
+    id: 'ice-bath',
+    name: 'Ice Bath (Chiller)',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['ice-bath'].left,
+      caption: 'Sub-zero chilled cold plunge pool (3°C)',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['ice-bath'].right,
+      caption: 'Granite basin & precision water chiller',
     },
   },
   {
@@ -290,18 +326,6 @@ export const AMENITY_DETAILS: AmenityDetail[] = [
     right: {
       slot: WELLNESS_AMENITY_IMAGES['salt-bath'].right,
       caption: 'Salt crystal therapy detail',
-    },
-  },
-  {
-    id: 'recovery-suite',
-    name: 'Recovery suite',
-    left: {
-      slot: WELLNESS_AMENITY_IMAGES['recovery-suite'].left,
-      caption: 'Zero-gravity compression lounge',
-    },
-    right: {
-      slot: WELLNESS_AMENITY_IMAGES['recovery-suite'].right,
-      caption: 'Infrared & percussive therapy',
     },
   },
   {
