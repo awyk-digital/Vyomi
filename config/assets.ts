@@ -122,13 +122,13 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
   'plate-loaded': [
     slot({
       id: 'eq-plate-main',
-      need: 'Plate-loaded machine, full silhouette, burgundy Panatta frame, three-quarter view',
-      master: '3200 × 2400',
+      need: 'Plate-loaded machine, full silhouette, Panatta FreeWeight Super High Row, red frame',
+      master: '2048 × 2048',
       ratio: '4 / 3',
       fit: 'contain',
       focal: '50% 50%',
-      src: '/img/eq-plate-main.png',
-      alt: 'Plate-loaded Panatta machine',
+      src: '/img/eq-plate-main-v2.jpg',
+      alt: 'Red Panatta FreeWeight plate-loaded machine',
     }),
     slot({
       id: 'eq-plate-detail-1',
