@@ -81,34 +81,29 @@ export default function StudioPage() {
     <>
       <StudioNav />
 
-      {/* Slim top bar — the rail carries chapter navigation, so this only
-          needs the way back and the single booking action. */}
-      <header className="border-b border-hairline bg-ink">
-        <div
-          className={`flex flex-wrap items-center gap-x-6 gap-y-3 pb-5 ${GUTTER}`}
-          style={{ paddingTop: 'clamp(5rem, 11vw, 7.5rem)' }}
+      <main id="main" className="pb-24 lg:pb-0">
+        {/* ---------- Title & Navigation ---------- */}
+        <section
+          className={`border-b border-hairline bg-ink pb-6 md:pb-8 ${GUTTER}`}
+          style={{ paddingTop: 'clamp(2.5rem, 4.5vw, 3.5rem)' }}
         >
-          <Link href="/" className="t-ui text-muted transition-colors hover:text-heading">
-            ← Home
-          </Link>
-          <div className="ms-auto">
-            <Link href="/#trial" className="btn-line shine !py-2">
-              Two-day request
+          <div className="mb-4">
+            <Link
+              href="/"
+              className="t-ui inline-flex items-center gap-2 text-muted transition-colors hover:text-heading"
+            >
+              <span>←</span>
+              <span className="text-xs uppercase tracking-widest">Home</span>
             </Link>
           </div>
-        </div>
-      </header>
 
-      <main id="main" className="pb-24 lg:pb-0">
-        {/* ---------- Title ---------- */}
-        <section className={`border-b border-hairline bg-ink py-section-y ${GUTTER}`}>
           <SectionHeading as="h1" immediate className="t-hero uppercase text-heading">
             The Studio.
           </SectionHeading>
-          <p className="t-body mt-5 max-w-measure text-muted">
+          <p className="t-body mt-2.5 max-w-measure text-muted">
             Five disciplines under one roof.
           </p>
-          <div className="mt-10 max-w-shell">
+          <div className="mt-5 max-w-shell">
             <AccentRule />
           </div>
         </section>
