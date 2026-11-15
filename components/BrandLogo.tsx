@@ -6,7 +6,7 @@ import Link from 'next/link';
 import gsap from 'gsap';
 import { SUPPLIED } from '@/config/assets';
 import { INTRO } from '@/lib/motion';
-import { shouldRunIntro, markIntroDone } from '@/lib/intro';
+import { shouldRunIntro, markIntroDone, markIntroUnveil } from '@/lib/intro';
 
 /**
  * The persistent Vyomi mark, fixed top-left, and the opening sequence.
@@ -79,6 +79,7 @@ export default function BrandLogo() {
 
     if (!shouldRunIntro()) {
       gsap.set(wrap, { opacity: 1 });
+      markIntroUnveil();
       markIntroDone();
       return;
     }
@@ -90,6 +91,7 @@ export default function BrandLogo() {
     const rect = wrap.getBoundingClientRect();
     if (rect.width === 0) {
       gsap.set(wrap, { opacity: 1 });
+      markIntroUnveil();
       markIntroDone();
       return;
     }
@@ -126,6 +128,11 @@ export default function BrandLogo() {
       0
     );
 
+    // Trigger unveiling the hero background video smoothly as logo takes flight
+    tl.call(() => {
+      markIntroUnveil();
+    }, [], INTRO.flipStart);
+
     // 2 — travel and scale into the corner (transform only)
     tl.to(
       wrap,
@@ -141,6 +148,8 @@ export default function BrandLogo() {
 
     return () => {
       introRunning.current = false;
+      markIntroUnveil();
+      markIntroDone();
       tl.kill();
     };
   }, []);

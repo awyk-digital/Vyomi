@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import StudioCapsule from '@/components/StudioCapsule';
 import Pending from '@/components/Pending';
 import SectionHeading from '@/components/SectionHeading';
 import { SUPPLIED } from '@/config/assets';
 import { site, presaleDisplay } from '@/config/site';
-import { useIntroDone } from '@/lib/intro';
+import { useIntroDone, useIntroUnveil } from '@/lib/intro';
 
 /**
  * Cinematic hero: the supplied gym video, one headline, the pre-sale line,
@@ -19,21 +19,34 @@ import { useIntroDone } from '@/lib/intro';
 export default function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const introUnveiled = useIntroUnveil();
   const introDone = useIntroDone();
   const presale = presaleDisplay();
 
-  // Pause offscreen so the hero costs nothing once the visitor scrolls past.
+  // Ensure immediate video playback on mount and pause when offscreen to save GPU
   useEffect(() => {
     const section = sectionRef.current;
     const video = videoRef.current;
     if (!section || !video) return;
 
+    video.defaultMuted = true;
+    video.muted = true;
+
+    const startPlayback = () => {
+      video.play().then(() => {
+        setIsVideoPlaying(true);
+      }).catch(() => {
+        /* autoplay fallback — poster handles the visual */
+      });
+    };
+
+    startPlayback();
+
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          video.play().catch(() => {
-            /* autoplay refused — the poster carries the frame */
-          });
+          startPlayback();
         } else {
           video.pause();
         }
@@ -43,7 +56,11 @@ export default function Hero() {
     io.observe(section);
 
     const onVisibility = () => {
-      if (document.hidden) video.pause();
+      if (document.hidden) {
+        video.pause();
+      } else {
+        startPlayback();
+      }
     };
     document.addEventListener('visibilitychange', onVisibility);
 
@@ -58,8 +75,12 @@ export default function Hero() {
       ref={sectionRef}
       className="relative flex h-[100svh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-ink"
     >
-      {/* Media */}
-      <div className="absolute inset-0 z-0">
+      {/* Media container with slow cinematic scale-in */}
+      <div
+        className={`absolute inset-0 z-0 transition-transform duration-[1800ms] ease-editorial ${
+          introUnveiled ? 'scale-100' : 'scale-[1.04]'
+        }`}
+      >
         <video
           ref={videoRef}
           poster={SUPPLIED.heroPoster}
@@ -67,20 +88,13 @@ export default function Hero() {
           autoPlay
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
+          onPlaying={() => setIsVideoPlaying(true)}
           aria-hidden="true"
           tabIndex={-1}
-          /*
-           * The supplied footage is 720 × 1280 — portrait, and low resolution
-           * for a full-bleed hero. Its natural ratio (0.5625) is close to a
-           * phone viewport, so mobile crops barely at all; a wide desktop
-           * viewport scales it up and crops top and bottom instead.
-           *
-           * Centre holds the composition in both cases. A landscape master at
-           * 1080p or better is listed in the outstanding-asset report — on a
-           * large display this source is being upscaled roughly 2x.
-           */
-          className="h-full w-full object-cover object-center"
+          className={`h-full w-full object-cover object-center transition-opacity duration-700 ${
+            isVideoPlaying ? 'opacity-100' : 'opacity-90'
+          }`}
         >
           <source src={SUPPLIED.heroVideo} type="video/mp4" />
         </video>
@@ -102,15 +116,6 @@ export default function Hero() {
               'linear-gradient(to right, rgba(8,8,8,0.72) 0%, rgba(8,8,8,0.28) 38%, transparent 66%)',
           }}
         />
-        {/*
-          Dedicated join band.
-
-          The overlay above tops out at the hero's own edge, so whatever the
-          video happens to be showing in its last few rows still tinted the
-          boundary — which read as a second, slightly different black against
-          the pure --ink section underneath. This band lands the hero on
-          exactly --ink before the seam, so the two surfaces are one colour.
-        */}
         <span
           aria-hidden="true"
           className="absolute inset-x-0 bottom-0 h-40"
@@ -120,6 +125,14 @@ export default function Hero() {
           }}
         />
       </div>
+
+      {/* Obsidian Veil: hides frozen video / initial frame while the logo is presented in the center */}
+      <div
+        aria-hidden="true"
+        className={`absolute inset-0 z-[5] bg-ink pointer-events-none transition-opacity duration-[1200ms] ease-editorial ${
+          introUnveiled ? 'opacity-0' : 'opacity-100'
+        }`}
+      />
 
       {/* Content */}
       <div

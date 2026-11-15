@@ -16,12 +16,14 @@ import { INTRO, prefersReducedMotion } from '@/lib/motion';
  */
 
 const EVENT = 'vyomi:intro-done';
+const EVENT_UNVEIL = 'vyomi:intro-unveil';
 
 /**
  * Module scope is re-created on every document load and shared across
  * client-side route changes — exactly the lifetime the sequence needs.
  */
 let doneInThisDocument = false;
+let unveiledInThisDocument = false;
 
 /** True when the intro should animate now. */
 export function shouldRunIntro(): boolean {
@@ -31,16 +33,61 @@ export function shouldRunIntro(): boolean {
   return true;
 }
 
+/** Marks the intro background unveiling and notifies listeners. */
+export function markIntroUnveil(): void {
+  unveiledInThisDocument = true;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(EVENT_UNVEIL));
+  }
+}
+
 /** Marks the intro finished and notifies listeners. */
 export function markIntroDone(): void {
+  unveiledInThisDocument = true;
   doneInThisDocument = true;
-  window.dispatchEvent(new Event(EVENT));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(EVENT_UNVEIL));
+    window.dispatchEvent(new Event(EVENT));
+  }
+}
+
+/** True once the background can be unveiled. */
+export function isIntroUnveiled(): boolean {
+  if (typeof window === 'undefined') return false;
+  return unveiledInThisDocument || doneInThisDocument || !shouldRunIntro();
 }
 
 /** True once the intro has finished, or immediately when it will not run. */
 export function isIntroDone(): boolean {
   if (typeof window === 'undefined') return false;
   return doneInThisDocument || !shouldRunIntro();
+}
+
+/**
+ * Subscribes to the moment the opening veil lifts (when the logo begins its flight).
+ */
+export function useIntroUnveil(): boolean {
+  const [unveiled, setUnveiled] = useState(false);
+
+  useEffect(() => {
+    if (isIntroUnveiled()) {
+      setUnveiled(true);
+      return;
+    }
+    const onUnveil = () => setUnveiled(true);
+    window.addEventListener(EVENT_UNVEIL, onUnveil);
+    window.addEventListener(EVENT, onUnveil);
+
+    const failsafe = window.setTimeout(() => setUnveiled(true), INTRO.totalMs);
+
+    return () => {
+      window.removeEventListener(EVENT_UNVEIL, onUnveil);
+      window.removeEventListener(EVENT, onUnveil);
+      window.clearTimeout(failsafe);
+    };
+  }, []);
+
+  return unveiled;
 }
 
 /**
