@@ -54,6 +54,9 @@ export const metadata: Metadata = {
       'Elite Panatta equipment, HYROX conditioning, reformer Pilates, and recovery suite.',
     images: ['/video/hero-poster.jpg'],
   },
+  verification: {
+    google: 'google72eeb563c4c02089',
+  },
   robots: {
     index: true,
     follow: true,
