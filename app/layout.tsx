@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     'Vyomi Fitness Club, Vijayawada. Panatta equipment, HYROX conditioning, reformer Pilates, and a full wellness and recovery suite.',
   applicationName: site.name,
   icons: {
-    icon: [{ url: '/logo.png', type: 'image/png' }],
-    apple: [{ url: '/logo.png' }],
+    icon: [{ url: '/img/vyomi-brand-logo.png', type: 'image/png' }],
+    apple: [{ url: '/img/vyomi-brand-logo.png' }],
   },
   openGraph: {
     type: 'website',

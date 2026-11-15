@@ -277,7 +277,8 @@ export default function Footer() {
               alt="Vyomi Fitness Club"
               width={SUPPLIED.logo.width}
               height={SUPPLIED.logo.height}
-              sizes="44px"
+              unoptimized
+              sizes="88px"
               className="h-11 w-auto opacity-70 transition-opacity duration-300 hover:opacity-100"
             />
           </Link>

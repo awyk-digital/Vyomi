@@ -625,8 +625,8 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
    ------------------------------------------------------------------ */
 
 export const SUPPLIED = {
-  /** Client logo, 7 Nov. Transparent PNG, near-square portrait (0.912). */
-  logo: { src: '/logo.png', width: 1198, height: 1313 },
+  /** Client logo. Transparent high-res master PNG, portrait (934 × 1024). */
+  logo: { src: '/img/vyomi-brand-logo.png', width: 934, height: 1024 },
   /**
    * Reception walkthrough, 7 Nov. Source was 1920 × 1080 with black bars baked
    * into the frame; re-encoded from the original at 1834 × 1044 with the bars

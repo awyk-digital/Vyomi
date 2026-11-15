@@ -7,6 +7,7 @@ import Pending from '@/components/Pending';
 import SectionHeading from '@/components/SectionHeading';
 import AccentRule from '@/components/AccentRule';
 import { site, addressLine, directionsLink, mapEmbedUrl } from '@/config/site';
+import { SUPPLIED } from '@/config/assets';
 
 const DAY_LABEL: Record<string, string> = {
   Monday: 'Mon',
@@ -113,10 +114,11 @@ export default function LocationSection() {
                   <div className="pointer-events-auto absolute top-4 left-4 sm:top-6 sm:left-6 z-20 flex max-w-[280px] sm:max-w-xs items-center gap-3.5 rounded-2xl border border-hairline-2/90 bg-ink/90 p-3.5 backdrop-blur-md shadow-[0_15px_35px_rgba(0,0,0,0.85)]">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-charcoal to-ink border border-hairline p-1 shadow-inner">
                       <Image
-                        src="/logo.png"
+                        src={SUPPLIED.logo.src}
                         alt="Vyomi"
                         width={28}
                         height={28}
+                        unoptimized
                         className="object-contain"
                       />
                     </div>
