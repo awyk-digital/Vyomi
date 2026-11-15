@@ -8,31 +8,63 @@ import SmoothScroll from '@/components/SmoothScroll';
 import { site, addressLine } from '@/config/site';
 
 export const metadata: Metadata = {
-  // Set NEXT_PUBLIC_SITE_URL to the production origin so Open Graph image
-  // URLs resolve absolutely instead of falling back to localhost.
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.vyomifitness.in'
   ),
   title: {
-    default: 'Vyomi Fitness Club — Vijayawada',
+    default: 'Vyomi Fitness Club — Luxury Gym in Vijayawada',
     template: '%s · Vyomi Fitness Club',
   },
   description:
-    'Vyomi Fitness Club, Vijayawada. Panatta equipment, HYROX conditioning, reformer Pilates, and a full wellness and recovery suite.',
+    'Vyomi Fitness Club, Vijayawada. Elite Panatta equipment, HYROX official conditioning, reformer Pilates, and luxury wellness & recovery suite in Patamata.',
   applicationName: site.name,
+  keywords: [
+    'Vyomi',
+    'Vyomi Fitness',
+    'Vyomi Fitness Club',
+    'Vyomi Gym',
+    'Gym in Vijayawada',
+    'Fitness Club Vijayawada',
+    'Panatta Gym Vijayawada',
+    'HYROX Vijayawada',
+    'Reformer Pilates Vijayawada',
+    'Luxury Gym Vijayawada',
+    'Patamata Gym',
+  ],
+  alternates: {
+    canonical: 'https://www.vyomifitness.in',
+  },
   icons: {
     icon: [{ url: '/img/vyomi-brand-logo.png', type: 'image/png' }],
     apple: [{ url: '/img/vyomi-brand-logo.png' }],
   },
   openGraph: {
     type: 'website',
+    url: 'https://www.vyomifitness.in',
     siteName: site.name,
-    title: 'Vyomi Fitness Club — Vijayawada',
+    title: 'Vyomi Fitness Club — Luxury Gym in Vijayawada',
     description:
-      'Panatta equipment, HYROX conditioning, reformer Pilates, and a full wellness and recovery suite.',
-    images: [{ url: '/video/hero-poster.jpg', width: 1920, height: 1280 }],
+      'Elite Panatta equipment, HYROX official conditioning, reformer Pilates, and luxury wellness & recovery suite in Vijayawada.',
+    images: [{ url: '/video/hero-poster.jpg', width: 1920, height: 1280, alt: 'Vyomi Fitness Club' }],
   },
-  robots: { index: true, follow: true },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vyomi Fitness Club — Luxury Gym in Vijayawada',
+    description:
+      'Elite Panatta equipment, HYROX conditioning, reformer Pilates, and recovery suite.',
+    images: ['/video/hero-poster.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export const viewport: Viewport = {
@@ -55,10 +87,16 @@ function LocalBusinessSchema() {
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'HealthAndBeautyBusiness',
+    '@type': ['ExerciseGym', 'SportsActivityLocation', 'HealthClub'],
     name: site.name,
+    alternateName: 'Vyomi',
+    url: 'https://www.vyomifitness.in',
+    logo: 'https://www.vyomifitness.in/img/vyomi-brand-logo.png',
+    image: 'https://www.vyomifitness.in/video/hero-poster.jpg',
     description:
-      'Fitness club in Vijayawada with Panatta equipment, HYROX conditioning, reformer Pilates and a wellness and recovery suite.',
+      'Premier luxury fitness club in Vijayawada featuring Panatta equipment, official HYROX training, reformer Pilates, and recovery suite.',
+    priceRange: '₹₹₹₹',
+    currenciesAccepted: 'INR',
     address: {
       '@type': 'PostalAddress',
       streetAddress: [site.address.line1, site.address.line2].filter(Boolean).join(', '),
