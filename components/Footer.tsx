@@ -63,7 +63,7 @@ export default function Footer() {
         <div className="flex flex-col gap-5 pb-10 md:flex-row md:items-center md:justify-between">
           {presale ? (
             <p className="t-h3 text-heading">
-              Pre-sale opens <time dateTime={site.presaleDate ?? undefined}>{presale}</time>.
+              Pre-sale: <span>{presale}</span>.
             </p>
           ) : (
             <div className="flex flex-wrap items-center gap-3">

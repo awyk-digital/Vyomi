@@ -63,11 +63,17 @@ export const site = {
    */
   mapsPlaceId: null as string | null,
 
+  /** Direct Google Maps link for the verified club location. */
+  mapsUrl: 'https://maps.app.goo.gl/ocqSrodeTthzK3L78',
+
   /** Latitude/longitude of the verified premises. */
   coordinates: { lat: 16.4975, lng: 80.658 } as { lat: number; lng: number } | null,
 
-  /** Confirmed pre-sale / launch date as an ISO date, e.g. '2026-11-12'. */
+  /** Confirmed pre-sale start date as an ISO date, e.g. '2026-11-12'. */
   presaleDate: '2026-11-12' as string | null,
+
+  /** Confirmed pre-sale end date as an ISO date. */
+  presaleEndDate: '2026-11-16' as string | null,
 
   /** Client-approved opening hours. */
   openingHours: null as OpeningHours[] | null,
@@ -111,6 +117,9 @@ export function addressLine(): string | null {
 
 /** Google Maps directions URL for the verified location, or null. */
 export function directionsLink(): string | null {
+  if (site.mapsUrl) {
+    return site.mapsUrl;
+  }
   if (site.mapsPlaceId) {
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
       site.name
@@ -128,8 +137,11 @@ export function mapEmbedUrl(layer: 'm' | 'k' = 'm'): string | null {
   return `https://maps.google.com/maps?q=${lat},${lng}&t=${layer}&z=16&ie=UTF8&iwloc=&output=embed`;
 }
 
-/** Formats the confirmed pre-sale date, or null while unconfirmed. */
+/** Formats the confirmed pre-sale date range, or null while unconfirmed. */
 export function presaleDisplay(): string | null {
+  if (site.presaleDate && site.presaleEndDate) {
+    return '12 November to 16 November';
+  }
   if (!site.presaleDate) return null;
   const d = new Date(`${site.presaleDate}T00:00:00`);
   if (Number.isNaN(d.getTime())) return null;

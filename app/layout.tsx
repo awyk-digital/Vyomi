@@ -100,6 +100,7 @@ function LocalBusinessSchema() {
       'Premier luxury fitness club in Vijayawada featuring Panatta equipment, official HYROX training, reformer Pilates, and recovery suite.',
     priceRange: '₹₹₹₹',
     currenciesAccepted: 'INR',
+    hasMap: 'https://maps.app.goo.gl/ocqSrodeTthzK3L78',
     address: {
       '@type': 'PostalAddress',
       streetAddress: [site.address.line1, site.address.line2].filter(Boolean).join(', '),
