@@ -28,6 +28,32 @@ export default function StudioNav() {
   const [active, setActive] = useState<string>(DISCIPLINES[0].id);
   const mobileNavRef = useRef<HTMLElement>(null);
   const pillsRef = useRef<Map<string, HTMLAnchorElement>>(new Map());
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
+  // Mouse drag handlers for desktop/DevTools touch emulation
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const nav = mobileNavRef.current;
+    if (!nav) return;
+    isDragging.current = true;
+    startX.current = e.pageX - nav.offsetLeft;
+    scrollLeft.current = nav.scrollLeft;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current) return;
+    const nav = mobileNavRef.current;
+    if (!nav) return;
+    e.preventDefault();
+    const x = e.pageX - nav.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    nav.scrollLeft = scrollLeft.current - walk;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDragging.current = false;
+  };
 
   // Auto-scroll the mobile bar smoothly to center whichever chapter is currently active
   useEffect(() => {
@@ -160,7 +186,11 @@ export default function StudioNav() {
       <nav
         ref={mobileNavRef}
         aria-label="Studio chapters"
-        className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 overflow-x-auto border-t border-hairline bg-ink/95 px-4 py-2.5 backdrop-blur-md scroll-smooth lg:hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUpOrLeave}
+        onMouseLeave={handleMouseUpOrLeave}
+        className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-start sm:justify-center gap-1.5 overflow-x-auto border-t border-hairline bg-ink/95 px-3 py-2.5 backdrop-blur-md lg:hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing select-none"
         style={{
           paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.65rem)',
           touchAction: 'pan-x pan-y',
@@ -179,9 +209,9 @@ export default function StudioNav() {
               }}
               href={`#${d.id}`}
               aria-current={isActive ? 'true' : undefined}
-              className={`t-label shrink-0 rounded-full border px-3.5 py-1.5 text-xs uppercase tracking-wider transition-all duration-300 ${
+              className={`t-label shrink-0 rounded-full border px-2.5 py-1 text-[11px] uppercase tracking-wider transition-all duration-300 ${
                 isActive
-                  ? 'border-bronze bg-bronze/15 text-heading font-medium shadow-[0_0_12px_rgba(176,141,87,0.25)]'
+                  ? 'border-bronze bg-bronze/20 text-heading font-semibold shadow-[0_0_14px_rgba(176,141,87,0.3)]'
                   : 'border-hairline text-faint hover:text-heading hover:border-hairline-2'
               }`}
             >
@@ -189,8 +219,8 @@ export default function StudioNav() {
             </a>
           );
         })}
-        {/* End padding spacer so the last pill (Pilates) is fully visible and never cut off */}
-        <span aria-hidden="true" className="w-8 shrink-0" />
+        {/* End padding spacer so Pilates has ample room and is never truncated */}
+        <span aria-hidden="true" className="w-5 shrink-0 sm:hidden" />
       </nav>
     </>
   );
