@@ -163,19 +163,6 @@ export default function StudioPage() {
                       </div>
                     ))}
                   </dl>
-
-                  <div className="mt-6">
-                    <a
-                      href="/catalogue"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-line !py-1.5 !px-3.5 font-mono text-xs inline-flex items-center gap-2 border-hairline-2 text-heading hover:bg-hairline"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#B08D57]" aria-hidden="true" />
-                      <span>Fitness Catalogue</span>
-                      <span aria-hidden="true">↗</span>
-                    </a>
-                  </div>
                 </Reveal>
               </div>
             </div>
