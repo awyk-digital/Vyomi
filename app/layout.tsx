@@ -84,49 +84,103 @@ export const viewport: Viewport = {
  * publishing an invented address as structured data would be worse than
  * publishing none at all.
  */
+/**
+ * Enhanced Google Structured Data Schema (@graph)
+ * Injects LocalBusiness, WebSite, and SiteNavigationElement for Google Sitelinks & Knowledge Panel
+ */
 function LocalBusinessSchema() {
   const line = addressLine();
   if (!line || !site.address) return null;
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': ['ExerciseGym', 'SportsActivityLocation', 'HealthClub'],
-    name: site.name,
-    alternateName: 'Vyomi',
-    url: 'https://www.vyomifitness.in',
-    logo: 'https://www.vyomifitness.in/img/vyomi-brand-logo.png',
-    image: 'https://www.vyomifitness.in/video/hero-poster.jpg',
-    description:
-      'Premier luxury fitness club in Vijayawada featuring Panatta equipment, official HYROX training, reformer Pilates, and recovery suite.',
-    priceRange: '₹₹₹₹',
-    currenciesAccepted: 'INR',
-    hasMap: 'https://maps.app.goo.gl/ocqSrodeTthzK3L78',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: [site.address.line1, site.address.line2].filter(Boolean).join(', '),
-      addressLocality: site.address.locality,
-      addressRegion: site.address.region,
-      postalCode: site.address.postalCode,
-      addressCountry: site.address.country,
-    },
-    ...(site.coordinates && {
-      geo: {
-        '@type': 'GeoCoordinates',
-        latitude: site.coordinates.lat,
-        longitude: site.coordinates.lng,
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': 'https://www.vyomifitness.in/#website',
+        url: 'https://www.vyomifitness.in',
+        name: site.name,
+        description:
+          'Vyomi Fitness Club, Vijayawada. Elite Panatta equipment, HYROX conditioning, reformer Pilates, and luxury recovery suite.',
+        publisher: {
+          '@id': 'https://www.vyomifitness.in/#organization',
+        },
       },
-    }),
-    ...(site.phone && { telephone: site.phone }),
-    ...(site.email && { email: site.email }),
-    ...(site.instagramUrl && { sameAs: [site.instagramUrl] }),
-    ...(site.openingHours && {
-      openingHoursSpecification: site.openingHours.map((h) => ({
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: h.days,
-        opens: h.opens,
-        closes: h.closes,
-      })),
-    }),
+      {
+        '@type': ['ExerciseGym', 'SportsActivityLocation', 'HealthClub'],
+        '@id': 'https://www.vyomifitness.in/#organization',
+        name: site.name,
+        alternateName: ['Vyomi', 'Vyomi Fitness', 'Vyomi Gym', 'Vyomi Fitness Club Vijayawada'],
+        url: 'https://www.vyomifitness.in',
+        logo: 'https://www.vyomifitness.in/img/vyomi-brand-logo.png',
+        image: [
+          'https://www.vyomifitness.in/video/hero-poster.jpg',
+          'https://www.vyomifitness.in/img/area-reception.png',
+          'https://www.vyomifitness.in/img/eq-pin-main-v2.jpg',
+          'https://www.vyomifitness.in/img/wellness-main.jpg',
+          'https://www.vyomifitness.in/img/studio-hyrox.png',
+        ],
+        description:
+          'Vijayawada premier 15,000 sq. ft. luxury fitness club featuring Italian Panatta equipment, official HYROX training, reformer Pilates, and executive recovery suite.',
+        priceRange: '₹₹₹₹',
+        currenciesAccepted: 'INR',
+        hasMap: 'https://maps.app.goo.gl/ocqSrodeTthzK3L78',
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: [site.address.line1, site.address.line2].filter(Boolean).join(', '),
+          addressLocality: site.address.locality,
+          addressRegion: site.address.region,
+          postalCode: site.address.postalCode,
+          addressCountry: site.address.country,
+        },
+        ...(site.coordinates && {
+          geo: {
+            '@type': 'GeoCoordinates',
+            latitude: site.coordinates.lat,
+            longitude: site.coordinates.lng,
+          },
+        }),
+        ...(site.phone && { telephone: site.phone }),
+        ...(site.email && { email: site.email }),
+        ...(site.instagramUrl && { sameAs: [site.instagramUrl] }),
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        name: 'The Studio',
+        url: 'https://www.vyomifitness.in/studio',
+        description: 'Explore the five disciplines: Panatta Strength, HYROX, Pilates, Zumba, and Wellness.',
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        name: 'Panatta Strength Floor',
+        url: 'https://www.vyomifitness.in/studio#fitness',
+        description: 'Italian Panatta FreeWeight and pin-loaded selectorized equipment floor.',
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        name: 'Official HYROX Training',
+        url: 'https://www.vyomifitness.in/studio#hyrox',
+        description: 'High-performance HYROX conditioning, ergs, sleds, and functional training.',
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        name: 'Reformer Pilates Studio',
+        url: 'https://www.vyomifitness.in/studio#pilates',
+        description: 'Classical reformer Pilates carriage training with posture diagnostics.',
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        name: 'Executive Wellness & Recovery',
+        url: 'https://www.vyomifitness.in/studio#wellness',
+        description: 'Finnish saunas, steam rooms, red light therapy, and ice bath cold immersion.',
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        name: 'Club Location & Directions',
+        url: 'https://www.vyomifitness.in/#location',
+        description: 'Near Sonovision, Patamata, Vijayawada with private lift and valet parking.',
+      },
+    ],
   };
 
   return (
