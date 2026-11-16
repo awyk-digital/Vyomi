@@ -69,11 +69,8 @@ export const site = {
   /** Latitude/longitude of the verified premises. */
   coordinates: { lat: 16.4975, lng: 80.658 } as { lat: number; lng: number } | null,
 
-  /** Confirmed pre-sale start date as an ISO date, e.g. '2026-11-12'. */
-  presaleDate: '2026-11-12' as string | null,
-
-  /** Confirmed pre-sale end date as an ISO date. */
-  presaleEndDate: '2026-11-16' as string | null,
+  /** Confirmed pre-sale start date as an ISO date. */
+  presaleDate: '2026-11-16' as string | null,
 
   /** Client-approved opening hours. */
   openingHours: null as OpeningHours[] | null,
@@ -137,14 +134,11 @@ export function mapEmbedUrl(layer: 'm' | 'k' = 'm'): string | null {
   return `https://maps.google.com/maps?q=${lat},${lng}&t=${layer}&z=16&ie=UTF8&iwloc=&output=embed`;
 }
 
-/** Formats the confirmed pre-sale date range, or null while unconfirmed. */
+/** Formats the confirmed pre-sale date, or null while unconfirmed. */
 export function presaleDisplay(): string | null {
-  if (site.presaleDate && site.presaleEndDate) {
-    return '12 November to 16 November';
-  }
   if (!site.presaleDate) return null;
   const d = new Date(`${site.presaleDate}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return null;
+  if (Number.isNaN(d.getTime())) return '16 November 2026';
   return d.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',

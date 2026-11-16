@@ -164,10 +164,10 @@ export default function Hero() {
         <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
           {presale ? (
             <p className="t-body text-muted">
-              Pre-sale:{' '}
-              <span className="text-heading">
+              Pre-sale opens{' '}
+              <time dateTime={site.presaleDate ?? undefined} className="text-heading">
                 {presale}
-              </span>
+              </time>
               .
             </p>
           ) : (

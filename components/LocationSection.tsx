@@ -136,7 +136,7 @@ export default function LocationSection() {
                         Benz Circle · Patamata, Vijayawada
                       </p>
                       <span className="t-micro text-bronze block mt-0.5 font-medium">
-                        Pre-Sale: 12 – 16 Nov
+                        Pre-Sale Launch 16 Nov
                       </span>
                     </div>
                   </div>
