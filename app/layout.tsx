@@ -100,6 +100,7 @@ function LocalBusinessSchema() {
         '@id': 'https://www.vyomifitness.in/#website',
         url: 'https://www.vyomifitness.in',
         name: site.name,
+        alternateName: ['Vyomi', 'Vyomi Fitness', 'Vyomi Gym'],
         description:
           'Vyomi Fitness Club, Vijayawada. Elite Panatta equipment, HYROX conditioning, reformer Pilates, and luxury recovery suite.',
         publisher: {
@@ -143,6 +144,14 @@ function LocalBusinessSchema() {
         ...(site.phone && { telephone: site.phone }),
         ...(site.email && { email: site.email }),
         ...(site.instagramUrl && { sameAs: [site.instagramUrl] }),
+        ...(site.openingHours && {
+          openingHoursSpecification: site.openingHours.map((h) => ({
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: h.days,
+            opens: h.opens,
+            closes: h.closes,
+          })),
+        }),
       },
       {
         '@type': 'SiteNavigationElement',
