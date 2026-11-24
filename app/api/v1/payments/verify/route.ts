@@ -35,6 +35,23 @@ export async function POST(req: Request) {
       });
     }
 
+    // Support Razorpay Sandbox Simulation Test Cases
+    if (body.simulateFailure || razorpay_signature === 'sig_simulate_failure') {
+      const reason = body.failureReason || 'Card declined by issuing bank (Simulated Razorpay Failure)';
+      db.markRegistrationFailed(reg.reference, reason);
+      return NextResponse.json(
+        { status: 'FAILED', reference: reg.reference, failureReason: reason },
+        { status: 402 }
+      );
+    }
+
+    if (body.simulatePending) {
+      return NextResponse.json(
+        { status: 'PENDING', reference: reg.reference, message: 'Simulated pending payment gateway delay' },
+        { status: 202 }
+      );
+    }
+
     // Offline / cash / test bypass
     const isOffline = method === 'CASH' || method === 'POS' || method === 'BANK_TRANSFER';
     const isMockPayment = !razorpay_signature || razorpay_signature.startsWith('sig_mock_') || razorpay_signature.startsWith('sig_test_');

@@ -429,6 +429,88 @@ function RegisterFormContent() {
     }
   };
 
+  const handleSimulatedPayment = async (scenario: 'SUCCESS' | 'FAILURE' | 'PENDING') => {
+    setGeneralError('');
+    if (!formData.acceptedTerms || !formData.acceptedWaiver || !formData.acceptedPrivacy) {
+      setGeneralError('Please accept the Terms & Conditions, Health Waiver, and Privacy Policy to execute this test case.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // 1. Create client intake & server order
+      const res = await fetch('/api/v1/registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packageId: selectedPackage.id,
+          couponCode: appliedCoupon?.code,
+          client: formData,
+          startDate: formData.startDate,
+          preferredSlot: formData.preferredSlot,
+          referralSource: formData.referralSource,
+          acceptedTerms: formData.acceptedTerms,
+          acceptedWaiver: formData.acceptedWaiver,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setGeneralError(data.error?.message || 'Registration could not be created.');
+        setSubmitting(false);
+        return;
+      }
+
+      const { registrationRef } = data;
+
+      if (scenario === 'SUCCESS') {
+        const vRes = await fetch('/api/v1/payments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            registrationRef,
+            razorpay_payment_id: `pay_test_${Date.now()}`,
+            razorpay_signature: 'sig_mock_verified',
+            method: 'RAZORPAY',
+          }),
+        });
+        if (vRes.ok) {
+          sessionStorage.removeItem('vyomi_reg_draft');
+          router.push(`/register/success?ref=${registrationRef}`);
+        } else {
+          router.push(`/register/pending?ref=${registrationRef}`);
+        }
+      } else if (scenario === 'FAILURE') {
+        await fetch('/api/v1/payments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            registrationRef,
+            simulateFailure: true,
+            failureReason: 'Card declined by issuing bank (Simulated Razorpay Test Case)',
+            razorpay_payment_id: `pay_declined_${Date.now()}`,
+            razorpay_signature: 'sig_simulate_failure',
+          }),
+        });
+        router.push(`/register/failed?ref=${registrationRef}`);
+      } else if (scenario === 'PENDING') {
+        await fetch('/api/v1/payments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            registrationRef,
+            simulatePending: true,
+          }),
+        });
+        router.push(`/register/pending?ref=${registrationRef}`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Simulation error occurred';
+      setGeneralError(msg);
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div data-theme="light" className="min-h-screen bg-[var(--bg)] text-[var(--text)] font-sans antialiased pb-24">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
@@ -1013,6 +1095,91 @@ function RegisterFormContent() {
                   </label>
                 </div>
 
+                {/* Razorpay Gateway Test Scenarios & Sandbox Simulation Panel */}
+                <div className="bg-[#111114] border border-[#D4AF37]/30 rounded-lg p-5 sm:p-6 space-y-4 shadow-lg">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                      <span className="t-label text-[#D4AF37] font-bold tracking-wider uppercase text-[0.6875rem]">
+                        Razorpay Gateway Test Cases & Sandbox
+                      </span>
+                    </div>
+                    <span className="nums text-[0.625rem] font-mono text-white/50 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                      SANDBOX KEY: rzp_test_vyomi2026
+                    </span>
+                  </div>
+
+                  {/* Test credentials cheatsheet */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-[#161619] p-3 rounded border border-white/5">
+                    <div>
+                      <span className="text-[#10B981] font-semibold block text-[0.625rem] uppercase">
+                        ✓ Success Test Credentials
+                      </span>
+                      <span className="font-mono text-[#F5F5F2] font-semibold">4111 1111 1111 1111</span>
+                      <span className="text-[0.625rem] text-white/50 block">Exp: 12/30 · CVV: 123 · OTP: Any 6 digits</span>
+                    </div>
+                    <div>
+                      <span className="text-[#8C2230] font-semibold block text-[0.625rem] uppercase">
+                        ✕ Decline / Failed Test Card
+                      </span>
+                      <span className="font-mono text-[#8C2230] font-semibold">4000 0000 0000 0002</span>
+                      <span className="text-[0.625rem] text-white/50 block">UPI: success@razorpay / failure@razorpay</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-[#A1A1AA]">
+                    Click any simulated scenario below to test end-to-end gateway callbacks, membership activation, or failure error screens:
+                  </p>
+
+                  {/* 1-Click Test Scenarios Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => handleSimulatedPayment('SUCCESS')}
+                      className="flex flex-col items-start p-3 rounded border border-[#10B981]/40 bg-[#10B981]/10 hover:bg-[#10B981]/20 transition-all text-left cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#10B981]">
+                        <span>✓</span>
+                        <span>Case 1: Success</span>
+                      </div>
+                      <span className="text-[0.6875rem] text-white/70 mt-1">
+                        Simulate 200 OK payment, activate membership & print receipt
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => handleSimulatedPayment('FAILURE')}
+                      className="flex flex-col items-start p-3 rounded border border-[#8C2230]/40 bg-[#8C2230]/10 hover:bg-[#8C2230]/20 transition-all text-left cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#FF6B6B]">
+                        <span>✕</span>
+                        <span>Case 2: Decline</span>
+                      </div>
+                      <span className="text-[0.6875rem] text-white/70 mt-1">
+                        Simulate bank card decline & test payment retry flow (/failed)
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => handleSimulatedPayment('PENDING')}
+                      className="flex flex-col items-start p-3 rounded border border-[#D4AF37]/40 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 transition-all text-left cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#D4AF37]">
+                        <span>⏳</span>
+                        <span>Case 3: Pending</span>
+                      </div>
+                      <span className="text-[0.6875rem] text-white/70 mt-1">
+                        Simulate gateway delay & test live status polling (/pending)
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Final Action Buttons */}
                 <div className="flex items-center justify-between pt-6 border-t border-[var(--line)]">
                   <button
@@ -1033,10 +1200,10 @@ function RegisterFormContent() {
                     {submitting ? (
                       <span className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-[var(--live)] animate-ping" />
-                        Initiating Payment Gateway...
+                        Initiating Razorpay Modal...
                       </span>
                     ) : (
-                      `Pay ${formatINR(pricing.total)} & Activate Membership →`
+                      `Launch Razorpay Modal · ${formatINR(pricing.total)} →`
                     )}
                   </button>
                 </div>

@@ -8,7 +8,7 @@
       "salt": "vyomi_luxury_salt_2026",
       "role": "SUPER_ADMIN",
       "isActive": true,
-      "lastLoginAt": "2026-11-24T08:08:46.260Z",
+      "lastLoginAt": "2026-11-24T08:56:42.036Z",
       "createdAt": "2026-11-24T07:33:30.009Z"
     },
     {
@@ -222,6 +222,25 @@
       "id": "cli-d6e24cc9",
       "memberCode": "VYO-2026-000104",
       "createdAt": "2026-11-24T08:05:02.855Z"
+    },
+    {
+      "fullName": "sri hari",
+      "phone": "1234567890",
+      "email": "sriharicherukumalli1@gmail.com",
+      "dateOfBirth": "2006-06-04",
+      "gender": "Male",
+      "address": "vissannapet mandal ,vissannapeta village ,kummarla bazar,521215",
+      "photoUrl": null,
+      "idProofType": "Aadhaar",
+      "idProofNumber": "1234567789012",
+      "fitnessGoal": "Hypertrophy & Muscle Gain",
+      "medicalNotes": null,
+      "emergencyContactName": "yaswanth",
+      "emergencyContactPhone": "1625456789",
+      "guardianName": "yaswanth",
+      "id": "cli-f3475171",
+      "memberCode": null,
+      "createdAt": "2026-11-24T09:02:03.341Z"
     }
   ],
   "registrations": [
@@ -312,6 +331,28 @@
       "notes": null,
       "createdAt": "2026-11-24T08:05:02.857Z",
       "updatedAt": "2026-11-24T08:05:11.259Z"
+    },
+    {
+      "id": "reg-236ecd52",
+      "reference": "REG-20261124-2A43",
+      "clientId": "cli-f3475171",
+      "packageId": "pkg-platinum-6m",
+      "couponId": null,
+      "pricePaise": 1600000,
+      "joiningFeePaise": 0,
+      "discountPaise": 0,
+      "gstPaise": 288000,
+      "totalPaise": 1888000,
+      "status": "PENDING",
+      "startDate": "2026-12-01",
+      "endDate": null,
+      "preferredSlot": "morning",
+      "referralSource": "Instagram",
+      "acceptedTermsAt": "2026-11-24T09:02:03.347Z",
+      "acceptedIp": "::1",
+      "notes": null,
+      "createdAt": "2026-11-24T09:02:03.347Z",
+      "updatedAt": "2026-11-24T09:02:03.347Z"
     }
   ],
   "payments": [
@@ -374,9 +415,37 @@
       "refundedPaise": 0,
       "paidAt": "2026-11-24T08:05:11.259Z",
       "createdAt": "2026-11-24T08:05:02.857Z"
+    },
+    {
+      "id": "pay-9ef04819",
+      "registrationId": "reg-236ecd52",
+      "method": "RAZORPAY",
+      "razorpayOrderId": "order_vyo_REG-20261124-2A43",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "amountPaise": 1888000,
+      "currency": "INR",
+      "status": "CREATED",
+      "failureReason": null,
+      "refundedPaise": 0,
+      "paidAt": null,
+      "createdAt": "2026-11-24T09:02:03.347Z"
     }
   ],
   "auditLogs": [
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-c7e57339",
+      "createdAt": "2026-11-24T08:56:42.041Z"
+    },
     {
       "adminId": "admin-super-01",
       "adminName": "Vyomi Super Admin",
