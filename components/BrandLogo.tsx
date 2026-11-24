@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import gsap from 'gsap';
 import { SUPPLIED } from '@/config/assets';
 import { INTRO } from '@/lib/motion';
@@ -13,8 +14,14 @@ import { shouldRunIntro, markIntroDone } from '@/lib/intro';
  * Pure logo presentation with zero artificial sheens, white highlights, or detailing overlays.
  */
 export default function BrandLogo() {
+  const pathname = usePathname();
   const wrapRef = useRef<HTMLDivElement>(null);
   const introRunning = useRef(false);
+
+  // Hidden on admin portal
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   /**
    * Keeping the mark clear of page content: it retires while the visitor

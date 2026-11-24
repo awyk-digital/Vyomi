@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import gsap from 'gsap';
 import { site, presaleDisplay } from '@/config/site';
 import { useIntroDone } from '@/lib/intro';
@@ -31,10 +32,16 @@ function istNow(): string {
 }
 
 export default function StatusMark() {
+  const pathname = usePathname();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [time, setTime] = useState<string | null>(null);
   const introDone = useIntroDone();
   const presale = presaleDisplay();
+
+  // Hidden on admin portal
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   useEffect(() => {
     setTime(istNow());
