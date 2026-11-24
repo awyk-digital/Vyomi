@@ -38,8 +38,8 @@ export default function StatusMark() {
   const introDone = useIntroDone();
   const presale = presaleDisplay();
 
-  // Hidden on admin portal
-  if (pathname?.startsWith('/admin')) {
+  // Hidden on admin portal and registration flow
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/register')) {
     return null;
   }
 

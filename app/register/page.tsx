@@ -7,6 +7,20 @@ import Image from 'next/image';
 import Script from 'next/script';
 import { SUPPLIED } from '@/config/assets';
 import { site } from '@/config/site';
+import {
+  SilverTierBadge,
+  GoldTierBadge,
+  PlatinumTierBadge,
+  DiamondTierBadge,
+  VipMembershipCard,
+  StepTierIcon,
+  StepIdIcon,
+  StepPulseIcon,
+  StepPaymentIcon,
+  SecurityLockBadge,
+  UpiIconSvg,
+  PanattaEmblemSvg,
+} from '@/components/LuxuryIcons';
 
 interface PackageItem {
   id: string;
@@ -420,27 +434,27 @@ function RegisterFormContent() {
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
       {/* Top Header */}
-      <header className="border-b border-[var(--line)] bg-[var(--surface)] sticky top-0 z-40">
+      <header className="border-b border-white/10 bg-[#0C0C0E]/90 backdrop-blur-md sticky top-0 z-40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 group">
             <Image
               src={SUPPLIED.logo.src}
               alt="Vyomi Fitness Club"
               width={72}
               height={36}
               unoptimized
-              className="h-9 w-auto brightness-0 invert-0"
+              className="h-9 w-auto opacity-95 group-hover:opacity-100 transition-opacity"
             />
-            <span className="hidden sm:inline-block text-xs font-semibold tracking-widest text-[var(--text-strong)] uppercase border-l border-[var(--line-2)] pl-3">
+            <span className="hidden sm:inline-block text-xs font-semibold tracking-widest text-[#D4AF37] uppercase border-l border-white/15 pl-3">
               Membership Portal
             </span>
           </Link>
 
           <div className="flex items-center gap-4 text-xs">
-            <div className="hidden md:flex items-center gap-2 text-[var(--text-faint)]">
+            <div className="hidden md:flex items-center gap-2 text-white/50">
               <span>{site.city}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--live)] inline-block" />
-              <span className="nums font-medium text-[var(--text-strong)]">{clock} IST</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block shadow-[0_0_8px_#10B981]" />
+              <span className="nums font-medium text-[#F5F5F2]">{clock} IST</span>
             </div>
             <Link
               href="/"
@@ -451,10 +465,10 @@ function RegisterFormContent() {
           </div>
         </div>
 
-        {/* Stepper progress bar */}
-        <div className="w-full bg-[var(--line)] h-1 relative overflow-hidden">
+        {/* Stepper progress bar with gold shimmer */}
+        <div className="w-full bg-white/5 h-1 relative overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[var(--bronze)] to-[var(--live)] transition-all duration-500 ease-[var(--ease-editorial)]"
+            className="h-full bg-gradient-to-r from-[#D4AF37] via-[#B08D57] to-[#10B981] transition-all duration-500 ease-[var(--ease-editorial)]"
             style={{ width: `${(step / 4) * 100}%` }}
           />
         </div>
@@ -463,19 +477,19 @@ function RegisterFormContent() {
       {/* Main Content Container */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
         {/* Step indicator header */}
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
           <div>
-            <div className="t-label text-[var(--bronze-text)] flex items-center gap-2">
+            <div className="t-label text-[#D4AF37] flex items-center gap-2">
               <span className="nums font-bold tracking-wider">STEP 0{step} / 04</span>
               <span>┃</span>
-              <span className="text-[var(--text-faint)] uppercase tracking-wider">
+              <span className="text-white/40 uppercase tracking-wider text-[0.6875rem]">
                 {step === 1 && 'Select Premium Tier'}
                 {step === 2 && 'Personal Identification'}
                 {step === 3 && 'Fitness & Safety Protocol'}
                 {step === 4 && 'Review & Activation'}
               </span>
             </div>
-            <h1 className="t-h2 text-[var(--text-strong)] mt-2 font-medium tracking-tight">
+            <h1 className="t-h2 text-[#F5F5F2] mt-2 font-medium tracking-tight">
               {step === 1 && 'Choose Your Membership.'}
               {step === 2 && 'Personal Details.'}
               {step === 3 && 'Health & Emergency Contact.'}
@@ -483,9 +497,14 @@ function RegisterFormContent() {
             </h1>
           </div>
 
-          {/* Stepper pill buttons */}
-          <div className="flex items-center gap-1.5 text-xs bg-[var(--surface-2)] p-1 rounded">
-            {[1, 2, 3, 4].map((s) => (
+          {/* Stepper pill buttons with Luxury SVGs */}
+          <div className="flex items-center gap-1.5 text-xs bg-[#111113] p-1.5 rounded-md border border-white/10">
+            {[
+              { s: 1, label: 'Tier', icon: StepTierIcon },
+              { s: 2, label: 'Identity', icon: StepIdIcon },
+              { s: 3, label: 'Safety', icon: StepPulseIcon },
+              { s: 4, label: 'Activation', icon: StepPaymentIcon },
+            ].map(({ s, label, icon: Icon }) => (
               <button
                 key={s}
                 type="button"
@@ -493,15 +512,17 @@ function RegisterFormContent() {
                   if (s < step) setStep(s);
                 }}
                 disabled={s > step}
-                className={`px-3 py-1.5 rounded transition-all font-medium ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs transition-all font-medium ${
                   s === step
-                    ? 'bg-[var(--surface)] text-[var(--text-strong)] shadow-sm'
+                    ? 'bg-[#1C1C20] text-[#D4AF37] border border-[#D4AF37]/40 shadow-sm'
                     : s < step
-                    ? 'text-[var(--text-strong)] hover:text-[var(--bronze-text)] cursor-pointer'
-                    : 'text-[var(--text-faint)] opacity-50 cursor-not-allowed'
+                    ? 'text-[#F5F5F2] hover:text-[#D4AF37] cursor-pointer'
+                    : 'text-white/30 cursor-not-allowed'
                 }`}
               >
-                0{s}
+                <Icon className="w-3.5 h-3.5" />
+                <span className="nums">0{s}</span>
+                <span className="hidden sm:inline">{label}</span>
               </button>
             ))}
           </div>
@@ -521,7 +542,7 @@ function RegisterFormContent() {
             {/* STEP 1: PACKAGE SELECTION */}
             {step === 1 && (
               <div className="space-y-6">
-                <p className="t-body text-[var(--text)]">
+                <p className="t-body text-[#A1A1AA]">
                   All memberships provide unrestricted access to the complete Panatta biomechanical equipment suite, executive locker rooms, and wellness thermal bays.
                 </p>
 
@@ -532,49 +553,56 @@ function RegisterFormContent() {
                       <div
                         key={pkg.id}
                         onClick={() => setSelectedPkgId(pkg.id)}
-                        className={`relative p-6 rounded-[2px] transition-all duration-300 cursor-pointer flex flex-col justify-between border ${
+                        className={`relative p-6 sm:p-7 rounded-lg transition-all duration-300 cursor-pointer flex flex-col justify-between border ${
                           isSelected
-                            ? 'bg-[var(--surface)] border-[var(--text-strong)] shadow-[var(--shadow-card)] ring-1 ring-[var(--text-strong)]'
-                            : 'bg-[var(--surface)] border-[var(--line)] hover:border-[var(--line-2)] hover:-translate-y-0.5'
+                            ? 'bg-gradient-to-b from-[#18181C] to-[#111113] border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.18)] ring-1 ring-[#D4AF37]'
+                            : 'bg-[#111113] border-white/10 hover:border-white/20 hover:bg-[#151518] hover:-translate-y-0.5'
                         }`}
                       >
                         {pkg.isFeatured && (
-                          <span className="absolute -top-3 right-4 px-2.5 py-0.5 text-[0.6875rem] font-bold tracking-widest uppercase rounded bg-[var(--burgundy)] text-white">
+                          <span className="absolute -top-3 right-5 px-3 py-0.5 text-[0.625rem] font-bold tracking-widest uppercase rounded-full bg-[#8C2230] text-white shadow-md">
                             Most Chosen
                           </span>
                         )}
 
                         <div>
-                          <div className="flex items-center justify-between">
-                            <span className="t-label text-[var(--text-faint)]">
-                              {pkg.durationDays} Days Commitment
-                            </span>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              {pkg.slug === 'silver' && <SilverTierBadge className="w-9 h-9" />}
+                              {pkg.slug === 'gold' && <GoldTierBadge className="w-9 h-9" />}
+                              {pkg.slug === 'platinum' && <PlatinumTierBadge className="w-9 h-9" />}
+                              {pkg.slug === 'diamond' && <DiamondTierBadge className="w-9 h-9" />}
+                              <div>
+                                <span className="t-label text-white/40 block text-[0.6875rem]">
+                                  {pkg.durationDays} Days Commitment
+                                </span>
+                                <h3 className="t-h3 text-[#F5F5F2] font-semibold">
+                                  {pkg.name} Tier
+                                </h3>
+                              </div>
+                            </div>
                             {isSelected && (
-                              <span className="t-micro px-2 py-0.5 bg-[var(--text-strong)] text-[var(--bg)] font-semibold tracking-wider rounded uppercase">
+                              <span className="t-micro px-2.5 py-1 bg-[#D4AF37] text-black font-bold tracking-wider rounded uppercase text-[0.625rem]">
                                 Selected
                               </span>
                             )}
                           </div>
 
-                          <h3 className="t-h3 text-[var(--text-strong)] mt-2 font-medium">
-                            {pkg.name} Tier
-                          </h3>
-
-                          <div className="mt-3 flex items-baseline gap-1">
-                            <span className="nums t-h2 text-[var(--text-strong)] font-semibold">
+                          <div className="mt-4 flex items-baseline gap-1">
+                            <span className="nums t-h2 text-[#F5F5F2] font-semibold">
                               {formatINR(pkg.pricePaise)}
                             </span>
-                            <span className="t-small text-[var(--text-faint)]">
+                            <span className="t-small text-white/40">
                               / {pkg.durationDays >= 365 ? 'yr' : `${pkg.durationDays / 30} mo`}
                             </span>
                           </div>
 
-                          <div className="h-px w-full bg-[var(--line)] my-4" />
+                          <div className="h-px w-full bg-white/10 my-5" />
 
-                          <ul className="space-y-2.5">
+                          <ul className="space-y-3">
                             {pkg.benefits.map((b, i) => (
-                              <li key={i} className="flex items-start gap-2 text-xs text-[var(--text)]">
-                                <span className="text-[var(--bronze)] font-bold mt-0.5">✓</span>
+                              <li key={i} className="flex items-start gap-2.5 text-xs text-[#C4C4C0]">
+                                <span className="text-[#D4AF37] font-bold mt-0.5">✓</span>
                                 <span>{b}</span>
                               </li>
                             ))}
@@ -583,10 +611,10 @@ function RegisterFormContent() {
 
                         <button
                           type="button"
-                          className={`mt-6 w-full text-xs font-semibold py-2.5 uppercase tracking-wider rounded transition-colors ${
+                          className={`mt-6 w-full text-xs font-semibold py-3 uppercase tracking-wider rounded transition-all ${
                             isSelected
-                              ? 'bg-[var(--solid-bg)] text-[var(--solid-text)]'
-                              : 'bg-[var(--surface-2)] text-[var(--text-strong)] hover:bg-[var(--line-2)]'
+                              ? 'bg-gradient-to-r from-[#D4AF37] to-[#B08D57] text-black font-bold shadow-md'
+                              : 'bg-[#18181B] text-[#F5F5F2] border border-white/10 hover:border-white/20'
                           }`}
                         >
                           {isSelected ? 'Tier Selected' : 'Select Package'}
@@ -1017,18 +1045,25 @@ function RegisterFormContent() {
           </div>
 
           {/* Right Column: Sticky Order Summary Card */}
-          <div className="lg:col-span-4 sticky top-28">
-            <div className="bg-[var(--surface)] border border-[var(--line)] rounded-[2px] p-6 shadow-[var(--shadow-card)] space-y-5">
-              <div className="border-b border-[var(--line)] pb-4">
-                <span className="t-label text-[var(--text-faint)] tracking-widest uppercase text-[0.6875rem]">
+          <div className="lg:col-span-4 sticky top-28 space-y-5">
+            {/* Live Interactive VIP Digital Card Preview */}
+            <VipMembershipCard
+              clientName={formData.fullName}
+              packageName={selectedPackage?.name ?? 'Gold'}
+              durationDays={selectedPackage?.durationDays ?? 90}
+            />
+
+            <div className="bg-[#111113] border border-white/10 rounded-lg p-6 shadow-[var(--shadow-card)] space-y-5">
+              <div className="border-b border-white/10 pb-4">
+                <span className="t-label text-[#D4AF37] tracking-widest uppercase text-[0.6875rem] font-bold">
                   Order Summary
                 </span>
                 <div className="flex items-baseline justify-between mt-1">
-                  <h3 className="t-h3 text-[var(--text-strong)] font-semibold">
+                  <h3 className="t-h3 text-[#F5F5F2] font-semibold">
                     {selectedPackage?.name ?? 'Gold'} Tier
                   </h3>
-                  <span className="nums t-small text-[var(--bronze-text)] font-medium">
-                    {selectedPackage?.durationDays ?? 90} Days
+                  <span className="nums t-small text-[#D4AF37] font-medium">
+                    {selectedPackage?.durationDays ?? 90} Days Access
                   </span>
                 </div>
               </div>
@@ -1036,38 +1071,38 @@ function RegisterFormContent() {
               {/* Price rows */}
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-[var(--text)]">Base Membership Fee</span>
-                  <span className="nums font-medium text-[var(--text-strong)]">
+                  <span className="text-[#A1A1AA]">Base Membership Fee</span>
+                  <span className="nums font-medium text-[#F5F5F2]">
                     {formatINR(pricing.basePrice)}
                   </span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-[var(--text)]">One-Time Admission Fee</span>
-                  <span className="nums text-[var(--text-strong)]">
+                  <span className="text-[#A1A1AA]">One-Time Admission Fee</span>
+                  <span className="nums text-[#10B981] font-medium">
                     {pricing.joiningFee === 0 ? 'Complimentary' : formatINR(pricing.joiningFee)}
                   </span>
                 </div>
 
                 {pricing.discount > 0 && (
-                  <div className="flex justify-between text-[var(--success)]">
+                  <div className="flex justify-between text-[#10B981]">
                     <span>Coupon Discount ({appliedCoupon?.code})</span>
                     <span className="nums font-medium">−{formatINR(pricing.discount)}</span>
                   </div>
                 )}
 
-                <div className="flex justify-between text-[var(--text-faint)]">
+                <div className="flex justify-between text-white/40">
                   <span>Goods & Services Tax (GST 18%)</span>
-                  <span className="nums font-medium text-[var(--text)]">
+                  <span className="nums font-medium text-[#A1A1AA]">
                     {formatINR(pricing.gst)}
                   </span>
                 </div>
 
-                <div className="h-px w-full bg-[var(--line)] my-2" />
+                <div className="h-px w-full bg-white/10 my-3" />
 
                 <div className="flex items-baseline justify-between pt-1">
-                  <span className="t-body font-semibold text-[var(--text-strong)]">Total Payable</span>
-                  <span className="nums t-h3 font-bold text-[var(--text-strong)]">
+                  <span className="t-body font-semibold text-[#F5F5F2]">Total Payable</span>
+                  <span className="nums t-h3 font-bold text-[#D4AF37]">
                     {formatINR(pricing.total)}
                   </span>
                 </div>
@@ -1075,7 +1110,7 @@ function RegisterFormContent() {
 
               {/* Coupon Code input */}
               <div className="pt-2">
-                <label className="block text-[0.6875rem] font-semibold text-[var(--text-faint)] mb-1 uppercase tracking-wider">
+                <label className="block text-[0.6875rem] font-semibold text-white/50 mb-1.5 uppercase tracking-wider">
                   Promotional Voucher Code
                 </label>
                 <div className="flex gap-2">
@@ -1090,7 +1125,7 @@ function RegisterFormContent() {
                     type="button"
                     disabled={isApplyingCoupon || !couponCode.trim()}
                     onClick={handleApplyCoupon}
-                    className="btn-line-light !h-9 !px-3 text-xs"
+                    className="btn-line-light !h-9 !px-3.5 text-xs"
                   >
                     {isApplyingCoupon ? '...' : 'Apply'}
                   </button>
@@ -1101,18 +1136,31 @@ function RegisterFormContent() {
                   </span>
                 )}
                 {appliedCoupon && (
-                  <span className="text-[0.6875rem] text-[var(--success)] mt-1 block font-medium">
+                  <span className="text-[0.6875rem] text-[#10B981] mt-1 block font-medium">
                     ✓ Voucher {appliedCoupon.code} applied successfully!
                   </span>
                 )}
               </div>
 
-              {/* Security info */}
-              <div className="border-t border-[var(--line)] pt-4 flex items-center gap-2.5 text-[0.6875rem] text-[var(--text-faint)]">
-                <span className="text-base">🔒</span>
-                <span>
-                  Payments processed through Razorpay with 256-bit bank-grade TLS encryption.
-                </span>
+              {/* Security info & Payment SVGs */}
+              <div className="border-t border-white/10 pt-4 space-y-3">
+                <div className="flex items-center gap-2.5 text-[0.6875rem] text-white/50">
+                  <SecurityLockBadge className="w-4 h-4 text-[#10B981] shrink-0" />
+                  <span>
+                    Bank-grade 256-bit TLS encrypted session via Razorpay.
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[0.625rem] text-white/40">
+                  <div className="flex items-center gap-2">
+                    <UpiIconSvg className="h-4 w-auto" />
+                    <span>Cards & NetBanking</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[#8C2230] font-semibold">
+                    <PanattaEmblemSvg className="w-3.5 h-3.5" />
+                    <span>Panatta Studio</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1158,7 +1206,7 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#F7F5F0] flex items-center justify-center text-xs text-neutral-500">
+        <div className="min-h-screen bg-[#080808] flex items-center justify-center text-xs text-neutral-400">
           Loading membership portal...
         </div>
       }

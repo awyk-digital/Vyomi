@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { SUPPLIED } from '@/config/assets';
+import { VipMembershipCard } from '@/components/LuxuryIcons';
 
 interface RegDetail {
   reference: string;
@@ -78,15 +79,25 @@ function SuccessContent() {
         </p>
       </div>
 
+      {/* VIP Digital Membership Card Display */}
+      <div className="my-8 max-w-md mx-auto">
+        <VipMembershipCard
+          clientName={detail?.clientName || 'Club Member'}
+          packageName={detail?.packageName || 'Gold'}
+          durationDays={detail?.durationDays || 90}
+          memberCode={detail?.memberCode || 'VYO · 2026 · VIP'}
+        />
+      </div>
+
       {/* Member ID spotlight */}
-      <div className="my-8 p-6 bg-[var(--surface-2)] border border-[var(--line-2)] rounded text-center">
-        <span className="t-label text-[var(--bronze-text)] uppercase tracking-widest text-[0.6875rem] font-bold block mb-1">
+      <div className="my-8 p-6 bg-[#161619] border border-white/10 rounded-lg text-center">
+        <span className="t-label text-[#D4AF37] uppercase tracking-widest text-[0.6875rem] font-bold block mb-1">
           Official Member Identification Code
         </span>
-        <span className="nums text-2xl sm:text-3xl font-bold tracking-wider text-[var(--text-strong)]">
+        <span className="nums text-2xl sm:text-3xl font-bold tracking-wider text-[#F5F5F2]">
           {detail?.memberCode || 'VYO-2026-ACTIVE'}
         </span>
-        <div className="w-16 h-0.5 bg-[var(--bronze)] mx-auto mt-3" />
+        <div className="w-16 h-0.5 bg-[#D4AF37] mx-auto mt-3" />
       </div>
 
       {/* Membership Details */}

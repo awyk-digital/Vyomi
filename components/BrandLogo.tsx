@@ -18,8 +18,8 @@ export default function BrandLogo() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const introRunning = useRef(false);
 
-  // Hidden on admin portal
-  if (pathname?.startsWith('/admin')) {
+  // Hidden on admin portal and registration flow
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/register')) {
     return null;
   }
 
