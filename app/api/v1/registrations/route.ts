@@ -20,46 +20,86 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: { code: 'INVALID_CLIENT', message: 'Client details are required.' } }, { status: 400 });
     }
 
-    const fullName = (client.fullName || '').trim();
+    // Sanitize string helper
+    const sanitize = (str: string) => str.replace(/<[^>]*>?/gm, '').trim();
+
+    const fullName = sanitize(client.fullName || '');
     const phone = (client.phone || '').trim().replace(/\D/g, '');
-    const email = (client.email || '').trim().toLowerCase();
+    const email = sanitize(client.email || '').toLowerCase();
     const dateOfBirth = client.dateOfBirth;
     const gender = client.gender;
-    const address = (client.address || '').trim();
-    const fitnessGoal = (client.fitnessGoal || '').trim();
-    const emergencyContactName = (client.emergencyContactName || '').trim();
-    const emergencyContactPhone = (client.emergencyContactPhone || '').trim();
+    const address = sanitize(client.address || '');
+    const fitnessGoal = sanitize(client.fitnessGoal || '');
+    const emergencyContactName = sanitize(client.emergencyContactName || '');
+    const emergencyContactPhone = (client.emergencyContactPhone || '').trim().replace(/\D/g, '');
+    const idProofType = client.idProofType;
+    const idProofNumber = sanitize(client.idProofNumber || '');
 
-    if (!fullName || fullName.length < 2) {
-      return NextResponse.json({ error: { code: 'INVALID_NAME', message: 'Full name is required (min 2 characters).' } }, { status: 400 });
+    // Strict Validations
+    if (!fullName || fullName.length < 3 || fullName.split(/\s+/).length < 2) {
+      return NextResponse.json({
+        error: { code: 'INVALID_NAME', message: 'Full legal name requires both first and last name (letters only).' }
+      }, { status: 400 });
     }
-    if (!phone || phone.length < 10) {
-      return NextResponse.json({ error: { code: 'INVALID_PHONE', message: 'Valid 10-digit mobile number is required.' } }, { status: 400 });
+
+    const indianMobileRegex = /^[6-9]\d{9}$/;
+    if (!phone || !indianMobileRegex.test(phone)) {
+      return NextResponse.json({
+        error: { code: 'INVALID_PHONE', message: 'Please provide a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.' }
+      }, { status: 400 });
     }
-    if (!email || !email.includes('@')) {
-      return NextResponse.json({ error: { code: 'INVALID_EMAIL', message: 'Valid email address is required.' } }, { status: 400 });
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!email || !emailRegex.test(email)) {
+      return NextResponse.json({
+        error: { code: 'INVALID_EMAIL', message: 'Please enter a valid RFC-compliant email address.' }
+      }, { status: 400 });
     }
+
     if (!dateOfBirth) {
-      return NextResponse.json({ error: { code: 'INVALID_DOB', message: 'Date of birth is required.' } }, { status: 400 });
+      return NextResponse.json({
+        error: { code: 'INVALID_DOB', message: 'Date of birth is required.' }
+      }, { status: 400 });
     }
-    if (!emergencyContactName || !emergencyContactPhone) {
-      return NextResponse.json({ error: { code: 'INVALID_EMERGENCY', message: 'Emergency contact name and phone are required.' } }, { status: 400 });
+
+    if (!emergencyContactName || emergencyContactName.length < 2) {
+      return NextResponse.json({
+        error: { code: 'INVALID_EMERGENCY_NAME', message: 'Emergency contact person name is required (min 2 characters).' }
+      }, { status: 400 });
+    }
+
+    if (!emergencyContactPhone || !indianMobileRegex.test(emergencyContactPhone)) {
+      return NextResponse.json({
+        error: { code: 'INVALID_EMERGENCY_PHONE', message: 'Emergency contact phone number must be a valid 10-digit mobile number.' }
+      }, { status: 400 });
+    }
+
+    if (phone === emergencyContactPhone) {
+      return NextResponse.json({
+        error: { code: 'SAME_PHONE', message: 'Emergency contact number cannot be identical to your personal mobile number.' }
+      }, { status: 400 });
     }
 
     // Check age
     const dob = new Date(dateOfBirth);
+    if (isNaN(dob.getTime()) || dob.getTime() > Date.now()) {
+      return NextResponse.json({
+        error: { code: 'INVALID_DOB', message: 'Date of birth cannot be in the future.' }
+      }, { status: 400 });
+    }
+
     const ageDiffMs = Date.now() - dob.getTime();
     const ageDate = new Date(ageDiffMs);
     const age = Math.abs(ageDate.getUTCFullYear() - 1970);
     if (age < 16) {
       return NextResponse.json(
-        { error: { code: 'AGE_RESTRICTION', message: 'Minimum age for membership is 16 years.' } },
+        { error: { code: 'AGE_RESTRICTION', message: 'Minimum age for membership at Vyomi is 16 years.' } },
         { status: 400 }
       );
     }
-    if (age < 18 && !client.guardianName) {
+    if (age < 18 && (!client.guardianName || !client.guardianConsent)) {
       return NextResponse.json(
-        { error: { code: 'GUARDIAN_REQUIRED', message: 'Guardian consent and name are required for members under 18.' } },
+        { error: { code: 'GUARDIAN_REQUIRED', message: 'Parent or legal guardian consent and full name are mandatory for members under 18.' } },
         { status: 400 }
       );
     }

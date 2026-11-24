@@ -473,6 +473,10 @@ class Database {
     }
   }
 
+  save(): void {
+    this.persist();
+  }
+
   private persist(): void {
     this.saveDirect(this.data);
   }

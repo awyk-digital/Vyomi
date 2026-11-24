@@ -8,7 +8,7 @@
       "salt": "vyomi_luxury_salt_2026",
       "role": "SUPER_ADMIN",
       "isActive": true,
-      "lastLoginAt": "2026-11-24T08:56:42.036Z",
+      "lastLoginAt": "2026-11-24T10:03:17.534Z",
       "createdAt": "2026-11-24T07:33:30.009Z"
     },
     {
@@ -205,19 +205,19 @@
       "createdAt": "2026-11-24T07:35:56.139Z"
     },
     {
-      "fullName": "Test Client",
-      "phone": "9876543210",
-      "email": "test@vyomi.com",
-      "dateOfBirth": "1998-05-15",
+      "fullName": "Aditya Varma Raju",
+      "phone": "9876543299",
+      "email": "aditya@vyomifitness.com",
+      "dateOfBirth": "1995-05-15",
       "gender": "Male",
-      "address": "Road 36, Jubilee Hills",
+      "address": "Plot 42, Jubilee Hills Road, Vijayawada",
       "photoUrl": null,
       "idProofType": "Aadhaar",
       "idProofNumber": "123456789012",
       "fitnessGoal": "Hypertrophy & Muscle Gain",
-      "medicalNotes": "None",
-      "emergencyContactName": "Emergency Contact",
-      "emergencyContactPhone": "9876543211",
+      "medicalNotes": null,
+      "emergencyContactName": "Kavitha Varma Raju",
+      "emergencyContactPhone": "9876543288",
       "guardianName": null,
       "id": "cli-d6e24cc9",
       "memberCode": "VYO-2026-000104",
@@ -241,6 +241,25 @@
       "id": "cli-f3475171",
       "memberCode": null,
       "createdAt": "2026-11-24T09:02:03.341Z"
+    },
+    {
+      "fullName": "sri hari",
+      "phone": "9121726977",
+      "email": "sriharicherukumalli1@gmail.com",
+      "dateOfBirth": "2004-02-16",
+      "gender": "Male",
+      "address": "vissannapet mandal ,vissannapeta village ,kummarla bazar,521215",
+      "photoUrl": null,
+      "idProofType": "Aadhaar",
+      "idProofNumber": "123456789012",
+      "fitnessGoal": "Fat Loss & Caloric Expenditure",
+      "medicalNotes": null,
+      "emergencyContactName": "yaswanth",
+      "emergencyContactPhone": "1234567890",
+      "guardianName": null,
+      "id": "cli-1e5b883a",
+      "memberCode": null,
+      "createdAt": "2026-11-24T09:22:53.935Z"
     }
   ],
   "registrations": [
@@ -353,6 +372,72 @@
       "notes": null,
       "createdAt": "2026-11-24T09:02:03.347Z",
       "updatedAt": "2026-11-24T09:02:03.347Z"
+    },
+    {
+      "id": "reg-05a35cb8",
+      "reference": "REG-20261124-C553",
+      "clientId": "cli-1e5b883a",
+      "packageId": "pkg-diamond-12m",
+      "couponId": "cpn-newyear10",
+      "pricePaise": 2800000,
+      "joiningFeePaise": 0,
+      "discountPaise": 280000,
+      "gstPaise": 453600,
+      "totalPaise": 2973600,
+      "status": "PENDING",
+      "startDate": "2026-12-01",
+      "endDate": null,
+      "preferredSlot": "morning",
+      "referralSource": "Instagram",
+      "acceptedTermsAt": "2026-11-24T09:22:53.941Z",
+      "acceptedIp": "::1",
+      "notes": null,
+      "createdAt": "2026-11-24T09:22:53.942Z",
+      "updatedAt": "2026-11-24T09:22:53.942Z"
+    },
+    {
+      "id": "reg-76747451",
+      "reference": "REG-20261124-F4AA",
+      "clientId": "cli-1e5b883a",
+      "packageId": "pkg-platinum-6m",
+      "couponId": null,
+      "pricePaise": 1600000,
+      "joiningFeePaise": 0,
+      "discountPaise": 0,
+      "gstPaise": 288000,
+      "totalPaise": 1888000,
+      "status": "PENDING",
+      "startDate": "2026-12-01",
+      "endDate": null,
+      "preferredSlot": "morning",
+      "referralSource": "Instagram",
+      "acceptedTermsAt": "2026-11-24T09:47:04.472Z",
+      "acceptedIp": "::1",
+      "notes": null,
+      "createdAt": "2026-11-24T09:47:04.472Z",
+      "updatedAt": "2026-11-24T09:47:04.472Z"
+    },
+    {
+      "id": "reg-3a9e0f72",
+      "reference": "REG-20261124-C782",
+      "clientId": "cli-d6e24cc9",
+      "packageId": "pkg-gold-3m",
+      "couponId": null,
+      "pricePaise": 900000,
+      "joiningFeePaise": 0,
+      "discountPaise": 0,
+      "gstPaise": 162000,
+      "totalPaise": 1062000,
+      "status": "CONFIRMED",
+      "startDate": "2026-12-01",
+      "endDate": "2027-03-01",
+      "preferredSlot": "morning",
+      "referralSource": "Instagram",
+      "acceptedTermsAt": "2026-11-24T10:01:26.776Z",
+      "acceptedIp": "::1",
+      "notes": null,
+      "createdAt": "2026-11-24T10:01:26.776Z",
+      "updatedAt": "2026-11-24T10:01:37.589Z"
     }
   ],
   "payments": [
@@ -430,9 +515,180 @@
       "refundedPaise": 0,
       "paidAt": null,
       "createdAt": "2026-11-24T09:02:03.347Z"
+    },
+    {
+      "id": "pay-d90078a3",
+      "registrationId": "reg-05a35cb8",
+      "method": "RAZORPAY",
+      "razorpayOrderId": "order_REG_20261124_C553_d71ccac2",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "amountPaise": 2973600,
+      "currency": "INR",
+      "status": "CREATED",
+      "failureReason": null,
+      "refundedPaise": 0,
+      "paidAt": null,
+      "createdAt": "2026-11-24T09:22:53.942Z"
+    },
+    {
+      "id": "pay-caad8c30",
+      "registrationId": "reg-76747451",
+      "method": "RAZORPAY",
+      "razorpayOrderId": "order_REG_20261124_F4AA_53a6b48c",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "amountPaise": 1888000,
+      "currency": "INR",
+      "status": "CREATED",
+      "failureReason": null,
+      "refundedPaise": 0,
+      "paidAt": null,
+      "createdAt": "2026-11-24T09:47:04.472Z"
+    },
+    {
+      "id": "pay-619894db",
+      "registrationId": "reg-3a9e0f72",
+      "method": "UPI",
+      "razorpayOrderId": "order_REG_20261124_C782_93ebc515",
+      "razorpayPaymentId": "pay_test_vyomi_verified",
+      "razorpaySignature": "sig_mock_verified",
+      "amountPaise": 1062000,
+      "currency": "INR",
+      "status": "PAID",
+      "failureReason": null,
+      "refundedPaise": 0,
+      "paidAt": "2026-11-24T10:01:37.589Z",
+      "createdAt": "2026-11-24T10:01:26.776Z"
     }
   ],
   "auditLogs": [
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-dac0a847",
+      "createdAt": "2026-11-24T10:03:17.537Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-c04d95f0",
+      "createdAt": "2026-11-24T10:03:07.926Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-6221bfe1",
+      "createdAt": "2026-11-24T10:02:58.054Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "MEMBER_DETAILS_CORRECTED",
+      "entityType": "REGISTRATION",
+      "entityId": "reg-3a9e0f72",
+      "details": {
+        "registrationRef": "REG-20261124-C782",
+        "clientName": "Aditya Varma Raju",
+        "updates": {
+          "fullName": "Aditya Varma Raju",
+          "phone": "9876543299",
+          "emergencyContactName": "Kavitha Varma Raju",
+          "emergencyContactPhone": "9876543288",
+          "address": "Plot 42, Jubilee Hills Road, Vijayawada"
+        }
+      },
+      "id": "aud-e10d8cc5",
+      "createdAt": "2026-11-24T10:02:46.051Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-8b306e0d",
+      "createdAt": "2026-11-24T10:02:45.984Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-54655045",
+      "createdAt": "2026-11-24T10:02:31.284Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-9615fe85",
+      "createdAt": "2026-11-24T10:02:19.265Z"
+    },
+    {
+      "adminId": null,
+      "adminName": "SYSTEM / RAZORPAY",
+      "action": "PAYMENT_CONFIRMED",
+      "entityType": "REGISTRATION",
+      "entityId": "reg-3a9e0f72",
+      "details": {
+        "reference": "REG-20261124-C782",
+        "amount": 10620,
+        "memberCode": "VYO-2026-000104",
+        "paymentId": "pay_test_vyomi_verified"
+      },
+      "id": "aud-27cc7bc1",
+      "createdAt": "2026-11-24T10:01:37.590Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-fec5840d",
+      "createdAt": "2026-11-24T09:50:36.036Z"
+    },
     {
       "adminId": "admin-super-01",
       "adminName": "Vyomi Super Admin",

@@ -266,12 +266,19 @@ export default function AdminRegistrationsPage() {
                       {r.startDate} → {r.endDate || '—'}
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Link
                           href={`/admin/registrations/${r.reference}`}
                           className="px-2 py-1 border border-[var(--line-2)] rounded hover:border-[var(--text-strong)] font-medium text-[0.6875rem]"
                         >
                           View
+                        </Link>
+                        <Link
+                          href={`/admin/registrations/${r.reference}/edit`}
+                          className="px-2 py-1 border border-[#D4AF37]/40 text-[#D4AF37] rounded hover:bg-[#D4AF37]/10 font-medium text-[0.6875rem]"
+                          title="Correct Member Details"
+                        >
+                          ✏️ Edit
                         </Link>
                         {r.status === 'PENDING' && (
                           <button

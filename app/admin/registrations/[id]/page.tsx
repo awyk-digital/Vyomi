@@ -181,6 +181,12 @@ export default function RegistrationDetailPage({
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            href={`/admin/registrations/${reg.reference}/edit`}
+            className="btn-line-light !h-9 !px-3.5 !text-xs !border-[#D4AF37]/50 !text-[#D4AF37] hover:!bg-[#D4AF37]/10"
+          >
+            ✏️ Correct Details
+          </Link>
           <button
             type="button"
             onClick={() => window.print()}

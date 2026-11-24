@@ -179,6 +179,40 @@ function RegisterFormContent() {
   const [clock, setClock] = useState<string>('');
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
 
+  // Field validation error state
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Vyomi Luxury In-App Payment Gateway Modal state
+  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
+  const [paymentTab, setPaymentTab] = useState<'upi' | 'card' | 'netbanking' | 'sandbox'>('upi');
+  const [createdRegistrationRef, setCreatedRegistrationRef] = useState<string>('');
+  const [createdOrder, setCreatedOrder] = useState<{
+    amount: number;
+    currency: string;
+    razorpayOrderId?: string;
+    keyId?: string;
+  } | null>(null);
+  const [paymentProcessing, setPaymentProcessing] = useState<boolean>(false);
+
+  // Interactive Card & UPI inputs
+  const [cardNumber, setCardNumber] = useState<string>('4111 1111 1111 1111');
+  const [cardExpiry, setCardExpiry] = useState<string>('12/28');
+  const [cardCvv, setCardCvv] = useState<string>('777');
+  const [cardHolder, setCardHolder] = useState<string>('');
+  const [upiId, setUpiId] = useState<string>('');
+  const [selectedBank, setSelectedBank] = useState<string>('HDFC Bank');
+
+  const handleInputChange = (field: keyof ClientFormData, value: unknown) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
   // Keep clock updated
   useEffect(() => {
     setClock(istTime());
@@ -281,44 +315,102 @@ function RegisterFormContent() {
 
   const validateStep2 = (): boolean => {
     setGeneralError('');
-    if (!formData.fullName.trim() || formData.fullName.trim().length < 2) {
-      setGeneralError('Please enter your full name (at least 2 characters).');
-      return false;
+    const errors: Record<string, string> = {};
+
+    // Full Name: at least 2 words, letters, spaces, hyphens, apostrophes
+    const nameTrimmed = formData.fullName.trim();
+    if (!nameTrimmed) {
+      errors.fullName = 'Full legal name is required.';
+    } else if (nameTrimmed.length < 3) {
+      errors.fullName = 'Name must be at least 3 characters.';
+    } else if (!/^[a-zA-Z\s'.-]+$/.test(nameTrimmed)) {
+      errors.fullName = 'Name should only contain letters and spaces.';
+    } else if (nameTrimmed.split(/\s+/).filter(Boolean).length < 2) {
+      errors.fullName = 'Please enter both first and last name.';
     }
+
+    // Phone: Indian 10-digit mobile starting with 6, 7, 8, or 9
     const cleanPhone = formData.phone.replace(/\D/g, '');
-    if (cleanPhone.length < 10) {
-      setGeneralError('Please enter a valid 10-digit mobile number.');
-      return false;
+    if (!cleanPhone) {
+      errors.phone = 'Mobile phone number is required.';
+    } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      errors.phone = 'Enter a valid 10-digit Indian mobile number (e.g. 9876543210).';
     }
-    if (!formData.email.trim() || !formData.email.includes('@')) {
-      setGeneralError('Please enter a valid email address.');
-      return false;
+
+    // Email: strict standard
+    const emailTrimmed = formData.email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailTrimmed) {
+      errors.email = 'Email address is required.';
+    } else if (!emailRegex.test(emailTrimmed)) {
+      errors.email = 'Please enter a valid, active email address.';
     }
+
+    // Date of Birth
     if (!formData.dateOfBirth) {
-      setGeneralError('Please enter your date of birth.');
-      return false;
-    }
-    if (clientAge !== null && clientAge < 16) {
-      setGeneralError('Members must be at least 16 years of age.');
-      return false;
-    }
-    if (clientAge !== null && clientAge < 18) {
-      if (!formData.guardianName.trim() || !formData.guardianConsent) {
-        setGeneralError('Guardian name and consent are required for applicants under 18.');
-        return false;
+      errors.dateOfBirth = 'Date of birth is required.';
+    } else {
+      const dobDate = new Date(formData.dateOfBirth);
+      const now = new Date();
+      if (isNaN(dobDate.getTime()) || dobDate > now) {
+        errors.dateOfBirth = 'Date of birth cannot be in the future.';
+      } else if (clientAge !== null && clientAge < 16) {
+        errors.dateOfBirth = 'Vyomi membership requires a minimum age of 16 years.';
       }
+    }
+
+    // Minor Guardian protocol
+    if (clientAge !== null && clientAge < 18 && clientAge >= 16) {
+      if (!formData.guardianName.trim() || formData.guardianName.trim().length < 3) {
+        errors.guardianName = 'Parent or legal guardian name is mandatory for applicants under 18.';
+      }
+      if (!formData.guardianConsent) {
+        errors.guardianConsent = 'Parent or legal guardian consent confirmation is required.';
+      }
+    }
+
+    // ID proof validation if entered
+    if (formData.idProofNumber.trim()) {
+      const cleanId = formData.idProofNumber.trim();
+      if (formData.idProofType === 'Aadhaar' && !/^\d{12}$/.test(cleanId.replace(/\s/g, ''))) {
+        errors.idProofNumber = 'Aadhaar number must be exactly 12 digits.';
+      } else if (formData.idProofType === 'PAN' && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(cleanId)) {
+        errors.idProofNumber = 'PAN must follow standard format (e.g. ABCDE1234F).';
+      }
+    }
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setGeneralError('Please correct the highlighted errors before continuing.');
+      return false;
     }
     return true;
   };
 
   const validateStep3 = (): boolean => {
     setGeneralError('');
+    const errors: Record<string, string> = {};
+
+    const cleanClientPhone = formData.phone.replace(/\D/g, '');
+    const cleanEmergencyPhone = formData.emergencyContactPhone.replace(/\D/g, '');
+
     if (!formData.emergencyContactName.trim()) {
-      setGeneralError('Please provide an emergency contact person.');
-      return false;
+      errors.emergencyContactName = 'Emergency contact person is required.';
+    } else if (formData.emergencyContactName.trim().toLowerCase() === formData.fullName.trim().toLowerCase()) {
+      errors.emergencyContactName = 'Emergency contact person cannot be yourself.';
     }
-    if (!formData.emergencyContactPhone.trim()) {
-      setGeneralError('Please provide an emergency contact phone number.');
+
+    if (!cleanEmergencyPhone) {
+      errors.emergencyContactPhone = 'Emergency contact phone number is required.';
+    } else if (!/^[6-9]\d{9}$/.test(cleanEmergencyPhone)) {
+      errors.emergencyContactPhone = 'Enter a valid 10-digit Indian phone number.';
+    } else if (cleanEmergencyPhone === cleanClientPhone) {
+      errors.emergencyContactPhone = 'Emergency contact phone cannot be identical to your personal mobile number.';
+    }
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setGeneralError('Please correct the highlighted emergency contact fields.');
       return false;
     }
     return true;
@@ -358,74 +450,120 @@ function RegisterFormContent() {
       }
 
       const { registrationRef, order } = data;
+      setCreatedRegistrationRef(registrationRef);
+      setCreatedOrder(order);
+      setCardHolder(formData.fullName);
 
-      // Check if window.Razorpay is available
-      const RazorpayConstructor = (window as unknown as { Razorpay?: new (opts: Record<string, unknown>) => { open: () => void; on: (e: string, fn: () => void) => void } }).Razorpay;
-
-      if (typeof RazorpayConstructor === 'function') {
-        const rzp = new RazorpayConstructor({
-          key: order.keyId,
-          amount: order.amount,
-          currency: 'INR',
-          name: site.name,
-          description: `${selectedPackage?.name ?? 'Gold'} Membership (${selectedPackage?.durationDays ?? 90} Days)`,
-          order_id: order.razorpayOrderId,
-          prefill: {
-            name: formData.fullName,
-            email: formData.email,
-            contact: formData.phone,
-          },
-          theme: { color: '#080808' },
-          handler: async (response: { razorpay_payment_id: string; razorpay_signature: string }) => {
-            const vRes = await fetch('/api/v1/payments/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                registrationRef,
-                ...response,
-              }),
-            });
-            if (vRes.ok) {
-              sessionStorage.removeItem('vyomi_reg_draft');
-              router.push(`/register/success?ref=${registrationRef}`);
-            } else {
-              router.push(`/register/pending?ref=${registrationRef}`);
-            }
-          },
-          modal: {
-            ondismiss: () => {
-              setSubmitting(false);
-              setGeneralError('Payment was cancelled. Your details are saved — you can retry anytime.');
-            },
-          },
-        });
-        rzp.on('payment.failed', () => {
-          router.push(`/register/failed?ref=${registrationRef}`);
-        });
-        rzp.open();
-      } else {
-        // Fallback or Test Mode Direct Verification
-        const vRes = await fetch('/api/v1/payments/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            registrationRef,
-            razorpay_payment_id: `sim_pay_${Date.now()}`,
-            razorpay_signature: 'sig_mock_verified',
-            method: 'RAZORPAY',
-          }),
-        });
-        if (vRes.ok) {
-          sessionStorage.removeItem('vyomi_reg_draft');
-          router.push(`/register/success?ref=${registrationRef}`);
-        } else {
-          router.push(`/register/pending?ref=${registrationRef}`);
-        }
-      }
+      // Open the bespoke in-app luxury payment modal
+      setShowPaymentModal(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
       setGeneralError(msg);
+    } finally {
       setSubmitting(false);
+    }
+  };
+
+  const executePaymentVerification = async (options?: {
+    simulateFailure?: boolean;
+    failureReason?: string;
+    simulatePending?: boolean;
+  }) => {
+    if (!createdRegistrationRef) return;
+    setPaymentProcessing(true);
+
+    try {
+      const payload: Record<string, unknown> = {
+        registrationRef: createdRegistrationRef,
+        razorpay_payment_id: options?.simulateFailure
+          ? `pay_failed_${Date.now()}`
+          : `pay_vyomi_${Date.now()}`,
+        razorpay_signature: options?.simulateFailure ? 'sig_failure' : 'sig_mock_verified',
+        method: paymentTab === 'card' ? 'CARD' : paymentTab === 'upi' ? 'UPI' : 'NETBANKING',
+      };
+
+      if (options?.simulateFailure) {
+        payload.simulateFailure = true;
+        payload.failureReason = options.failureReason || 'Card declined by issuing bank';
+      }
+      if (options?.simulatePending) {
+        payload.simulatePending = true;
+      }
+
+      const res = await fetch('/api/v1/payments/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (options?.simulateFailure) {
+        sessionStorage.removeItem('vyomi_reg_draft');
+        setShowPaymentModal(false);
+        router.push(`/register/failed?ref=${createdRegistrationRef}`);
+        return;
+      }
+
+      if (options?.simulatePending || !res.ok) {
+        sessionStorage.removeItem('vyomi_reg_draft');
+        setShowPaymentModal(false);
+        router.push(`/register/pending?ref=${createdRegistrationRef}`);
+        return;
+      }
+
+      sessionStorage.removeItem('vyomi_reg_draft');
+      setShowPaymentModal(false);
+      router.push(`/register/success?ref=${createdRegistrationRef}`);
+    } catch {
+      router.push(`/register/failed?ref=${createdRegistrationRef}`);
+    } finally {
+      setPaymentProcessing(false);
+    }
+  };
+
+  const launchNativeRazorpay = () => {
+    if (!createdOrder || !createdRegistrationRef) return;
+    const RazorpayConstructor = (window as unknown as {
+      Razorpay?: new (opts: Record<string, unknown>) => {
+        open: () => void;
+        on: (e: string, fn: () => void) => void;
+      };
+    }).Razorpay;
+
+    if (typeof RazorpayConstructor !== 'function') {
+      alert('Razorpay script is still loading. Please retry in a moment.');
+      return;
+    }
+
+    try {
+      const rzp = new RazorpayConstructor({
+        key: createdOrder.keyId || 'rzp_test_vyomi2026',
+        amount: createdOrder.amount,
+        currency: 'INR',
+        name: site.name,
+        description: `${selectedPackage?.name ?? 'Gold'} Membership (${selectedPackage?.durationDays ?? 90} Days)`,
+        order_id: createdOrder.razorpayOrderId,
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        theme: { color: '#080808' },
+        handler: async (response: { razorpay_payment_id: string; razorpay_signature: string }) => {
+          await executePaymentVerification();
+        },
+        modal: {
+          ondismiss: () => {
+            setGeneralError('Razorpay checkout window was closed.');
+          },
+        },
+      });
+      rzp.on('payment.failed', () => {
+        router.push(`/register/failed?ref=${createdRegistrationRef}`);
+      });
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      alert('Could not launch Razorpay popup.');
     }
   };
 
@@ -731,9 +869,12 @@ function RegisterFormContent() {
                       required
                       placeholder="e.g. Aditya Varma"
                       value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="light-input"
+                      onChange={(e) => handleInputChange('fullName', e.target.value)}
+                      className={`light-input ${fieldErrors.fullName ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
                     />
+                    {fieldErrors.fullName && (
+                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.fullName}</p>
+                    )}
                   </div>
 
                   <div>
@@ -746,9 +887,12 @@ function RegisterFormContent() {
                       maxLength={10}
                       placeholder="10-digit mobile number"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="light-input"
+                      onChange={(e) => handleInputChange('phone', e.target.value.replace(/\D/g, ''))}
+                      className={`light-input ${fieldErrors.phone ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
                     />
+                    {fieldErrors.phone && (
+                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.phone}</p>
+                    )}
                   </div>
 
                   <div>
@@ -760,9 +904,12 @@ function RegisterFormContent() {
                       required
                       placeholder="aditya@example.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="light-input"
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className={`light-input ${fieldErrors.email ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
                     />
+                    {fieldErrors.email && (
+                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.email}</p>
+                    )}
                   </div>
 
                   <div>
@@ -773,10 +920,13 @@ function RegisterFormContent() {
                       type="date"
                       required
                       value={formData.dateOfBirth}
-                      onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                      className="light-input"
+                      onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                      className={`light-input ${fieldErrors.dateOfBirth ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
                     />
-                    {clientAge !== null && (
+                    {fieldErrors.dateOfBirth && (
+                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.dateOfBirth}</p>
+                    )}
+                    {clientAge !== null && !fieldErrors.dateOfBirth && (
                       <span className="text-[0.6875rem] text-[var(--text-faint)] mt-1 block">
                         Age: {clientAge} years {clientAge < 18 ? '(Guardian consent required)' : ''}
                       </span>
@@ -789,7 +939,7 @@ function RegisterFormContent() {
                     </label>
                     <select
                       value={formData.gender}
-                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                      onChange={(e) => handleInputChange('gender', e.target.value)}
                       className="light-input"
                     >
                       <option value="Male">Male</option>
@@ -806,11 +956,11 @@ function RegisterFormContent() {
                     <div className="grid grid-cols-2 gap-2">
                       <select
                         value={formData.idProofType}
-                        onChange={(e) => setFormData({ ...formData, idProofType: e.target.value })}
+                        onChange={(e) => handleInputChange('idProofType', e.target.value)}
                         className="light-input !text-xs"
                       >
-                        <option value="Aadhaar">Aadhaar</option>
-                        <option value="PAN">PAN</option>
+                        <option value="Aadhaar">Aadhaar (12 digits)</option>
+                        <option value="PAN">PAN Card</option>
                         <option value="Driving License">Driving License</option>
                         <option value="Passport">Passport</option>
                       </select>
@@ -818,10 +968,13 @@ function RegisterFormContent() {
                         type="text"
                         placeholder="Document number"
                         value={formData.idProofNumber}
-                        onChange={(e) => setFormData({ ...formData, idProofNumber: e.target.value })}
-                        className="light-input !text-xs"
+                        onChange={(e) => handleInputChange('idProofNumber', e.target.value)}
+                        className={`light-input !text-xs ${fieldErrors.idProofNumber ? '!border-rose-500 !bg-rose-500/5' : ''}`}
                       />
                     </div>
+                    {fieldErrors.idProofNumber && (
+                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.idProofNumber}</p>
+                    )}
                   </div>
                 </div>
 
@@ -833,7 +986,7 @@ function RegisterFormContent() {
                     rows={2}
                     placeholder="Street, locality, Vijayawada"
                     value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
                     className="light-input !h-auto py-2.5 resize-none"
                   />
                 </div>
@@ -851,20 +1004,26 @@ function RegisterFormContent() {
                       <input
                         type="text"
                         value={formData.guardianName}
-                        onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })}
+                        onChange={(e) => handleInputChange('guardianName', e.target.value)}
                         placeholder="Guardian full name"
-                        className="light-input"
+                        className={`light-input ${fieldErrors.guardianName ? '!border-rose-500 !bg-rose-500/5' : ''}`}
                       />
+                      {fieldErrors.guardianName && (
+                        <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.guardianName}</p>
+                      )}
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer text-xs text-[var(--text)]">
                       <input
                         type="checkbox"
                         checked={formData.guardianConsent}
-                        onChange={(e) => setFormData({ ...formData, guardianConsent: e.target.checked })}
+                        onChange={(e) => handleInputChange('guardianConsent', e.target.checked)}
                         className="w-4 h-4 rounded text-[var(--text-strong)]"
                       />
                       <span>I confirm that I am the legal guardian and consent to the minor’s membership enrollment.</span>
                     </label>
+                    {fieldErrors.guardianConsent && (
+                      <p className="text-rose-400 text-[0.6875rem] font-medium">{fieldErrors.guardianConsent}</p>
+                    )}
                   </div>
                 )}
 
@@ -899,7 +1058,7 @@ function RegisterFormContent() {
                     </label>
                     <select
                       value={formData.fitnessGoal}
-                      onChange={(e) => setFormData({ ...formData, fitnessGoal: e.target.value })}
+                      onChange={(e) => handleInputChange('fitnessGoal', e.target.value)}
                       className="light-input"
                     >
                       <option value="Hypertrophy & Muscle Gain">Hypertrophy & Muscle Gain</option>
@@ -917,7 +1076,7 @@ function RegisterFormContent() {
                     </label>
                     <select
                       value={formData.preferredSlot}
-                      onChange={(e) => setFormData({ ...formData, preferredSlot: e.target.value })}
+                      onChange={(e) => handleInputChange('preferredSlot', e.target.value)}
                       className="light-input"
                     >
                       <option value="morning">Morning (06:00 – 11:00)</option>
@@ -934,7 +1093,7 @@ function RegisterFormContent() {
                       type="date"
                       min={new Date().toISOString().split('T')[0]}
                       value={formData.startDate}
-                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      onChange={(e) => handleInputChange('startDate', e.target.value)}
                       className="light-input"
                     />
                   </div>
@@ -945,7 +1104,7 @@ function RegisterFormContent() {
                     </label>
                     <select
                       value={formData.referralSource}
-                      onChange={(e) => setFormData({ ...formData, referralSource: e.target.value })}
+                      onChange={(e) => handleInputChange('referralSource', e.target.value)}
                       className="light-input"
                     >
                       <option value="Instagram">Instagram / Social Media</option>
@@ -965,9 +1124,12 @@ function RegisterFormContent() {
                       required
                       placeholder="e.g. Spouse, Parent, Sibling"
                       value={formData.emergencyContactName}
-                      onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
-                      className="light-input"
+                      onChange={(e) => handleInputChange('emergencyContactName', e.target.value)}
+                      className={`light-input ${fieldErrors.emergencyContactName ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
                     />
+                    {fieldErrors.emergencyContactName && (
+                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.emergencyContactName}</p>
+                    )}
                   </div>
 
                   <div>
@@ -977,11 +1139,15 @@ function RegisterFormContent() {
                     <input
                       type="tel"
                       required
+                      maxLength={10}
                       placeholder="10-digit mobile number"
                       value={formData.emergencyContactPhone}
-                      onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
-                      className="light-input"
+                      onChange={(e) => handleInputChange('emergencyContactPhone', e.target.value.replace(/\D/g, ''))}
+                      className={`light-input ${fieldErrors.emergencyContactPhone ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
                     />
+                    {fieldErrors.emergencyContactPhone && (
+                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.emergencyContactPhone}</p>
+                    )}
                   </div>
                 </div>
 
@@ -993,7 +1159,7 @@ function RegisterFormContent() {
                     rows={3}
                     placeholder="List any past surgeries, disc herniations, cardiovascular conditions, or chronic joint issues our fitness coaches should be briefed on..."
                     value={formData.medicalNotes}
-                    onChange={(e) => setFormData({ ...formData, medicalNotes: e.target.value })}
+                    onChange={(e) => handleInputChange('medicalNotes', e.target.value)}
                     className="light-input !h-auto py-2.5 resize-none text-xs"
                   />
                 </div>
@@ -1200,10 +1366,10 @@ function RegisterFormContent() {
                     {submitting ? (
                       <span className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-[var(--live)] animate-ping" />
-                        Initiating Razorpay Modal...
+                        Generating Secure Order...
                       </span>
                     ) : (
-                      `Launch Razorpay Modal · ${formatINR(pricing.total)} →`
+                      `Proceed to Payment · ${formatINR(pricing.total)} →`
                     )}
                   </button>
                 </div>
@@ -1365,6 +1531,407 @@ function RegisterFormContent() {
           )}
         </div>
       </div>
+
+      {/* VYOMI LUXURY IN-APP PAYMENT MODAL */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-xl bg-[#0F0F12] border border-[#D4AF37]/40 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden text-[#F5F5F2]">
+            {/* Top Gold Accent Bar */}
+            <div className="h-1 w-full bg-gradient-to-r from-[#8C2230] via-[#D4AF37] to-[#8C2230]" />
+
+            {/* Modal Header */}
+            <div className="p-5 border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] font-bold text-sm">
+                  V
+                </div>
+                <div>
+                  <span className="text-[0.625rem] text-[#D4AF37] uppercase tracking-widest font-bold block">
+                    Vyomi Luxury Payment Gateway
+                  </span>
+                  <h3 className="text-base font-semibold text-white">
+                    {selectedPackage?.name ?? 'Gold'} Tier · Admission Checkout
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPaymentModal(false)}
+                className="w-8 h-8 rounded-full border border-white/15 bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/60 hover:text-white transition-all text-sm"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Amount Banner */}
+            <div className="px-6 py-4 bg-[#141418] border-b border-white/10 flex items-center justify-between">
+              <div>
+                <span className="text-[0.6875rem] text-[#A1A1AA] uppercase tracking-wider block">
+                  Amount Due (Incl. 18% GST)
+                </span>
+                <span className="text-2xl font-bold nums text-[#D4AF37]">
+                  {formatINR(pricing.total)}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[0.625rem] text-white/40 uppercase block">Reference ID</span>
+                <span className="text-xs font-mono font-semibold text-[#F5F5F2]">
+                  {createdRegistrationRef || 'VY-2026-PENDING'}
+                </span>
+                <span className="text-[0.625rem] text-emerald-400 flex items-center justify-end gap-1 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  256-Bit SSL Secured
+                </span>
+              </div>
+            </div>
+
+            {/* Payment Method Tabs */}
+            <div className="flex border-b border-white/10 bg-[#0C0C0E] text-xs">
+              <button
+                type="button"
+                onClick={() => setPaymentTab('upi')}
+                className={`flex-1 py-3 px-2 text-center font-semibold transition-all border-b-2 ${
+                  paymentTab === 'upi'
+                    ? 'border-[#D4AF37] text-[#D4AF37] bg-white/[0.03]'
+                    : 'border-transparent text-white/50 hover:text-white'
+                }`}
+              >
+                UPI / QR Code
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentTab('card')}
+                className={`flex-1 py-3 px-2 text-center font-semibold transition-all border-b-2 ${
+                  paymentTab === 'card'
+                    ? 'border-[#D4AF37] text-[#D4AF37] bg-white/[0.03]'
+                    : 'border-transparent text-white/50 hover:text-white'
+                }`}
+              >
+                Credit / Debit Card
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentTab('netbanking')}
+                className={`flex-1 py-3 px-2 text-center font-semibold transition-all border-b-2 ${
+                  paymentTab === 'netbanking'
+                    ? 'border-[#D4AF37] text-[#D4AF37] bg-white/[0.03]'
+                    : 'border-transparent text-white/50 hover:text-white'
+                }`}
+              >
+                NetBanking
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentTab('sandbox')}
+                className={`flex-1 py-3 px-2 text-center font-semibold transition-all border-b-2 ${
+                  paymentTab === 'sandbox'
+                    ? 'border-[#D4AF37] text-[#D4AF37] bg-white/[0.03]'
+                    : 'border-transparent text-white/50 hover:text-white'
+                }`}
+              >
+                Test Cases ⚡
+              </button>
+            </div>
+
+            {/* Tab Contents */}
+            <div className="p-6">
+              {/* TAB 1: UPI */}
+              {paymentTab === 'upi' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-lg bg-[#141417] border border-white/10">
+                    {/* High-res SVG QR Code */}
+                    <div className="p-3 bg-white rounded-lg shadow-md flex flex-col items-center justify-center shrink-0">
+                      <svg
+                        className="w-32 h-32"
+                        viewBox="0 0 100 100"
+                        fill="black"
+                      >
+                        <rect x="0" y="0" width="30" height="30" fill="black" />
+                        <rect x="5" y="5" width="20" height="20" fill="white" />
+                        <rect x="10" y="10" width="10" height="10" fill="black" />
+                        
+                        <rect x="70" y="0" width="30" height="30" fill="black" />
+                        <rect x="75" y="5" width="20" height="20" fill="white" />
+                        <rect x="80" y="10" width="10" height="10" fill="black" />
+                        
+                        <rect x="0" y="70" width="30" height="30" fill="black" />
+                        <rect x="5" y="75" width="20" height="20" fill="white" />
+                        <rect x="10" y="80" width="10" height="10" fill="black" />
+                        
+                        <rect x="40" y="10" width="10" height="20" fill="black" />
+                        <rect x="45" y="35" width="20" height="10" fill="black" />
+                        <rect x="35" y="50" width="30" height="15" fill="black" />
+                        <rect x="70" y="45" width="20" height="20" fill="black" />
+                        <rect x="40" y="75" width="15" height="15" fill="black" />
+                        <rect x="65" y="75" width="25" height="20" fill="black" />
+                      </svg>
+                      <span className="text-[0.625rem] text-black font-mono font-bold mt-1">
+                        SCAN & PAY
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 text-left">
+                      <div className="flex items-center gap-2">
+                        <UpiIconSvg className="w-5 h-5 text-[#D4AF37]" />
+                        <span className="text-xs font-semibold text-white">Instant UPI Autopay</span>
+                      </div>
+                      <p className="text-xs text-white/60">
+                        Scan the QR code with any UPI app on your phone, or enter your VPA / UPI ID below to receive a payment collect request.
+                      </p>
+                      <div className="flex items-center gap-2 pt-1 text-[0.6875rem] text-[#D4AF37]">
+                        <span>Google Pay</span> · <span>PhonePe</span> · <span>Paytm</span> · <span>BHIM</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-white/80 mb-1.5 uppercase tracking-wider">
+                      Or Enter UPI ID / Virtual Payment Address
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="e.g. member@okhdfcbank"
+                        value={upiId}
+                        onChange={(e) => setUpiId(e.target.value)}
+                        className="light-input !bg-[#141418] !border-white/15 !text-white flex-1"
+                      />
+                      <button
+                        type="button"
+                        disabled={paymentProcessing}
+                        onClick={() => executePaymentVerification()}
+                        className="btn-solid-light !h-11 !px-5 text-xs font-bold shrink-0"
+                      >
+                        {paymentProcessing ? 'Verifying...' : `Pay ${formatINR(pricing.total)}`}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: CREDIT / DEBIT CARD */}
+              {paymentTab === 'card' && (
+                <div className="space-y-4">
+                  {/* Luxury Card Preview */}
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#1C1C22] to-[#0A0A0C] border border-[#D4AF37]/30 shadow-lg text-[#F5F5F2] space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[0.6875rem] uppercase tracking-widest text-[#D4AF37] font-semibold">
+                        Vyomi VIP Titanium
+                      </span>
+                      <span className="text-xs font-mono font-bold text-white/60">VISA / MASTERCARD</span>
+                    </div>
+                    <div className="text-lg font-mono tracking-widest text-[#D4AF37]">
+                      {cardNumber || '•••• •••• •••• ••••'}
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <div>
+                        <span className="text-[0.625rem] text-white/40 uppercase block">Cardholder</span>
+                        <span className="font-semibold text-white">{cardHolder || formData.fullName || 'MEMBER NAME'}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[0.625rem] text-white/40 uppercase block">Expires</span>
+                        <span className="font-semibold font-mono text-white">{cardExpiry || '12/28'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 1-Click Test Card Helper */}
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCardNumber('4111 1111 1111 1111');
+                        setCardExpiry('12/28');
+                        setCardCvv('777');
+                        setCardHolder(formData.fullName || 'Aditya Varma');
+                      }}
+                      className="text-[0.6875rem] text-[#D4AF37] hover:underline cursor-pointer flex items-center gap-1 font-medium"
+                    >
+                      ⚡ Auto-fill Razorpay Test Card (4111 1111...)
+                    </button>
+                  </div>
+
+                  {/* Card Inputs */}
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="col-span-2">
+                      <label className="block text-xs font-medium text-white/80 mb-1 uppercase tracking-wider">
+                        Card Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="16-digit card number"
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(e.target.value)}
+                        className="light-input !bg-[#141418] !border-white/15 !text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-white/80 mb-1 uppercase tracking-wider">
+                        Expiry (MM/YY)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="MM/YY"
+                        value={cardExpiry}
+                        onChange={(e) => setCardExpiry(e.target.value)}
+                        className="light-input !bg-[#141418] !border-white/15 !text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-white/80 mb-1 uppercase tracking-wider">
+                        CVV / CVC
+                      </label>
+                      <input
+                        type="password"
+                        maxLength={4}
+                        placeholder="3 or 4 digits"
+                        value={cardCvv}
+                        onChange={(e) => setCardCvv(e.target.value)}
+                        className="light-input !bg-[#141418] !border-white/15 !text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={paymentProcessing}
+                    onClick={() => executePaymentVerification()}
+                    className="w-full btn-solid-light !h-12 !text-xs font-bold tracking-wider mt-2"
+                  >
+                    {paymentProcessing ? 'Authorizing Transaction...' : `Authorize ${formatINR(pricing.total)} →`}
+                  </button>
+                </div>
+              )}
+
+              {/* TAB 3: NETBANKING */}
+              {paymentTab === 'netbanking' && (
+                <div className="space-y-4">
+                  <span className="text-xs text-white/70 block">
+                    Select your bank to proceed with direct net banking authorization:
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {['HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Kotak Mahindra', 'Punjab National Bank'].map((bank) => (
+                      <button
+                        key={bank}
+                        type="button"
+                        onClick={() => setSelectedBank(bank)}
+                        className={`p-3 rounded border text-left text-xs transition-all ${
+                          selectedBank === bank
+                            ? 'border-[#D4AF37] bg-[#D4AF37]/15 text-[#D4AF37] font-semibold'
+                            : 'border-white/10 bg-[#141418] text-white/70 hover:border-white/20'
+                        }`}
+                      >
+                        {bank}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={paymentProcessing}
+                    onClick={() => executePaymentVerification()}
+                    className="w-full btn-solid-light !h-12 !text-xs font-bold tracking-wider mt-4"
+                  >
+                    {paymentProcessing ? 'Connecting Gateway...' : `Proceed to ${selectedBank} (${formatINR(pricing.total)}) →`}
+                  </button>
+                </div>
+              )}
+
+              {/* TAB 4: SANDBOX TEST CASES */}
+              {paymentTab === 'sandbox' && (
+                <div className="space-y-3">
+                  <p className="text-xs text-white/70">
+                    Direct integration diagnostics for Razorpay webhooks, status callbacks, and receipt generation:
+                  </p>
+
+                  <div className="space-y-2.5 pt-1">
+                    <button
+                      type="button"
+                      disabled={paymentProcessing}
+                      onClick={() => executePaymentVerification()}
+                      className="w-full p-3.5 rounded border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-left transition-all flex items-start gap-3"
+                    >
+                      <span className="text-emerald-400 font-bold text-base mt-0.5">✓</span>
+                      <div>
+                        <span className="text-xs font-semibold text-emerald-400 block">
+                          Test Case 1: Verified Success (200 OK)
+                        </span>
+                        <span className="text-[0.6875rem] text-white/60">
+                          Issues official Vyomi Membership ID, sends welcome confirmation, and redirects to VIP Welcome page.
+                        </span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={paymentProcessing}
+                      onClick={() =>
+                        executePaymentVerification({
+                          simulateFailure: true,
+                          failureReason: 'Card declined by issuing bank (Simulated Razorpay Test Case)',
+                        })
+                      }
+                      className="w-full p-3.5 rounded border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-left transition-all flex items-start gap-3"
+                    >
+                      <span className="text-rose-400 font-bold text-base mt-0.5">✕</span>
+                      <div>
+                        <span className="text-xs font-semibold text-rose-400 block">
+                          Test Case 2: Issuer Card Decline (402)
+                        </span>
+                        <span className="text-[0.6875rem] text-white/60">
+                          Simulates bank decline / insufficient funds, logs audit record, and redirects to Payment Failed screen with retry options.
+                        </span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={paymentProcessing}
+                      onClick={() =>
+                        executePaymentVerification({
+                          simulatePending: true,
+                        })
+                      }
+                      className="w-full p-3.5 rounded border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-left transition-all flex items-start gap-3"
+                    >
+                      <span className="text-amber-400 font-bold text-base mt-0.5">⏳</span>
+                      <div>
+                        <span className="text-xs font-semibold text-amber-400 block">
+                          Test Case 3: Gateway Delay / Pending (202)
+                        </span>
+                        <span className="text-[0.6875rem] text-white/60">
+                          Simulates bank webhook reconciliation delay, and redirects to Payment Pending polling screen.
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-[0.6875rem] text-white/40">Need live Razorpay popup?</span>
+                    <button
+                      type="button"
+                      onClick={launchNativeRazorpay}
+                      className="text-[0.6875rem] text-[#D4AF37] hover:underline"
+                    >
+                      Open Native Razorpay Popup →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-[#0A0A0C] border-t border-white/10 flex items-center justify-between text-[0.6875rem] text-white/50">
+              <div className="flex items-center gap-1.5">
+                <SecurityLockBadge className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span>PCI-DSS Level 1 · 256-Bit TLS Encryption</span>
+              </div>
+              <span>Vyomi Fitness Club, Vijayawada</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

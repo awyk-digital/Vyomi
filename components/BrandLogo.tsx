@@ -17,17 +17,14 @@ export default function BrandLogo() {
   const pathname = usePathname();
   const wrapRef = useRef<HTMLDivElement>(null);
   const introRunning = useRef(false);
-
-  // Hidden on admin portal and registration flow
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/register')) {
-    return null;
-  }
+  const isHidden = Boolean(pathname?.startsWith('/admin') || pathname?.startsWith('/register'));
 
   /**
    * Keeping the mark clear of page content: it retires while the visitor
    * reads downward and returns the moment they scroll back up.
    */
   useEffect(() => {
+    if (isHidden) return;
     const wrap = wrapRef.current;
     if (!wrap) return;
 
@@ -81,6 +78,7 @@ export default function BrandLogo() {
   }, []);
 
   useEffect(() => {
+    if (isHidden) return;
     const wrap = wrapRef.current;
     if (!wrap) return;
 
@@ -151,6 +149,8 @@ export default function BrandLogo() {
       tl.kill();
     };
   }, []);
+
+  if (isHidden) return null;
 
   return (
     <div

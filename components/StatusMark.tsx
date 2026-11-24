@@ -37,13 +37,10 @@ export default function StatusMark() {
   const [time, setTime] = useState<string | null>(null);
   const introDone = useIntroDone();
   const presale = presaleDisplay();
-
-  // Hidden on admin portal and registration flow
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/register')) {
-    return null;
-  }
+  const isHidden = Boolean(pathname?.startsWith('/admin') || pathname?.startsWith('/register'));
 
   useEffect(() => {
+    if (isHidden) return;
     setTime(istNow());
     // Aligning to the next minute boundary avoids a visible lag between the
     // displayed minute and the real one.
@@ -57,11 +54,12 @@ export default function StatusMark() {
       window.clearTimeout(align);
       if (interval) window.clearInterval(interval);
     };
-  }, []);
+  }, [isHidden]);
 
   // Retires on downward scroll and returns on the way back up, matching
   // the brand mark on the opposite corner.
   useEffect(() => {
+    if (isHidden) return;
     const wrap = wrapRef.current;
     if (!wrap) return;
 
@@ -96,6 +94,8 @@ export default function StatusMark() {
       window.removeEventListener('scroll', onScroll);
     };
   }, []);
+
+  if (isHidden) return null;
 
   return (
     <div
