@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import gsap from 'gsap';
 import { site, presaleDisplay } from '@/config/site';
 import { useIntroDone } from '@/lib/intro';
@@ -31,12 +32,15 @@ function istNow(): string {
 }
 
 export default function StatusMark() {
+  const pathname = usePathname();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [time, setTime] = useState<string | null>(null);
   const introDone = useIntroDone();
   const presale = presaleDisplay();
+  const isHidden = Boolean(pathname?.startsWith('/admin') || pathname?.startsWith('/register'));
 
   useEffect(() => {
+    if (isHidden) return;
     setTime(istNow());
     // Aligning to the next minute boundary avoids a visible lag between the
     // displayed minute and the real one.
@@ -50,11 +54,12 @@ export default function StatusMark() {
       window.clearTimeout(align);
       if (interval) window.clearInterval(interval);
     };
-  }, []);
+  }, [isHidden]);
 
   // Retires on downward scroll and returns on the way back up, matching
   // the brand mark on the opposite corner.
   useEffect(() => {
+    if (isHidden) return;
     const wrap = wrapRef.current;
     if (!wrap) return;
 
@@ -89,6 +94,8 @@ export default function StatusMark() {
       window.removeEventListener('scroll', onScroll);
     };
   }, []);
+
+  if (isHidden) return null;
 
   return (
     <div

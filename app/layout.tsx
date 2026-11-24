@@ -117,7 +117,7 @@ export default function RootLayout({
         */}
         <link
           rel="stylesheet"
-          href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap"
+          href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500&f[]=boska@500&display=swap"
         />
       </head>
       <body className="bg-ink text-muted antialiased">

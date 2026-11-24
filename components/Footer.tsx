@@ -72,9 +72,14 @@ export default function Footer() {
             </div>
           )}
 
-          <a href="#enquire" className="btn-line w-fit">
-            Enquire
-          </a>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/register" className="btn-solid w-fit">
+              Membership Register ↗
+            </Link>
+            <a href="#enquire" className="btn-line w-fit">
+              Enquire
+            </a>
+          </div>
         </div>
 
         <div className="h-px w-full bg-hairline" />
@@ -127,6 +132,9 @@ export default function Footer() {
 
           <div className="flex flex-col gap-3">
             <span className="t-label text-faint">Visit</span>
+            <Link href="/register" className="t-small text-heading hover:text-muted font-medium text-bronze">
+              Membership Register ↗
+            </Link>
             <Link href="/#wellness" className="t-small text-heading hover:text-muted">
               Wellness
             </Link>
@@ -293,6 +301,15 @@ export default function Footer() {
               <span>About Dev</span>
               <span className="nums text-[0.6875rem] text-muted">{showDev ? '✕' : '(4)'}</span>
             </button>
+
+            <span className="text-hairline" aria-hidden="true">·</span>
+
+            <Link
+              href="/admin"
+              className="t-label text-faint hover:text-heading transition-colors"
+            >
+              Staff Portal 🔒
+            </Link>
 
             <span className="text-hairline" aria-hidden="true">·</span>
 

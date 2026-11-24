@@ -504,3 +504,156 @@
   .accent-pulse { animation: none; }
   .rv-word > span { transform: none !important; }
 }
+
+
+/* ============================================================
+   VYOMI — Luxury Theme (Client Registration & Admin Portal)
+   Ultra-Premium Quiet Luxury Dark Obsidian Aesthetic
+   ============================================================ */
+
+:root[data-theme="light"],
+[data-theme="light"] {
+  --bg: #080808;
+  --surface: #111113;
+  --surface-2: #18181B;
+  --surface-3: #222226;
+  --text-strong: #F5F5F2;
+  --text: #C4C4C0;
+  --text-faint: #7A7A78;
+  --line: rgba(245, 245, 242, 0.08);
+  --line-2: rgba(245, 245, 242, 0.16);
+  --solid-bg: linear-gradient(135deg, #E0C097 0%, #D4AF37 50%, #B08D57 100%);
+  --solid-text: #080808;
+
+  --burgundy: #8C2230;
+  --burgundy-d: #5E1620;
+  --burgundy-wash: rgba(140, 34, 48, 0.18);
+  --bronze: #C5A880;
+  --bronze-text: #D4AF37;
+  --bronze-lo: rgba(197, 168, 128, 0.18);
+  --live: #10B981;
+  --success: #10B981;
+
+  --shadow-card: 0 12px 40px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --shadow-modal: 0 24px 64px -16px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(197, 168, 128, 0.25);
+
+  --font-sans: "General Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-quote: "Boska", Georgia, "Times New Roman", serif;
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+  --radius: 3px;
+  --pad-x: clamp(1.25rem, 5vw, 5.5rem);
+  --section-y: clamp(4.5rem, 9vh, 8rem);
+
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+[data-theme="light"] ::selection {
+  background: #D4AF37;
+  color: #080808;
+}
+
+[data-theme="light"] :focus-visible {
+  outline: 2px solid #D4AF37;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Luxury theme button variants */
+.btn-solid-light {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  height: 48px;
+  padding: 0 1.5rem;
+  background: linear-gradient(135deg, #E0C097 0%, #D4AF37 50%, #B08D57 100%);
+  color: #080808;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px -4px rgba(212, 175, 55, 0.35);
+  transition: all 0.25s var(--ease-editorial);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.btn-solid-light:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px -4px rgba(212, 175, 55, 0.5);
+  filter: brightness(1.08);
+}
+
+.btn-solid-light:disabled {
+  background: var(--surface-2);
+  color: var(--text-faint);
+  border-color: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.btn-line-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 48px;
+  padding: 0 1.25rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--text-strong);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  border: 1px solid var(--line-2);
+  transition: all 0.25s var(--ease-editorial);
+  cursor: pointer;
+}
+
+.btn-line-light:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--bronze);
+  color: #FFFFFF;
+}
+
+/* Luxury form fields */
+.light-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 1rem;
+  background-color: #0E0E10;
+  border: 1px solid rgba(255, 255, 252, 0.12);
+  border-radius: 3px;
+  color: var(--text-strong);
+  font-size: var(--fs-body);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.light-input:focus {
+  outline: none;
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 1px #D4AF37, 0 0 16px -2px rgba(212, 175, 55, 0.25);
+  background-color: #141416;
+}
+
+.light-input.error {
+  border-color: var(--burgundy);
+  background-color: var(--burgundy-wash);
+}
+
+/* Luxury liquid glass bottom bar */
+.light-glass-bar {
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  background: rgba(14, 14, 16, 0.88);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 -8px 32px rgba(0, 0, 0, 0.6);
+}
