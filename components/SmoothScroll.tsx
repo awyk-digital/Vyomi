@@ -19,6 +19,14 @@ gsap.registerPlugin(ScrollTrigger);
  */
 export default function SmoothScroll({ children }: { children: ReactNode }) {
   useEffect(() => {
+    // Disable Lenis smooth scrolling on registration and admin routes
+    if (
+      typeof window !== 'undefined' &&
+      (window.location.pathname.startsWith('/register') || window.location.pathname.startsWith('/admin'))
+    ) {
+      return;
+    }
+
     if (prefersReducedMotion() || isLowPowerDevice()) {
       ScrollTrigger.refresh();
       return;
