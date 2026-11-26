@@ -42,6 +42,7 @@ export async function POST(req: Request) {
       email,
       expiresInSeconds: 600,
       dispatched: emailResult.sent,
+      ...(process.env.NODE_ENV !== 'production' && !process.env.GMAIL_APP_PASS ? { devOtp: otpCode } : {}),
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to send email OTP';

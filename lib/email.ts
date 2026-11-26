@@ -34,6 +34,10 @@ function getTransporter() {
   const user = process.env.GMAIL_USER || '';
   const pass = (process.env.GMAIL_APP_PASS || '').replace(/\s+/g, '');
 
+  if (!user || !pass) {
+    return null;
+  }
+
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -133,6 +137,16 @@ export async function sendGmailOtp({
 
   try {
     const transporter = getTransporter();
+    if (!transporter) {
+      console.log(`[EMAIL:DEV] ✉️ GMAIL_USER / GMAIL_APP_PASS not configured in environment.`);
+      console.log(`[EMAIL:DEV] 🔑 SIMULATED OTP CODE FOR ${toEmail}: 👉 [ ${otpCode} ] 👈`);
+      return {
+        sent: true,
+        provider: 'DEV_LOG',
+        messageId: `dev-otp-${Date.now()}`,
+      };
+    }
+
     const info = await transporter.sendMail({
       from: `"Vyomi Fitness Club" <${senderEmail}>`,
       to: toEmail,
@@ -351,6 +365,14 @@ export async function sendMembershipReceiptEmail(
 
   try {
     const transporter = getTransporter();
+    if (!transporter) {
+      console.log(`[EMAIL:DEV] ✉️ GMAIL_USER / GMAIL_APP_PASS not configured. Simulated receipt for ${params.toEmail} (${params.receiptNumber})`);
+      return {
+        sent: true,
+        provider: 'DEV_LOG',
+        messageId: `dev-receipt-${Date.now()}`,
+      };
+    }
 
     const attachments = params.pdfBase64
       ? [
