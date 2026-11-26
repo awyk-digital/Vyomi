@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 /**
  * Bespoke luxury SVG vectors and components for Vyomi Fitness Club.
@@ -118,48 +119,55 @@ export function VipMembershipCard({
 
   return (
     <div
-      className={`relative w-full aspect-[1.586] rounded-xl overflow-hidden p-5 sm:p-6 text-white flex flex-col justify-between border border-[#D4AF37]/40 shadow-sm transition-all duration-300 group ${className}`}
+      className={`relative w-full aspect-[1.586] rounded-2xl overflow-hidden p-5 sm:p-6 text-white flex flex-col justify-between border border-[#D4AF37]/50 shadow-[0_12px_30px_rgba(0,0,0,0.4)] transition-all duration-300 group ${className}`}
       style={{
-        background: 'linear-gradient(135deg, #18181B 0%, #0F0F11 50%, #080808 100%)',
+        background: 'radial-gradient(circle at 85% 15%, rgba(212, 175, 55, 0.18) 0%, rgba(24, 24, 27, 0.98) 45%, #080808 100%)',
       }}
     >
       {/* Background Decorative Guilloche / Waves */}
       <svg
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full opacity-10 pointer-events-none"
+        className="absolute inset-0 w-full h-full opacity-15 pointer-events-none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
           d="M-50,80 Q100,20 250,120 T500,60"
           fill="none"
           stroke="#D4AF37"
-          strokeWidth="0.8"
+          strokeWidth="1"
         />
         <path
           d="M-50,110 Q120,40 270,140 T520,80"
           fill="none"
           stroke="#D4AF37"
-          strokeWidth="0.8"
+          strokeWidth="1"
         />
         <path
           d="M-50,140 Q140,60 290,160 T540,100"
           fill="none"
           stroke="#D4AF37"
-          strokeWidth="0.8"
+          strokeWidth="1"
         />
       </svg>
 
       {/* Top Row: Brand & Contactless Icon */}
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded border border-[#D4AF37]/40 flex items-center justify-center bg-black/60">
-            <span className="font-serif italic font-bold text-xs text-[#D4AF37]">V</span>
+          <div className="relative w-8 h-8 rounded-lg border border-[#D4AF37]/60 overflow-hidden bg-black/90 p-0.5 shadow-inner flex items-center justify-center flex-shrink-0">
+            <Image
+              src="/img/vyomi-brand-logo.png"
+              alt="Vyomi"
+              width={26}
+              height={30}
+              className="object-contain"
+              unoptimized
+            />
           </div>
           <div>
-            <span className="block text-[0.625rem] font-bold tracking-[0.25em] text-[#D4AF37] uppercase">
+            <span className="block text-xs font-black tracking-[0.25em] text-[#E5C158] uppercase leading-none">
               Vyomi
             </span>
-            <span className="block text-[0.5rem] tracking-[0.3em] text-white/50 uppercase">
+            <span className="block text-[8px] font-bold tracking-[0.3em] text-[#94A3B8] uppercase mt-0.5 leading-none">
               Fitness Club
             </span>
           </div>
@@ -167,10 +175,10 @@ export function VipMembershipCard({
 
         {/* Contactless Waves SVG & Tier Pill */}
         <div className="flex items-center gap-2">
-          <span className="text-[0.5625rem] font-mono tracking-widest text-[#D4AF37] px-2 py-0.5 rounded border border-[#D4AF37]/40 bg-[#D4AF37]/10 uppercase font-bold">
+          <span className="text-[10px] font-mono tracking-widest text-[#E5C158] px-2.5 py-0.5 rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/15 uppercase font-black shadow-sm">
             {tierUpper} TIER
           </span>
-          <svg className="w-4 h-4 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg className="w-4 h-4 text-[#D4AF37]/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M8.5 16.5C9.5 15.5 10 14 10 12C10 10 9.5 8.5 8.5 7.5" strokeLinecap="round" />
             <path d="M12 19C13.5 17.5 14.5 15 14.5 12C14.5 9 13.5 6.5 12 5" strokeLinecap="round" />
             <path d="M15.5 21.5C17.5 19.5 19 16 19 12C19 8 17.5 4.5 15.5 2.5" strokeLinecap="round" />
@@ -179,15 +187,15 @@ export function VipMembershipCard({
       </div>
 
       {/* Middle: Smart Chip & Hologram */}
-      <div className="relative z-10 my-auto pt-2 flex items-center justify-between">
+      <div className="relative z-10 my-auto pt-1 flex items-center justify-between">
         {/* EMV Chip SVG */}
-        <svg className="w-10 h-7 rounded border border-[#D4AF37]/30" viewBox="0 0 44 32" fill="none">
+        <svg className="w-11 h-8 rounded border border-[#D4AF37]/50 shadow-sm" viewBox="0 0 44 32" fill="none">
           <rect width="44" height="32" rx="4" fill="url(#chipGrad)" />
           <defs>
             <linearGradient id="chipGrad" x1="0" y1="0" x2="44" y2="32">
-              <stop offset="0%" stopColor="#F5D061" />
-              <stop offset="50%" stopColor="#D4AF37" />
-              <stop offset="100%" stopColor="#AA822A" />
+              <stop offset="0%" stopColor="#FDE68A" />
+              <stop offset="45%" stopColor="#D4AF37" />
+              <stop offset="100%" stopColor="#92400E" />
             </linearGradient>
           </defs>
           <path d="M0 16H14M30 16H44M14 0V32M30 0V32M14 10H30M14 22H30" stroke="#7A5610" strokeWidth="0.8" />
@@ -195,41 +203,41 @@ export function VipMembershipCard({
         </svg>
 
         {/* Dynamic Tier Emblem */}
-        <div className="opacity-90">
-          {tierUpper.includes('FOUNDING') && <SilverTierBadge className="w-7 h-7" />}
-          {tierUpper.includes('SILVER') && <SilverTierBadge className="w-7 h-7" />}
-          {tierUpper.includes('VIP') && !tierUpper.includes('VVIP') && <GoldTierBadge className="w-7 h-7" />}
-          {tierUpper.includes('VVIP') && <DiamondTierBadge className="w-7 h-7" />}
+        <div className="opacity-95 filter drop-shadow-[0_2px_6px_rgba(212,175,55,0.4)]">
+          {tierUpper.includes('FOUNDING') && <SilverTierBadge className="w-8 h-8" />}
+          {tierUpper.includes('SILVER') && <SilverTierBadge className="w-8 h-8" />}
+          {tierUpper.includes('VIP') && !tierUpper.includes('VVIP') && <GoldTierBadge className="w-8 h-8" />}
+          {tierUpper.includes('VVIP') && <DiamondTierBadge className="w-8 h-8" />}
         </div>
       </div>
 
       {/* Bottom Row: Member Name, Unique Code, Plan & End Date */}
-      <div className="relative z-10 pt-2.5 border-t border-white/10 space-y-1">
+      <div className="relative z-10 pt-2.5 border-t border-white/15 space-y-1">
         <div className="flex items-end justify-between">
-          <div>
-            <span className="block text-[0.5rem] uppercase tracking-widest text-white/40">
+          <div className="flex-1 mr-2">
+            <span className="block text-[9px] font-extrabold uppercase tracking-[0.25em] text-[#E5C158]">
               MEMBER NAME
             </span>
-            <span className="block text-xs sm:text-sm font-semibold tracking-wider text-[#F8FAFC] font-mono truncate max-w-[190px]">
+            <span className="block text-base sm:text-lg font-black tracking-wider text-white font-mono uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] truncate">
               {displayName}
             </span>
           </div>
 
-          <div className="text-right">
-            <span className="block text-[0.5rem] uppercase tracking-widest text-white/40">
+          <div className="text-right flex-shrink-0">
+            <span className="block text-[9px] font-bold uppercase tracking-[0.2em] text-white/50">
               UNIQUE MEMBER ID
             </span>
-            <span className="block text-xs font-mono font-bold tracking-wider text-[#D4AF37]">
+            <span className="block text-xs sm:text-sm font-mono font-black tracking-wider text-[#E5C158] drop-shadow-sm">
               {memberCode}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-[0.5625rem] pt-0.5 text-white/60">
-          <span className="font-medium text-[#E2E8F0] tracking-wide">
-            Plan: <strong className="text-white font-bold">{tierUpper}</strong> (365 Days)
+        <div className="flex items-center justify-between text-[10px] pt-1 text-white/70 border-t border-white/5">
+          <span className="font-semibold text-[#E2E8F0] tracking-wide">
+            Plan: <strong className="text-white font-black">{tierUpper}</strong> (365 Days)
           </span>
-          <span className="font-mono text-[#FDE68A] tracking-wider">
+          <span className="font-mono text-[#FDE68A] tracking-wider font-bold">
             VALID THRU: <strong className="text-[#FFB100]">{endDate || '1 YEAR FROM INTAKE'}</strong>
           </span>
         </div>
