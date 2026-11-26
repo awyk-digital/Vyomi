@@ -99,24 +99,26 @@ export function DiamondTierBadge({ className = 'w-8 h-8' }: { className?: string
 interface VipCardProps {
   clientName: string;
   packageName: string;
-  durationDays: number;
+  durationDays?: number;
   memberCode?: string;
+  endDate?: string;
   className?: string;
 }
 
 export function VipMembershipCard({
   clientName,
   packageName,
-  durationDays,
+  durationDays = 365,
   memberCode = 'VYO · 2026 · VIP',
+  endDate,
   className = '',
 }: VipCardProps) {
-  const displayName = clientName.trim() ? clientName.toUpperCase() : 'VALUED CLIENT';
-  const tierUpper = (packageName || 'GOLD').toUpperCase();
+  const displayName = clientName.trim() ? clientName.toUpperCase() : 'VALUED MEMBER';
+  const tierUpper = (packageName || 'VIP').toUpperCase();
 
   return (
     <div
-      className={`relative w-full aspect-[1.586] rounded-xl overflow-hidden p-5 sm:p-6 text-white flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)] border border-white/10 transition-all duration-500 group ${className}`}
+      className={`relative w-full aspect-[1.586] rounded-xl overflow-hidden p-5 sm:p-6 text-white flex flex-col justify-between border border-[#D4AF37]/40 shadow-sm transition-all duration-300 group ${className}`}
       style={{
         background: 'linear-gradient(135deg, #18181B 0%, #0F0F11 50%, #080808 100%)',
       }}
@@ -124,32 +126,25 @@ export function VipMembershipCard({
       {/* Background Decorative Guilloche / Waves */}
       <svg
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full opacity-15 pointer-events-none"
+        className="absolute inset-0 w-full h-full opacity-10 pointer-events-none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <defs>
-          <radialGradient id="cardGlow" cx="80%" cy="20%" r="60%">
-            <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#080808" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#cardGlow)" />
         <path
           d="M-50,80 Q100,20 250,120 T500,60"
           fill="none"
-          stroke="rgba(212,175,55,0.3)"
+          stroke="#D4AF37"
           strokeWidth="0.8"
         />
         <path
           d="M-50,110 Q120,40 270,140 T520,80"
           fill="none"
-          stroke="rgba(212,175,55,0.2)"
+          stroke="#D4AF37"
           strokeWidth="0.8"
         />
         <path
           d="M-50,140 Q140,60 290,160 T540,100"
           fill="none"
-          stroke="rgba(212,175,55,0.15)"
+          stroke="#D4AF37"
           strokeWidth="0.8"
         />
       </svg>
@@ -170,12 +165,12 @@ export function VipMembershipCard({
           </div>
         </div>
 
-        {/* Contactless Waves SVG */}
+        {/* Contactless Waves SVG & Tier Pill */}
         <div className="flex items-center gap-2">
-          <span className="text-[0.5625rem] font-mono tracking-widest text-[#D4AF37]/90 px-2 py-0.5 rounded border border-[#D4AF37]/30 bg-[#D4AF37]/10 uppercase">
+          <span className="text-[0.5625rem] font-mono tracking-widest text-[#D4AF37] px-2 py-0.5 rounded border border-[#D4AF37]/40 bg-[#D4AF37]/10 uppercase font-bold">
             {tierUpper} TIER
           </span>
-          <svg className="w-5 h-5 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg className="w-4 h-4 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M8.5 16.5C9.5 15.5 10 14 10 12C10 10 9.5 8.5 8.5 7.5" strokeLinecap="round" />
             <path d="M12 19C13.5 17.5 14.5 15 14.5 12C14.5 9 13.5 6.5 12 5" strokeLinecap="round" />
             <path d="M15.5 21.5C17.5 19.5 19 16 19 12C19 8 17.5 4.5 15.5 2.5" strokeLinecap="round" />
@@ -184,9 +179,9 @@ export function VipMembershipCard({
       </div>
 
       {/* Middle: Smart Chip & Hologram */}
-      <div className="relative z-10 my-auto pt-3 flex items-center justify-between">
+      <div className="relative z-10 my-auto pt-2 flex items-center justify-between">
         {/* EMV Chip SVG */}
-        <svg className="w-11 h-8 rounded border border-[#D4AF37]/30" viewBox="0 0 44 32" fill="none">
+        <svg className="w-10 h-7 rounded border border-[#D4AF37]/30" viewBox="0 0 44 32" fill="none">
           <rect width="44" height="32" rx="4" fill="url(#chipGrad)" />
           <defs>
             <linearGradient id="chipGrad" x1="0" y1="0" x2="44" y2="32">
@@ -200,31 +195,42 @@ export function VipMembershipCard({
         </svg>
 
         {/* Dynamic Tier Emblem */}
-        <div className="opacity-80">
-          {tierUpper.includes('SILVER') && <SilverTierBadge className="w-8 h-8" />}
-          {tierUpper.includes('GOLD') && <GoldTierBadge className="w-8 h-8" />}
-          {tierUpper.includes('PLATINUM') && <PlatinumTierBadge className="w-8 h-8" />}
-          {tierUpper.includes('DIAMOND') && <DiamondTierBadge className="w-8 h-8" />}
+        <div className="opacity-90">
+          {tierUpper.includes('FOUNDING') && <SilverTierBadge className="w-7 h-7" />}
+          {tierUpper.includes('SILVER') && <SilverTierBadge className="w-7 h-7" />}
+          {tierUpper.includes('VIP') && !tierUpper.includes('VVIP') && <GoldTierBadge className="w-7 h-7" />}
+          {tierUpper.includes('VVIP') && <DiamondTierBadge className="w-7 h-7" />}
         </div>
       </div>
 
-      {/* Bottom Row: Member Name, Code & Duration */}
-      <div className="relative z-10 flex items-end justify-between pt-3 border-t border-white/10">
-        <div>
-          <span className="block text-[0.5625rem] uppercase tracking-widest text-white/40 mb-0.5">
-            Member Name
-          </span>
-          <span className="block text-xs sm:text-sm font-semibold tracking-wider text-[#F5F5F2] font-mono truncate max-w-[190px]">
-            {displayName}
-          </span>
+      {/* Bottom Row: Member Name, Unique Code, Plan & End Date */}
+      <div className="relative z-10 pt-2.5 border-t border-white/10 space-y-1">
+        <div className="flex items-end justify-between">
+          <div>
+            <span className="block text-[0.5rem] uppercase tracking-widest text-white/40">
+              MEMBER NAME
+            </span>
+            <span className="block text-xs sm:text-sm font-semibold tracking-wider text-[#F8FAFC] font-mono truncate max-w-[190px]">
+              {displayName}
+            </span>
+          </div>
+
+          <div className="text-right">
+            <span className="block text-[0.5rem] uppercase tracking-widest text-white/40">
+              UNIQUE MEMBER ID
+            </span>
+            <span className="block text-xs font-mono font-bold tracking-wider text-[#D4AF37]">
+              {memberCode}
+            </span>
+          </div>
         </div>
 
-        <div className="text-right">
-          <span className="block text-[0.5625rem] uppercase tracking-widest text-white/40 mb-0.5">
-            Member ID
+        <div className="flex items-center justify-between text-[0.5625rem] pt-0.5 text-white/60">
+          <span className="font-medium text-[#E2E8F0] tracking-wide">
+            Plan: <strong className="text-white font-bold">{tierUpper}</strong> (365 Days)
           </span>
-          <span className="block text-xs font-mono font-semibold tracking-widest text-[#D4AF37]">
-            {memberCode}
+          <span className="font-mono text-[#FDE68A] tracking-wider">
+            VALID THRU: <strong className="text-[#FFB100]">{endDate || '1 YEAR FROM INTAKE'}</strong>
           </span>
         </div>
       </div>

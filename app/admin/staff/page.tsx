@@ -62,12 +62,12 @@ export default function AdminStaffPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="t-label text-[var(--bronze-text)] uppercase tracking-wider font-semibold">
+          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
             Access Control & RBAC
           </span>
-          <h1 className="t-h2 text-[var(--text-strong)] font-semibold mt-1">
+          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
             Staff & Concierge Accounts ({staff.length})
           </h1>
         </div>
@@ -75,7 +75,7 @@ export default function AdminStaffPage() {
         <button
           type="button"
           onClick={() => setShowAdd(!showAdd)}
-          className="btn-solid-light !h-9 !px-4 !text-xs"
+          className="px-3.5 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition shadow-sm"
         >
           {showAdd ? 'Cancel' : '+ Add Staff User'}
         </button>
@@ -84,17 +84,17 @@ export default function AdminStaffPage() {
       {showAdd && (
         <form
           onSubmit={handleCreateStaff}
-          className="bg-[var(--surface)] border border-[var(--line-2)] p-6 rounded-[2px] shadow-[var(--shadow-card)] space-y-4 max-w-xl"
+          className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4 max-w-xl"
         >
-          <h3 className="t-h3 text-[var(--text-strong)] font-semibold border-b border-[var(--line)] pb-2">
+          <h3 className="text-sm font-extrabold text-[#0F172A] border-b border-[#E2E8F0] pb-2">
             Provision Staff User
           </h3>
 
-          {error && <div className="text-xs text-[var(--burgundy)]">{error}</div>}
+          {error && <div className="text-xs font-bold text-red-600">{error}</div>}
 
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
                 Full Name *
               </label>
               <input
@@ -103,12 +103,12 @@ export default function AdminStaffPage() {
                 placeholder="Staff name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="light-input"
+                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
                 Email Address *
               </label>
               <input
@@ -117,18 +117,18 @@ export default function AdminStaffPage() {
                 placeholder="staff@vyomi.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="light-input"
+                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
                 Permission Role *
               </label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as 'SUPER_ADMIN' | 'MANAGER' | 'FRONT_DESK')}
-                className="light-input"
+                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
               >
                 <option value="FRONT_DESK">FRONT_DESK (Intake & Search)</option>
                 <option value="MANAGER">MANAGER (Export & Mark Paid)</option>
@@ -137,7 +137,7 @@ export default function AdminStaffPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
                 Password *
               </label>
               <input
@@ -146,7 +146,7 @@ export default function AdminStaffPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="light-input"
+                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
               />
             </div>
           </div>
@@ -155,60 +155,63 @@ export default function AdminStaffPage() {
             <button
               type="button"
               onClick={() => setShowAdd(false)}
-              className="btn-line-light !h-8 !px-3 text-xs"
+              className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A]"
             >
               Cancel
             </button>
-            <button type="submit" className="btn-solid-light !h-8 !px-4 text-xs">
+            <button
+              type="submit"
+              className="px-4 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded text-xs font-bold"
+            >
               Create Account
             </button>
           </div>
         </form>
       )}
 
-      <div className="bg-[var(--surface)] border border-[var(--line)] rounded-[2px] shadow-[var(--shadow-card)] overflow-hidden">
+      <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="bg-[var(--surface-2)] border-b border-[var(--line)] text-[var(--text-faint)] uppercase tracking-wider text-[0.6875rem]">
-              <th className="py-3 px-4 font-semibold">Staff Member</th>
-              <th className="py-3 px-4 font-semibold">Email</th>
-              <th className="py-3 px-4 font-semibold">Access Level</th>
-              <th className="py-3 px-4 font-semibold">Last Active</th>
-              <th className="py-3 px-4 font-semibold">Status</th>
+            <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
+              <th className="py-3 px-4 font-extrabold">Staff Member</th>
+              <th className="py-3 px-4 font-extrabold">Email</th>
+              <th className="py-3 px-4 font-extrabold">Access Level</th>
+              <th className="py-3 px-4 font-extrabold">Last Active</th>
+              <th className="py-3 px-4 font-extrabold">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--line)]">
+          <tbody className="divide-y divide-[#E2E8F0]">
             {loading ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-[var(--text-faint)]">
+                <td colSpan={5} className="py-12 text-center text-[#64748B] font-medium">
                   Loading accounts...
                 </td>
               </tr>
             ) : staff.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-[var(--text-faint)]">
+                <td colSpan={5} className="py-12 text-center text-[#64748B] font-medium">
                   No staff accounts configured.
                 </td>
               </tr>
             ) : (
               staff.map((u) => (
-                <tr key={u.id} className="hover:bg-[var(--surface-2)]/40 transition-colors">
-                  <td className="py-3.5 px-4 font-semibold text-[var(--text-strong)]">
+                <tr key={u.id} className="hover:bg-[#F8FAFC] transition">
+                  <td className="py-3.5 px-4 font-bold text-[#0F172A]">
                     {u.name}
                   </td>
-                  <td className="py-3.5 px-4 text-[var(--text)]">{u.email}</td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-[0.6875rem] text-[var(--bronze-text)]">
+                  <td className="py-3.5 px-4 text-[#334155] font-semibold">{u.email}</td>
+                  <td className="py-3.5 px-4 font-mono font-bold text-[11px] text-[#D97706]">
                     {u.role}
                   </td>
-                  <td className="py-3.5 px-4 nums text-[var(--text-faint)]">
+                  <td className="py-3.5 px-4 text-[#475569]">
                     {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('en-GB') : 'Never'}
                   </td>
                   <td className="py-3.5 px-4">
                     <span
-                      className={`px-2 py-0.5 rounded text-[0.625rem] font-bold uppercase tracking-wider border ${
+                      className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${
                         u.isActive
-                          ? 'border-[var(--success)] text-[var(--success)] bg-[var(--surface)]'
-                          : 'border-[var(--burgundy)] text-[var(--burgundy)] bg-[var(--surface)]'
+                          ? 'border-emerald-300 text-emerald-900 bg-emerald-100'
+                          : 'border-red-300 text-red-900 bg-red-100'
                       }`}
                     >
                       {u.isActive ? 'Active' : 'Disabled'}

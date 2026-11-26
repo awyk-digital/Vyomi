@@ -8,17 +8,11 @@ interface RegistrationDetail {
   id: string;
   reference: string;
   pricePaise: number;
-  joiningFeePaise: number;
-  discountPaise: number;
-  gstPaise: number;
   totalPaise: number;
   status: string;
   startDate: string;
   endDate: string | null;
   preferredSlot: string | null;
-  referralSource: string | null;
-  acceptedTermsAt: string;
-  acceptedIp: string;
   notes: string | null;
   createdAt: string;
   client?: {
@@ -26,17 +20,10 @@ interface RegistrationDetail {
     fullName: string;
     phone: string;
     email: string;
-    dateOfBirth: string;
-    gender: string;
-    address: string;
+    dateOfBirth?: string;
+    gender?: string;
+    address?: string;
     memberCode: string | null;
-    idProofType?: string | null;
-    idProofNumber?: string | null;
-    fitnessGoal: string;
-    medicalNotes: string | null;
-    emergencyContactName: string;
-    emergencyContactPhone: string;
-    guardianName: string | null;
   };
   package?: {
     id: string;
@@ -47,12 +34,8 @@ interface RegistrationDetail {
   payment?: {
     id: string;
     method: string;
-    razorpayOrderId: string | null;
-    razorpayPaymentId: string | null;
     status: string;
     amountPaise: number;
-    failureReason: string | null;
-    refundedPaise: number;
     paidAt: string | null;
     createdAt: string;
   };
@@ -64,6 +47,14 @@ function formatINR(paise: number): string {
     currency: 'INR',
     maximumFractionDigits: 0,
   }).format(paise / 100);
+}
+
+function formatPaymentMethod(method?: string): string {
+  const m = (method || '').toUpperCase();
+  if (m === 'CASH' || m === 'OFFLINE' || m === 'POS') {
+    return 'Offline Cash (Front Desk)';
+  }
+  return 'Online Payment (UPI QR)';
 }
 
 export default function RegistrationDetailPage({
@@ -113,24 +104,24 @@ export default function RegistrationDetailPage({
   };
 
   const handleMarkPaid = async () => {
-    if (!confirm('Mark offline payment and confirm membership?')) return;
+    if (!confirm('Mark offline cash collected and dispatch Digital VIP Card to member Gmail?')) return;
     try {
       const res = await fetch(`/api/v1/admin/registrations/${id}/mark-paid`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'POS' }),
+        body: JSON.stringify({ method: 'CASH' }),
       });
       if (res.ok) {
-        alert('Payment confirmed.');
+        alert('Payment confirmed! Digital VIP Card and receipt sent to member Gmail.');
         router.refresh();
       }
     } catch {
-      alert('Failed to mark paid');
+      alert('Failed to update status');
     }
   };
 
   const handleRefund = async () => {
-    const reason = prompt('Enter reason for issuing refund:');
+    const reason = prompt('Enter refund justification reason:');
     if (!reason) return;
     try {
       const res = await fetch(`/api/v1/admin/registrations/${reg?.id}/refund`, {
@@ -151,63 +142,57 @@ export default function RegistrationDetailPage({
   };
 
   if (loading) {
-    return <div className="py-12 text-center text-xs text-[var(--text-faint)]">Loading client record...</div>;
+    return <div className="py-12 text-center text-xs text-[#64748B] font-semibold">Loading client record...</div>;
   }
 
   if (!reg) {
-    return <div className="py-12 text-center text-xs text-[var(--burgundy)]">Registration record not found.</div>;
+    return <div className="py-12 text-center text-xs text-red-600 font-bold">Registration record not found.</div>;
   }
 
   return (
     <div className="space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
           <div className="flex items-center gap-2">
             <Link
               href="/admin/registrations"
-              className="text-xs text-[var(--text-faint)] hover:text-[var(--text-strong)]"
+              className="text-xs font-bold text-[#64748B] hover:text-[#0F172A]"
             >
               ← Registrations
             </Link>
-            <span className="text-[var(--line-2)]">/</span>
-            <span className="t-label text-[var(--bronze-text)] uppercase font-semibold">
+            <span className="text-[#CBD5E1]">/</span>
+            <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider">
               Client Dossier
             </span>
           </div>
-          <h1 className="t-h2 text-[var(--text-strong)] font-semibold mt-1">
+          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-1 tracking-tight">
             {reg.client?.fullName || 'Client'} · {reg.reference}
           </h1>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href={`/admin/registrations/${reg.reference}/edit`}
-            className="btn-line-light !h-9 !px-3.5 !text-xs !border-[#D4AF37]/50 !text-[#D4AF37] hover:!bg-[#D4AF37]/10"
-          >
-            ✏️ Correct Details
-          </Link>
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => window.print()}
-            className="btn-line-light !h-9 !px-3.5 !text-xs"
+            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] text-[#0F172A] rounded-lg text-xs font-bold transition shadow-sm"
           >
             🖨️ Print Invoice
           </button>
-          {reg.status === 'PENDING' && (
+          {(reg.status === 'PENDING' || reg.status === 'PENDING_CASH_COLLECTION') && (
             <button
               type="button"
               onClick={handleMarkPaid}
-              className="btn-solid-light !h-9 !px-4 !text-xs !bg-[var(--success)]"
+              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm"
             >
-              ✓ Mark Paid (Offline)
+              ✓ Mark Paid (Offline Cash)
             </button>
           )}
           {reg.status === 'CONFIRMED' && (
             <button
               type="button"
               onClick={handleRefund}
-              className="btn-line-light !h-9 !px-3.5 !text-xs !text-[var(--burgundy)] hover:!border-[var(--burgundy)]"
+              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition"
             >
               Issue Refund
             </button>
@@ -220,116 +205,69 @@ export default function RegistrationDetailPage({
         {/* Left Column: Client Identity & Health */}
         <div className="lg:col-span-7 space-y-6">
           {/* Card: Client Profile */}
-          <div className="bg-[var(--surface)] border border-[var(--line)] p-6 rounded-[2px] shadow-[var(--shadow-card)] space-y-5">
-            <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
+          <div className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
               <div>
-                <h3 className="t-h3 text-[var(--text-strong)] font-semibold">
-                  Personal Information
+                <h3 className="text-sm font-extrabold text-[#0F172A]">
+                  Personal Particulars
                 </h3>
-                <span className="text-xs text-[var(--text-faint)]">
+                <span className="text-xs text-[#64748B] font-medium">
                   Registered {new Date(reg.createdAt).toLocaleDateString('en-GB')}
                 </span>
               </div>
               <div className="text-right">
-                <span className="t-label text-[var(--text-faint)] uppercase block text-[0.625rem]">
+                <span className="text-[10px] font-extrabold text-[#64748B] uppercase block tracking-wider">
                   Member ID
                 </span>
-                <span className="nums text-base font-bold text-[var(--bronze-text)]">
+                <span className="font-mono text-base font-black text-[#D97706]">
                   {reg.client?.memberCode || 'Unassigned'}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs">
+            <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-[var(--text-faint)] block uppercase">Full Legal Name</span>
-                <span className="font-semibold text-[var(--text-strong)]">{reg.client?.fullName}</span>
+                <span className="text-[#64748B] font-bold block uppercase text-[10px]">Full Legal Name</span>
+                <span className="font-bold text-[#0F172A]">{reg.client?.fullName}</span>
               </div>
               <div>
-                <span className="text-[var(--text-faint)] block uppercase">Mobile Number</span>
-                <a href={`tel:${reg.client?.phone}`} className="font-semibold text-[var(--text-strong)] hover:underline">
+                <span className="text-[#64748B] font-bold block uppercase text-[10px]">Mobile Number</span>
+                <a href={`tel:${reg.client?.phone}`} className="font-bold text-[#0F172A] hover:underline">
                   +91 {reg.client?.phone}
                 </a>
               </div>
               <div>
-                <span className="text-[var(--text-faint)] block uppercase">Email Address</span>
-                <a href={`mailto:${reg.client?.email}`} className="font-semibold text-[var(--text-strong)] hover:underline">
+                <span className="text-[#64748B] font-bold block uppercase text-[10px]">Email Address</span>
+                <a href={`mailto:${reg.client?.email}`} className="font-bold text-[#0F172A] hover:underline">
                   {reg.client?.email}
                 </a>
               </div>
               <div>
-                <span className="text-[var(--text-faint)] block uppercase">Date of Birth & Gender</span>
-                <span className="font-semibold text-[var(--text-strong)]">
-                  {reg.client?.dateOfBirth} ({reg.client?.gender})
-                </span>
-              </div>
-              <div className="col-span-2">
-                <span className="text-[var(--text-faint)] block uppercase">Address</span>
-                <span className="text-[var(--text)]">{reg.client?.address}</span>
-              </div>
-              {reg.client?.idProofNumber && (
-                <div className="col-span-2">
-                  <span className="text-[var(--text-faint)] block uppercase">Government ID</span>
-                  <span className="font-mono text-[var(--text)]">
-                    {reg.client.idProofType}: {reg.client.idProofNumber}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Card: Health, Fitness & Emergency */}
-          <div className="bg-[var(--surface)] border border-[var(--line)] p-6 rounded-[2px] shadow-[var(--shadow-card)] space-y-4">
-            <h3 className="t-h3 text-[var(--text-strong)] border-b border-[var(--line)] pb-3 font-semibold">
-              Training & Emergency Protocol
-            </h3>
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <span className="text-[var(--text-faint)] block uppercase">Primary Goal</span>
-                <span className="font-semibold text-[var(--text-strong)]">{reg.client?.fitnessGoal}</span>
-              </div>
-              <div>
-                <span className="text-[var(--text-faint)] block uppercase">Preferred Time Slot</span>
-                <span className="font-semibold text-[var(--text-strong)] capitalize">{reg.preferredSlot || 'Any'}</span>
-              </div>
-              <div>
-                <span className="text-[var(--text-faint)] block uppercase">Emergency Contact Person</span>
-                <span className="font-semibold text-[var(--text-strong)]">{reg.client?.emergencyContactName}</span>
-              </div>
-              <div>
-                <span className="text-[var(--text-faint)] block uppercase">Emergency Phone</span>
-                <a href={`tel:${reg.client?.emergencyContactPhone}`} className="font-semibold text-[var(--text-strong)] hover:underline">
-                  +91 {reg.client?.emergencyContactPhone}
-                </a>
-              </div>
-              <div className="col-span-2">
-                <span className="text-[var(--text-faint)] block uppercase">Medical Notes & Orthopedic History</span>
-                <p className="p-3 bg-[var(--surface-2)] rounded text-[var(--text)] mt-1 font-mono text-[0.6875rem]">
-                  {reg.client?.medicalNotes || 'No specific injuries or conditions noted during intake.'}
-                </p>
+                <span className="text-[#64748B] font-bold block uppercase text-[10px]">Preferred Training Slot</span>
+                <span className="font-bold text-[#0F172A]">{reg.preferredSlot || '06:00 – 09:00 AM'}</span>
               </div>
             </div>
           </div>
 
           {/* Internal Staff Notes */}
-          <div className="bg-[var(--surface)] border border-[var(--line)] p-6 rounded-[2px] shadow-[var(--shadow-card)] space-y-3">
+          <div className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="t-h3 text-[var(--text-strong)] font-semibold">Internal Operations Notes</h3>
-              {notesSaved && <span className="text-xs text-[var(--success)] font-medium">✓ Saved</span>}
+              <h3 className="text-sm font-extrabold text-[#0F172A]">Internal Concierge Notes</h3>
+              {notesSaved && <span className="text-xs text-emerald-600 font-bold">✓ Notes Saved</span>}
             </div>
             <textarea
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add concierge notes, trainer assignment, locker allocation..."
-              className="light-input !h-auto py-2.5 resize-none text-xs"
+              placeholder="Add concierge notes, locker allocation, trainer notes..."
+              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg p-2.5 text-xs font-medium text-[#0F172A] focus:outline-none focus:border-[#D97706]"
             />
             <div className="flex justify-end">
               <button
                 type="button"
                 disabled={savingNotes}
                 onClick={handleSaveNotes}
-                className="btn-solid-light !h-8 !px-3 !text-xs"
+                className="px-3.5 py-1.5 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-lg text-xs font-bold transition shadow-sm"
               >
                 {savingNotes ? 'Saving...' : 'Save Notes'}
               </button>
@@ -340,98 +278,59 @@ export default function RegistrationDetailPage({
         {/* Right Column: Membership & Payment Timeline */}
         <div className="lg:col-span-5 space-y-6">
           {/* Membership Tier & Status */}
-          <div className="bg-[var(--surface)] border border-[var(--line)] p-6 rounded-[2px] shadow-[var(--shadow-card)] space-y-4">
-            <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
-              <h3 className="t-h3 text-[var(--text-strong)] font-semibold">Tier & Validity</h3>
+          <div className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+              <h3 className="text-sm font-extrabold text-[#0F172A]">Tier & Validity</h3>
               <span
-                className={`px-2 py-0.5 rounded text-[0.625rem] font-bold uppercase tracking-wider border ${
+                className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${
                   reg.status === 'CONFIRMED'
-                    ? 'border-[var(--success)] text-[var(--success)] bg-[var(--surface)]'
-                    : reg.status === 'PENDING'
-                    ? 'border-[var(--bronze)] text-[var(--bronze-text)] bg-[var(--surface)]'
-                    : 'border-[var(--burgundy)] text-[var(--burgundy)] bg-[var(--surface)]'
+                    ? 'border-emerald-300 text-emerald-900 bg-emerald-100'
+                    : 'border-amber-300 text-amber-900 bg-amber-100'
                 }`}
               >
-                {reg.status}
+                {reg.status === 'CONFIRMED' ? 'PAID & ACTIVATED' : 'PENDING CASH'}
               </span>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-[var(--text-faint)]">Package</span>
-                <span className="font-semibold text-[var(--text-strong)]">{reg.package?.name} Tier</span>
+                <span className="text-[#64748B] font-medium">Package</span>
+                <span className="font-bold text-[#0F172A]">{reg.package?.name} (1 Year)</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--text-faint)]">Duration</span>
-                <span className="nums font-medium text-[var(--text-strong)]">{reg.package?.durationDays} Days</span>
+                <span className="text-[#64748B] font-medium">Duration</span>
+                <span className="font-bold text-[#0F172A]">365 Days</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--text-faint)]">Start Date</span>
-                <span className="nums font-medium text-[var(--text-strong)]">{reg.startDate}</span>
+                <span className="text-[#64748B] font-medium">Start Date</span>
+                <span className="font-bold text-[#0F172A]">{reg.startDate}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--text-faint)]">Expiration Date</span>
-                <span className="nums font-bold text-[var(--text-strong)]">{reg.endDate || 'Pending Confirmation'}</span>
+                <span className="text-[#64748B] font-medium">Expiration Date</span>
+                <span className="font-mono font-bold text-[#D97706]">{reg.endDate || 'Pending Confirmation'}</span>
               </div>
             </div>
           </div>
 
           {/* Payment & Invoice Breakdown */}
-          <div className="bg-[var(--surface)] border border-[var(--line)] p-6 rounded-[2px] shadow-[var(--shadow-card)] space-y-4">
-            <h3 className="t-h3 text-[var(--text-strong)] border-b border-[var(--line)] pb-3 font-semibold">
+          <div className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
+            <h3 className="text-sm font-extrabold text-[#0F172A] border-b border-[#E2E8F0] pb-3">
               Billing Ledger
             </h3>
 
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-[var(--text)]">Base Fee</span>
-                <span className="nums font-medium text-[var(--text-strong)]">{formatINR(reg.pricePaise)}</span>
+                <span className="text-[#64748B] font-medium">Total Invoiced</span>
+                <span className="font-black text-sm text-[#0F172A]">{formatINR(reg.totalPaise)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--text)]">Admission Fee</span>
-                <span className="nums text-[var(--text)]">{formatINR(reg.joiningFeePaise)}</span>
-              </div>
-              {reg.discountPaise > 0 && (
-                <div className="flex justify-between text-[var(--success)] font-medium">
-                  <span>Discount</span>
-                  <span className="nums">−{formatINR(reg.discountPaise)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-[var(--text-faint)]">
-                <span>GST (18%)</span>
-                <span className="nums">{formatINR(reg.gstPaise)}</span>
-              </div>
-              <div className="h-px bg-[var(--line)] my-1" />
-              <div className="flex justify-between text-sm font-bold text-[var(--text-strong)]">
-                <span>Total Settled</span>
-                <span className="nums">{formatINR(reg.totalPaise)}</span>
-              </div>
-            </div>
-
-            {/* Payment Details */}
-            <div className="mt-4 pt-4 border-t border-[var(--line)] text-xs space-y-2">
-              <div className="flex justify-between">
-                <span className="text-[var(--text-faint)]">Method</span>
-                <span className="font-semibold text-[var(--text-strong)] uppercase">{reg.payment?.method || 'N/A'}</span>
+                <span className="text-[#64748B] font-medium">Payment Mode</span>
+                <span className="font-bold text-[#0F172A]">{formatPaymentMethod(reg.payment?.method)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--text-faint)]">Payment Status</span>
-                <span className="font-semibold text-[var(--text-strong)]">{reg.payment?.status || 'CREATED'}</span>
+                <span className="text-[#64748B] font-medium">Payment Status</span>
+                <span className="font-bold text-[#0F172A]">{reg.payment?.status || 'CREATED'}</span>
               </div>
-              {reg.payment?.razorpayPaymentId && (
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-faint)]">Payment ID</span>
-                  <span className="font-mono text-[0.6875rem]">{reg.payment.razorpayPaymentId}</span>
-                </div>
-              )}
-              {reg.payment?.paidAt && (
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-faint)]">Paid Timestamp</span>
-                  <span className="nums text-[var(--text-faint)]">
-                    {new Date(reg.payment.paidAt).toLocaleString('en-GB')}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>

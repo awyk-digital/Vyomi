@@ -4,22 +4,19 @@ import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import Script from 'next/script';
 import { SUPPLIED } from '@/config/assets';
-import { site } from '@/config/site';
+import { generateUpiString, generateQrDataUrl } from '@/lib/qr';
+import { generatePdfReceipt } from '@/lib/pdfReceipt';
 import {
   SilverTierBadge,
   GoldTierBadge,
-  PlatinumTierBadge,
   DiamondTierBadge,
   VipMembershipCard,
   StepTierIcon,
   StepIdIcon,
-  StepPulseIcon,
   StepPaymentIcon,
   SecurityLockBadge,
   UpiIconSvg,
-  PanattaEmblemSvg,
 } from '@/components/LuxuryIcons';
 
 interface PackageItem {
@@ -28,118 +25,66 @@ interface PackageItem {
   slug: string;
   durationDays: number;
   pricePaise: number;
-  joiningFeePaise: number;
+  originalPricePaise?: number;
   benefits: string[];
   isFeatured?: boolean;
 }
 
-interface ClientFormData {
-  fullName: string;
-  phone: string;
-  email: string;
-  dateOfBirth: string;
-  gender: string;
-  address: string;
-  idProofType: string;
-  idProofNumber: string;
-  guardianName: string;
-  guardianConsent: boolean;
-  fitnessGoal: string;
-  medicalNotes: string;
-  emergencyContactName: string;
-  emergencyContactPhone: string;
-  startDate: string;
-  preferredSlot: string;
-  referralSource: string;
-  acceptedTerms: boolean;
-  acceptedWaiver: boolean;
-  acceptedPrivacy: boolean;
-}
-
-const DEFAULT_PACKAGES: PackageItem[] = [
+const OFFICIAL_PACKAGES: PackageItem[] = [
   {
-    id: 'pkg-silver-1m',
-    name: 'Silver',
-    slug: 'silver',
-    durationDays: 30,
-    pricePaise: 350000,
-    joiningFeePaise: 0,
+    id: 'pkg-founding-1y',
+    name: 'Founding Membership',
+    slug: 'founding',
+    durationDays: 365,
+    pricePaise: 2500000, // ₹25,000
     benefits: [
-      'Full gym floor & strength zone access',
-      'Complimentary luxury day locker',
-      '5 group fitness classes per month',
-      'Initial movement & posture screen',
+      '1 Year Full Gym Access',
+      'Italian Panatta Bio-strength Zone',
+      'Complimentary Member Locker & Showers',
+      'Dedicated Onboarding & Movement Screen',
     ],
   },
   {
-    id: 'pkg-gold-3m',
-    name: 'Gold',
-    slug: 'gold',
-    durationDays: 90,
-    pricePaise: 900000,
-    joiningFeePaise: 0,
+    id: 'pkg-vip-1y',
+    name: 'VIP Membership',
+    slug: 'vip',
+    durationDays: 365,
+    pricePaise: 5000000, // ₹50,000
+    originalPricePaise: 6000000, // ₹60,000
     isFeatured: true,
     benefits: [
-      'All Silver membership privileges',
-      '2 One-on-one personal trainer sessions',
-      'Unlimited steam bath & cedar sauna access',
-      'Bi-monthly body composition telemetry',
+      '1 Year Full Gym Access',
+      'Limited Recovery & Wellness Suite',
+      'Finnish Cedar Sauna & Steam Access',
+      'Bi-monthly Body Composition Telemetry',
+      'Priority Trainer Consultation',
     ],
   },
   {
-    id: 'pkg-platinum-6m',
-    name: 'Platinum',
-    slug: 'platinum',
-    durationDays: 180,
-    pricePaise: 1600000,
-    joiningFeePaise: 0,
-    benefits: [
-      'All Gold membership privileges',
-      '6 Dedicated personal training sessions',
-      'Comprehensive clinical diet consultation',
-      '4 Complimentary guest VIP day passes',
-      'Priority studio & reformer slot reservations',
-    ],
-  },
-  {
-    id: 'pkg-diamond-12m',
-    name: 'Diamond',
-    slug: 'diamond',
+    id: 'pkg-vvip-1y',
+    name: 'VVIP Membership',
+    slug: 'vvip',
     durationDays: 365,
-    pricePaise: 2800000,
-    joiningFeePaise: 0,
+    pricePaise: 6000000, // ₹60,000
+    originalPricePaise: 8000000, // ₹80,000
     benefits: [
-      'All Platinum membership privileges',
-      'Full-year tailored personal trainer blueprint',
-      'Cold plunge hydrotherapy & recovery suite access',
-      'Unlimited guest privileges & private locker',
-      'Vyomi bespoke member welcome apparel kit',
+      '1 Year Full Gym Access',
+      'Unlimited Recovery & Wellness Suite',
+      'Zumba & Group Fitness Unlimited',
+      'Official HYROX Training Zone Access',
+      'Hydrotherapy Cold Plunge & Cedar Sauna',
+      'VIP Locker & Welcome Kit',
     ],
   },
 ];
 
-const INITIAL_FORM: ClientFormData = {
-  fullName: '',
-  phone: '',
-  email: '',
-  dateOfBirth: '',
-  gender: 'Prefer not to say',
-  address: '',
-  idProofType: 'Aadhaar',
-  idProofNumber: '',
-  guardianName: '',
-  guardianConsent: false,
-  fitnessGoal: 'Hypertrophy & Muscle Gain',
-  medicalNotes: '',
-  emergencyContactName: '',
-  emergencyContactPhone: '',
-  startDate: '2026-12-01',
-  preferredSlot: 'morning',
-  referralSource: 'Instagram',
-  acceptedTerms: false,
-  acceptedWaiver: false,
-  acceptedPrivacy: false,
-};
+const TIME_SLOTS = [
+  '06:00 AM – 09:00 AM (Morning Prime)',
+  '09:00 AM – 12:00 PM (Midday)',
+  '12:00 PM – 04:00 PM (Afternoon Quiet)',
+  '04:00 PM – 08:00 PM (Evening Prime)',
+  '08:00 PM – 10:30 PM (Night Sessions)',
+];
 
 function formatINR(paise: number): string {
   return new Intl.NumberFormat('en-IN', {
@@ -149,1789 +94,1105 @@ function formatINR(paise: number): string {
   }).format(paise / 100);
 }
 
-function istTime(): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'Asia/Kolkata',
-  }).format(new Date());
-}
-
-function RegisterFormContent() {
+function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialPkgSlug = searchParams.get('package') || 'gold';
+  const urlPkg = searchParams.get('package') || 'vip';
 
-  const [step, setStep] = useState<number>(1);
-  const [packages, setPackages] = useState<PackageItem[]>(DEFAULT_PACKAGES);
-  const [selectedPkgId, setSelectedPkgId] = useState<string>('pkg-gold-3m');
-  const [formData, setFormData] = useState<ClientFormData>(INITIAL_FORM);
-  const [couponCode, setCouponCode] = useState<string>('');
-  const [appliedCoupon, setAppliedCoupon] = useState<{
-    code: string;
-    discountPaise: number;
+  // Step 1: Select Plan | Step 2: Member Details & Gmail OTP | Step 3: Payment | Step 4: Success
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+
+  // Package state
+  const [packages, setPackages] = useState<PackageItem[]>(OFFICIAL_PACKAGES);
+  const [selectedPkgId, setSelectedPkgId] = useState<string>('pkg-vip-1y');
+
+  // Form Fields
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [gender, setGender] = useState('Male');
+  const [preferredSlot, setPreferredSlot] = useState(TIME_SLOTS[0]);
+  const [startDate, setStartDate] = useState(
+    () => new Date().toISOString().split('T')[0]
+  );
+  const [acceptedTerms, setAcceptedTerms] = useState(true);
+
+  // Real-Time Gmail OTP State
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpMessage, setOtpMessage] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  // Payment Options (Strictly 2 options: Dynamic UPI QR or Offline Cash)
+  const [paymentOption, setPaymentOption] = useState<'UPI' | 'CASH'>('UPI');
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [upiIntentUri, setUpiIntentUri] = useState<string>('');
+  const [utrNumber, setUtrNumber] = useState('');
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+
+  // Errors & General UI
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState('');
+
+  // Confirmed Registration Details
+  const [confirmationData, setConfirmationData] = useState<{
+    reference: string;
+    memberCode: string;
+    fullName: string;
+    phone: string;
+    email: string;
+    packageName: string;
+    durationDays: number;
+    preferredSlot: string;
+    startDate: string;
+    endDate: string;
+    totalAmount: number;
+    paymentMethod: 'UPI' | 'CASH';
+    paymentStatus: string;
+    utrNumber?: string;
   } | null>(null);
-  const [couponError, setCouponError] = useState<string>('');
-  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [generalError, setGeneralError] = useState<string>('');
-  const [clock, setClock] = useState<string>('');
-  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
 
-  // Field validation error state
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailStatus, setEmailStatus] = useState('');
 
-  // Vyomi Luxury In-App Payment Gateway Modal state
-  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
-  const [paymentTab, setPaymentTab] = useState<'upi' | 'card' | 'netbanking' | 'sandbox'>('upi');
-  const [createdRegistrationRef, setCreatedRegistrationRef] = useState<string>('');
-  const [createdOrder, setCreatedOrder] = useState<{
-    amount: number;
-    currency: string;
-    razorpayOrderId?: string;
-    keyId?: string;
-  } | null>(null);
-  const [paymentProcessing, setPaymentProcessing] = useState<boolean>(false);
-
-  // Interactive Card & UPI inputs
-  const [cardNumber, setCardNumber] = useState<string>('4111 1111 1111 1111');
-  const [cardExpiry, setCardExpiry] = useState<string>('12/28');
-  const [cardCvv, setCardCvv] = useState<string>('777');
-  const [cardHolder, setCardHolder] = useState<string>('');
-  const [upiId, setUpiId] = useState<string>('');
-  const [selectedBank, setSelectedBank] = useState<string>('HDFC Bank');
-
-  const handleInputChange = (field: keyof ClientFormData, value: unknown) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
+  // Calculate projected End Date (1 year / 365 days)
+  const projectedEndDate = useMemo(() => {
+    try {
+      const d = new Date(startDate || Date.now());
+      d.setDate(d.getDate() + 365);
+      return d.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
       });
+    } catch {
+      return '365 Days From Intake';
     }
-  };
+  }, [startDate]);
 
-  // Keep clock updated
-  useEffect(() => {
-    setClock(istTime());
-    const timer = setInterval(() => setClock(istTime()), 30000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Fetch packages
+  // Load packages
   useEffect(() => {
     fetch('/api/v1/packages')
       .then((res) => res.json())
       .then((data) => {
         if (data.packages && data.packages.length > 0) {
           setPackages(data.packages);
-          const found = data.packages.find((p: PackageItem) => p.slug === initialPkgSlug) || data.packages[1] || data.packages[0];
-          setSelectedPkgId(found.id);
+          const found = data.packages.find((p: PackageItem) => p.slug === urlPkg);
+          if (found) setSelectedPkgId(found.id);
         }
       })
-      .catch((err) => console.error('Failed to load packages:', err));
-  }, [initialPkgSlug]);
+      .catch(() => {});
+  }, [urlPkg]);
 
-  // Restore draft from sessionStorage
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem('vyomi_reg_draft');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.formData) setFormData(parsed.formData);
-        if (parsed.selectedPkgId) setSelectedPkgId(parsed.selectedPkgId);
-        if (parsed.step && parsed.step > 1) setStep(parsed.step);
-      }
-    } catch {}
-  }, []);
-
-  // Save draft
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(
-        'vyomi_reg_draft',
-        JSON.stringify({ formData, selectedPkgId, step })
-      );
-    } catch {}
-  }, [formData, selectedPkgId, step]);
-
+  // Selected package lookup
   const selectedPackage = useMemo(() => {
-    return packages.find((p) => p.id === selectedPkgId) || packages[0];
+    return packages.find((p) => p.id === selectedPkgId) || packages[1] || packages[0];
   }, [packages, selectedPkgId]);
 
-  // Calculate pricing breakdown
-  const pricing = useMemo(() => {
-    if (!selectedPackage) {
-      return { basePrice: 0, joiningFee: 0, discount: 0, taxable: 0, gst: 0, total: 0 };
+  // Timer countdown for OTP resend
+  useEffect(() => {
+    if (otpTimer <= 0) return;
+    const interval = setInterval(() => setOtpTimer((t) => t - 1), 1000);
+    return () => clearInterval(interval);
+  }, [otpTimer]);
+
+  // Generate dynamic QR code whenever selected package or step changes
+  useEffect(() => {
+    if (currentStep === 3 && paymentOption === 'UPI' && selectedPackage) {
+      const amountInr = selectedPackage.pricePaise / 100;
+      const upiUri = generateUpiString({
+        vpa: '9666636563@axisbank',
+        payeeName: 'VALLABHANENI',
+        amountInr,
+        transactionNote: `Vyomi ${selectedPackage.name}`,
+      });
+      setUpiIntentUri(upiUri);
+      generateQrDataUrl(upiUri).then(setQrDataUrl);
     }
-    const basePrice = selectedPackage.pricePaise;
-    const joiningFee = selectedPackage.joiningFeePaise || 0;
-    const discount = appliedCoupon ? appliedCoupon.discountPaise : 0;
-    const taxable = Math.max(0, basePrice + joiningFee - discount);
-    const gst = Math.round(taxable * 0.18);
-    const total = taxable + gst;
-    return { basePrice, joiningFee, discount, taxable, gst, total };
-  }, [selectedPackage, appliedCoupon]);
+  }, [currentStep, paymentOption, selectedPackage]);
 
-  // Age calculation
-  const clientAge = useMemo(() => {
-    if (!formData.dateOfBirth) return null;
-    const dob = new Date(formData.dateOfBirth);
-    const diff = Date.now() - dob.getTime();
-    return Math.abs(new Date(diff).getUTCFullYear() - 1970);
-  }, [formData.dateOfBirth]);
+  // Handle Real-Time Gmail OTP Send
+  const handleSendEmailOtp = async () => {
+    setOtpError('');
+    setOtpMessage('');
+    const cleanEmail = email.trim().toLowerCase();
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return;
-    setIsApplyingCoupon(true);
-    setCouponError('');
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setFormErrors((prev) => ({ ...prev, email: 'Enter a valid email address first.' }));
+      setOtpError('Please provide a valid Gmail/Email address to receive the verification code.');
+      return;
+    }
+
+    setOtpSending(true);
     try {
-      const res = await fetch('/api/v1/coupons/validate', {
+      const res = await fetch('/api/v1/auth/email-otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: couponCode.trim(),
-          packageId: selectedPackage.id,
-        }),
+        body: JSON.stringify({ email: cleanEmail, fullName: fullName.trim() }),
       });
       const data = await res.json();
-      if (!res.ok || !data.valid) {
-        setCouponError(data.error?.message || 'Invalid coupon code');
-        setAppliedCoupon(null);
+      if (!res.ok) {
+        setOtpError(data.error?.message || 'Failed to dispatch verification code to Gmail.');
       } else {
-        setAppliedCoupon({
-          code: data.code,
-          discountPaise: data.discountPaise,
-        });
+        setOtpSent(true);
+        setOtpTimer(60);
+        setOtpMessage(`6-digit verification code sent to ${cleanEmail}. Please check your inbox.`);
+        setFormErrors((prev) => ({ ...prev, email: '', otp: '' }));
       }
     } catch {
-      setCouponError('Could not validate coupon.');
+      setOtpError('Network error while requesting verification code.');
     } finally {
-      setIsApplyingCoupon(false);
+      setOtpSending(false);
     }
   };
 
-  const validateStep2 = (): boolean => {
+  // Handle Real-Time Gmail OTP Verify
+  const handleVerifyEmailOtp = async () => {
+    setOtpError('');
+    setOtpMessage('');
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!otpCode || otpCode.trim().length !== 6) {
+      setOtpError('Please enter the 6-digit verification code sent to your Gmail.');
+      return;
+    }
+
+    setOtpVerifying(true);
+    try {
+      const res = await fetch('/api/v1/auth/email-otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, otp: otpCode.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpError(data.error?.message || 'Invalid or expired verification code.');
+      } else {
+        setEmailVerified(true);
+        setOtpMessage('Email verified successfully! You can now proceed.');
+        setFormErrors((prev) => ({ ...prev, otp: '', email: '' }));
+      }
+    } catch {
+      setOtpError('Verification failed. Please retry.');
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
+  // Validate Step 2 (Member Details)
+  const handleContinueToPayment = () => {
     setGeneralError('');
     const errors: Record<string, string> = {};
 
-    // Full Name: at least 2 words, letters, spaces, hyphens, apostrophes
-    const nameTrimmed = formData.fullName.trim();
-    if (!nameTrimmed) {
+    const cleanName = fullName.trim();
+    if (!cleanName || cleanName.length < 3) {
       errors.fullName = 'Full legal name is required.';
-    } else if (nameTrimmed.length < 3) {
-      errors.fullName = 'Name must be at least 3 characters.';
-    } else if (!/^[a-zA-Z\s'.-]+$/.test(nameTrimmed)) {
-      errors.fullName = 'Name should only contain letters and spaces.';
-    } else if (nameTrimmed.split(/\s+/).filter(Boolean).length < 2) {
-      errors.fullName = 'Please enter both first and last name.';
+    } else if (cleanName.split(/\s+/).length < 2) {
+      errors.fullName = 'Please enter both first and last name (e.g. Aditya Varma).';
     }
 
-    // Phone: Indian 10-digit mobile starting with 6, 7, 8, or 9
-    const cleanPhone = formData.phone.replace(/\D/g, '');
-    if (!cleanPhone) {
-      errors.phone = 'Mobile phone number is required.';
-    } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-      errors.phone = 'Enter a valid 10-digit Indian mobile number (e.g. 9876543210).';
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      errors.phone = 'Valid 10-digit mobile number required starting with 6, 7, 8, or 9.';
     }
 
-    // Email: strict standard
-    const emailTrimmed = formData.email.trim();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailTrimmed) {
-      errors.email = 'Email address is required.';
-    } else if (!emailRegex.test(emailTrimmed)) {
-      errors.email = 'Please enter a valid, active email address.';
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      errors.email = 'Valid email address is required for receipts and records.';
+    } else if (!emailVerified) {
+      errors.otp = 'Please verify your Gmail address with the 6-digit verification code.';
     }
 
-    // Date of Birth
-    if (!formData.dateOfBirth) {
-      errors.dateOfBirth = 'Date of birth is required.';
-    } else {
-      const dobDate = new Date(formData.dateOfBirth);
-      const now = new Date();
-      if (isNaN(dobDate.getTime()) || dobDate > now) {
-        errors.dateOfBirth = 'Date of birth cannot be in the future.';
-      } else if (clientAge !== null && clientAge < 16) {
-        errors.dateOfBirth = 'Vyomi membership requires a minimum age of 16 years.';
-      }
+    if (!acceptedTerms) {
+      errors.terms = 'You must agree to the club membership terms.';
     }
 
-    // Minor Guardian protocol
-    if (clientAge !== null && clientAge < 18 && clientAge >= 16) {
-      if (!formData.guardianName.trim() || formData.guardianName.trim().length < 3) {
-        errors.guardianName = 'Parent or legal guardian name is mandatory for applicants under 18.';
-      }
-      if (!formData.guardianConsent) {
-        errors.guardianConsent = 'Parent or legal guardian consent confirmation is required.';
-      }
-    }
-
-    // ID proof validation if entered
-    if (formData.idProofNumber.trim()) {
-      const cleanId = formData.idProofNumber.trim();
-      if (formData.idProofType === 'Aadhaar' && !/^\d{12}$/.test(cleanId.replace(/\s/g, ''))) {
-        errors.idProofNumber = 'Aadhaar number must be exactly 12 digits.';
-      } else if (formData.idProofType === 'PAN' && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(cleanId)) {
-        errors.idProofNumber = 'PAN must follow standard format (e.g. ABCDE1234F).';
-      }
-    }
-
-    setFieldErrors(errors);
+    setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
-      setGeneralError('Please correct the highlighted errors before continuing.');
-      return false;
-    }
-    return true;
-  };
-
-  const validateStep3 = (): boolean => {
-    setGeneralError('');
-    const errors: Record<string, string> = {};
-
-    const cleanClientPhone = formData.phone.replace(/\D/g, '');
-    const cleanEmergencyPhone = formData.emergencyContactPhone.replace(/\D/g, '');
-
-    if (!formData.emergencyContactName.trim()) {
-      errors.emergencyContactName = 'Emergency contact person is required.';
-    } else if (formData.emergencyContactName.trim().toLowerCase() === formData.fullName.trim().toLowerCase()) {
-      errors.emergencyContactName = 'Emergency contact person cannot be yourself.';
-    }
-
-    if (!cleanEmergencyPhone) {
-      errors.emergencyContactPhone = 'Emergency contact phone number is required.';
-    } else if (!/^[6-9]\d{9}$/.test(cleanEmergencyPhone)) {
-      errors.emergencyContactPhone = 'Enter a valid 10-digit Indian phone number.';
-    } else if (cleanEmergencyPhone === cleanClientPhone) {
-      errors.emergencyContactPhone = 'Emergency contact phone cannot be identical to your personal mobile number.';
-    }
-
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) {
-      setGeneralError('Please correct the highlighted emergency contact fields.');
-      return false;
-    }
-    return true;
-  };
-
-  const handlePayAndRegister = async () => {
-    setGeneralError('');
-    if (!formData.acceptedTerms || !formData.acceptedWaiver || !formData.acceptedPrivacy) {
-      setGeneralError('Please accept the Terms & Conditions, Health Waiver, and Privacy Policy to proceed.');
+      setGeneralError('Please correct the highlighted fields and verify your email address.');
       return;
     }
 
-    setSubmitting(true);
+    setCurrentStep(3);
+  };
 
+  // Handle Final Submission (Only 2 options: Online UPI QR or Offline Cash)
+  const handleCompleteRegistration = async () => {
+    setGeneralError('');
+    if (paymentOption === 'UPI' && (!utrNumber || utrNumber.trim().length < 6)) {
+      setGeneralError('Please enter the 12-digit UPI / UTR transaction reference after completing payment in PhonePe/GPay.');
+      return;
+    }
+
+    setSubmittingPayment(true);
     try {
-      // 1. Create registration & server order
       const res = await fetch('/api/v1/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           packageId: selectedPackage.id,
-          couponCode: appliedCoupon?.code,
-          client: formData,
-          startDate: formData.startDate,
-          preferredSlot: formData.preferredSlot,
-          referralSource: formData.referralSource,
-          acceptedTerms: formData.acceptedTerms,
-          acceptedWaiver: formData.acceptedWaiver,
+          fullName: fullName.trim(),
+          phone: phone.replace(/\D/g, ''),
+          email: email.trim().toLowerCase(),
+          preferredSlot,
+          fitnessGoal: 'Vyomi Annual Membership',
+          startDate,
+          gender,
+          paymentMethod: paymentOption,
+          utrNumber: paymentOption === 'UPI' ? utrNumber.trim() : undefined,
+          acceptedTerms: true,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        setGeneralError(data.error?.message || 'Registration could not be created.');
-        setSubmitting(false);
+        setGeneralError(data.error?.message || 'Registration failed. Please retry.');
+        setSubmittingPayment(false);
         return;
       }
 
-      const { registrationRef, order } = data;
-      setCreatedRegistrationRef(registrationRef);
-      setCreatedOrder(order);
-      setCardHolder(formData.fullName);
-
-      // Open the bespoke in-app luxury payment modal
-      setShowPaymentModal(true);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setGeneralError(msg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const executePaymentVerification = async (options?: {
-    simulateFailure?: boolean;
-    failureReason?: string;
-    simulatePending?: boolean;
-  }) => {
-    if (!createdRegistrationRef) return;
-    setPaymentProcessing(true);
-
-    try {
-      const payload: Record<string, unknown> = {
-        registrationRef: createdRegistrationRef,
-        razorpay_payment_id: options?.simulateFailure
-          ? `pay_failed_${Date.now()}`
-          : `pay_vyomi_${Date.now()}`,
-        razorpay_signature: options?.simulateFailure ? 'sig_failure' : 'sig_mock_verified',
-        method: paymentTab === 'card' ? 'CARD' : paymentTab === 'upi' ? 'UPI' : 'NETBANKING',
+      const conf = {
+        reference: data.reference || data.registrationRef,
+        memberCode: data.memberCode,
+        fullName: fullName.trim(),
+        phone: phone.replace(/\D/g, ''),
+        email: email.trim().toLowerCase(),
+        packageName: selectedPackage.name,
+        durationDays: selectedPackage.durationDays,
+        preferredSlot,
+        startDate,
+        endDate: data.endDate || new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
+        totalAmount: selectedPackage.pricePaise / 100,
+        paymentMethod: paymentOption,
+        paymentStatus: paymentOption === 'UPI' ? 'PAID' : 'PENDING_CASH_COLLECTION',
+        utrNumber: paymentOption === 'UPI' ? utrNumber.trim() : undefined,
       };
 
-      if (options?.simulateFailure) {
-        payload.simulateFailure = true;
-        payload.failureReason = options.failureReason || 'Card declined by issuing bank';
-      }
-      if (options?.simulatePending) {
-        payload.simulatePending = true;
-      }
-
-      const res = await fetch('/api/v1/payments/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (options?.simulateFailure) {
-        sessionStorage.removeItem('vyomi_reg_draft');
-        setShowPaymentModal(false);
-        router.push(`/register/failed?ref=${createdRegistrationRef}`);
-        return;
-      }
-
-      if (options?.simulatePending || !res.ok) {
-        sessionStorage.removeItem('vyomi_reg_draft');
-        setShowPaymentModal(false);
-        router.push(`/register/pending?ref=${createdRegistrationRef}`);
-        return;
-      }
-
-      sessionStorage.removeItem('vyomi_reg_draft');
-      setShowPaymentModal(false);
-      router.push(`/register/success?ref=${createdRegistrationRef}`);
+      setConfirmationData(conf);
+      setCurrentStep(4);
     } catch {
-      router.push(`/register/failed?ref=${createdRegistrationRef}`);
+      setGeneralError('An unexpected server error occurred.');
     } finally {
-      setPaymentProcessing(false);
+      setSubmittingPayment(false);
     }
   };
 
-  const launchNativeRazorpay = () => {
-    if (!createdOrder || !createdRegistrationRef) return;
-    const RazorpayConstructor = (window as unknown as {
-      Razorpay?: new (opts: Record<string, unknown>) => {
-        open: () => void;
-        on: (e: string, fn: () => void) => void;
-      };
-    }).Razorpay;
-
-    if (typeof RazorpayConstructor !== 'function') {
-      alert('Razorpay script is still loading. Please retry in a moment.');
-      return;
-    }
-
-    try {
-      const rzp = new RazorpayConstructor({
-        key: createdOrder.keyId || 'rzp_test_vyomi2026',
-        amount: createdOrder.amount,
-        currency: 'INR',
-        name: site.name,
-        description: `${selectedPackage?.name ?? 'Gold'} Membership (${selectedPackage?.durationDays ?? 90} Days)`,
-        order_id: createdOrder.razorpayOrderId,
-        prefill: {
-          name: formData.fullName,
-          email: formData.email,
-          contact: formData.phone,
-        },
-        theme: { color: '#080808' },
-        handler: async (response: { razorpay_payment_id: string; razorpay_signature: string }) => {
-          await executePaymentVerification();
-        },
-        modal: {
-          ondismiss: () => {
-            setGeneralError('Razorpay checkout window was closed.');
-          },
-        },
-      });
-      rzp.on('payment.failed', () => {
-        router.push(`/register/failed?ref=${createdRegistrationRef}`);
-      });
-      rzp.open();
-    } catch (err) {
-      console.error(err);
-      alert('Could not launch Razorpay popup.');
-    }
+  // Download PDF
+  const handleDownloadPdf = () => {
+    if (!confirmationData) return;
+    const doc = generatePdfReceipt({
+      receiptNumber: `REC-2026-${confirmationData.reference.slice(-5)}`,
+      reference: confirmationData.reference,
+      memberCode: confirmationData.memberCode,
+      clientName: confirmationData.fullName,
+      phone: confirmationData.phone,
+      email: confirmationData.email,
+      packageName: confirmationData.packageName,
+      durationDays: confirmationData.durationDays,
+      timeSlot: confirmationData.preferredSlot,
+      fitnessGoal: 'Vyomi Membership',
+      startDate: confirmationData.startDate,
+      endDate: confirmationData.endDate,
+      amountInr: confirmationData.totalAmount,
+      paymentMethod: confirmationData.paymentMethod,
+      paymentStatus: confirmationData.paymentStatus as 'PAID' | 'PENDING_CASH_COLLECTION',
+      utrNumber: confirmationData.utrNumber,
+      paymentDate: new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
+    });
+    doc.save(`Vyomi_Receipt_${confirmationData.memberCode}.pdf`);
   };
 
-  const handleSimulatedPayment = async (scenario: 'SUCCESS' | 'FAILURE' | 'PENDING') => {
-    setGeneralError('');
-    if (!formData.acceptedTerms || !formData.acceptedWaiver || !formData.acceptedPrivacy) {
-      setGeneralError('Please accept the Terms & Conditions, Health Waiver, and Privacy Policy to execute this test case.');
-      return;
-    }
-
-    setSubmitting(true);
+  // Send Email Receipt directly via Gmail
+  const handleSendEmailReceipt = async () => {
+    if (!confirmationData) return;
+    setEmailSending(true);
+    setEmailStatus('');
     try {
-      // 1. Create client intake & server order
-      const res = await fetch('/api/v1/registrations', {
+      const res = await fetch(`/api/v1/registrations/${confirmationData.reference}/send-receipt`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          packageId: selectedPackage.id,
-          couponCode: appliedCoupon?.code,
-          client: formData,
-          startDate: formData.startDate,
-          preferredSlot: formData.preferredSlot,
-          referralSource: formData.referralSource,
-          acceptedTerms: formData.acceptedTerms,
-          acceptedWaiver: formData.acceptedWaiver,
-        }),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        setGeneralError(data.error?.message || 'Registration could not be created.');
-        setSubmitting(false);
-        return;
+      if (res.ok) {
+        setEmailStatus(`Official Digital VIP Card & PDF receipt sent to ${confirmationData.email}`);
+      } else {
+        setEmailStatus(data.error?.message || 'Receipt recorded in club records.');
       }
-
-      const { registrationRef } = data;
-
-      if (scenario === 'SUCCESS') {
-        const vRes = await fetch('/api/v1/payments/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            registrationRef,
-            razorpay_payment_id: `pay_test_${Date.now()}`,
-            razorpay_signature: 'sig_mock_verified',
-            method: 'RAZORPAY',
-          }),
-        });
-        if (vRes.ok) {
-          sessionStorage.removeItem('vyomi_reg_draft');
-          router.push(`/register/success?ref=${registrationRef}`);
-        } else {
-          router.push(`/register/pending?ref=${registrationRef}`);
-        }
-      } else if (scenario === 'FAILURE') {
-        await fetch('/api/v1/payments/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            registrationRef,
-            simulateFailure: true,
-            failureReason: 'Card declined by issuing bank (Simulated Razorpay Test Case)',
-            razorpay_payment_id: `pay_declined_${Date.now()}`,
-            razorpay_signature: 'sig_simulate_failure',
-          }),
-        });
-        router.push(`/register/failed?ref=${registrationRef}`);
-      } else if (scenario === 'PENDING') {
-        await fetch('/api/v1/payments/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            registrationRef,
-            simulatePending: true,
-          }),
-        });
-        router.push(`/register/pending?ref=${registrationRef}`);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Simulation error occurred';
-      setGeneralError(msg);
-      setSubmitting(false);
+    } catch {
+      setEmailStatus('Receipt recorded in club records.');
+    } finally {
+      setEmailSending(false);
     }
   };
 
   return (
-    <div data-theme="light" className="min-h-screen bg-[var(--bg)] text-[var(--text)] font-sans antialiased pb-24">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-
-      {/* Top Header */}
-      <header className="border-b border-white/10 bg-[#0C0C0E]/90 backdrop-blur-md sticky top-0 z-40">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <Image
-              src={SUPPLIED.logo.src}
-              alt="Vyomi Fitness Club"
-              width={72}
-              height={36}
-              unoptimized
-              className="h-9 w-auto opacity-95 group-hover:opacity-100 transition-opacity"
-            />
-            <span className="hidden sm:inline-block text-xs font-semibold tracking-widest text-[#D4AF37] uppercase border-l border-white/15 pl-3">
-              Membership Portal
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-4 text-xs">
-            <div className="hidden md:flex items-center gap-2 text-white/50">
-              <span>{site.city}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block shadow-[0_0_8px_#10B981]" />
-              <span className="nums font-medium text-[#F5F5F2]">{clock} IST</span>
-            </div>
-            <Link
-              href="/"
-              className="btn-line-light !h-9 !px-3.5 !text-xs !tracking-wider"
-            >
-              Exit to Club ↗
-            </Link>
-          </div>
-        </div>
-
-        {/* Stepper progress bar with gold shimmer */}
-        <div className="w-full bg-white/5 h-1 relative overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-[#D4AF37] via-[#B08D57] to-[#10B981] transition-all duration-500 ease-[var(--ease-editorial)]"
-            style={{ width: `${(step / 4) * 100}%` }}
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] py-6 sm:py-10 px-4 sm:px-6">
+      {/* Top Brand Bar - Clean Standalone Portal */}
+      <div className="max-w-4xl mx-auto mb-6 flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+        <Link href="/register" className="flex items-center gap-3">
+          <Image
+            src={SUPPLIED.logo.src}
+            alt="Vyomi Fitness Club"
+            width={120}
+            height={44}
+            unoptimized
+            className="h-9 w-auto brightness-90"
           />
+        </Link>
+        <div className="text-right">
+          <span className="text-[11px] font-bold tracking-widest text-[#D97706] uppercase block">
+            Patamata, Vijayawada
+          </span>
+          <span className="text-xs font-bold text-[#334155]">Official Membership Intake</span>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content Container */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
-        {/* Step indicator header */}
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
-          <div>
-            <div className="t-label text-[#D4AF37] flex items-center gap-2">
-              <span className="nums font-bold tracking-wider">STEP 0{step} / 04</span>
-              <span>┃</span>
-              <span className="text-white/40 uppercase tracking-wider text-[0.6875rem]">
-                {step === 1 && 'Select Premium Tier'}
-                {step === 2 && 'Personal Identification'}
-                {step === 3 && 'Fitness & Safety Protocol'}
-                {step === 4 && 'Review & Activation'}
-              </span>
-            </div>
-            <h1 className="t-h2 text-[#F5F5F2] mt-2 font-medium tracking-tight">
-              {step === 1 && 'Choose Your Membership.'}
-              {step === 2 && 'Personal Details.'}
-              {step === 3 && 'Health & Emergency Contact.'}
-              {step === 4 && 'Review & Complete Enrollment.'}
-            </h1>
+      {/* Main Container - High Contrast Luxury White Card on Slate Foundation */}
+      <div className="max-w-3xl mx-auto bg-white border border-[#CBD5E1] rounded-2xl shadow-sm p-6 sm:p-8">
+        {/* Progress Step Header */}
+        <div className="mb-6 sm:mb-8">
+          {/* Mobile Step Badge */}
+          <div className="flex sm:hidden items-center justify-between text-xs mb-2">
+            <span className="font-extrabold text-[#0F172A]">
+              Step {currentStep} of 4: {['Select Plan', 'Member Intake & Email OTP', 'Payment (2 Options)', 'Confirmation'][currentStep - 1]}
+            </span>
+            <span className="text-[#D97706] font-mono font-bold">
+              {Math.round((currentStep / 4) * 100)}%
+            </span>
           </div>
 
-          {/* Stepper pill buttons with Luxury SVGs */}
-          <div className="flex items-center gap-1.5 text-xs bg-[#111113] p-1.5 rounded-md border border-white/10">
-            {[
-              { s: 1, label: 'Tier', icon: StepTierIcon },
-              { s: 2, label: 'Identity', icon: StepIdIcon },
-              { s: 3, label: 'Safety', icon: StepPulseIcon },
-              { s: 4, label: 'Activation', icon: StepPaymentIcon },
-            ].map(({ s, label, icon: Icon }) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => {
-                  if (s < step) setStep(s);
-                }}
-                disabled={s > step}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs transition-all font-medium ${
-                  s === step
-                    ? 'bg-[#1C1C20] text-[#D4AF37] border border-[#D4AF37]/40 shadow-sm'
-                    : s < step
-                    ? 'text-[#F5F5F2] hover:text-[#D4AF37] cursor-pointer'
-                    : 'text-white/30 cursor-not-allowed'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span className="nums">0{s}</span>
-                <span className="hidden sm:inline">{label}</span>
-              </button>
-            ))}
+          {/* Desktop step labels with SVGs */}
+          <div className="hidden sm:flex items-center justify-between text-xs font-bold text-[#475569] mb-3">
+            <span className={`flex items-center gap-1.5 ${currentStep >= 1 ? 'text-[#D97706]' : 'text-[#64748B]'}`}>
+              <StepTierIcon className="w-4 h-4" />
+              <span>1. Select Plan</span>
+            </span>
+            <span className={`flex items-center gap-1.5 ${currentStep >= 2 ? 'text-[#D97706]' : 'text-[#64748B]'}`}>
+              <StepIdIcon className="w-4 h-4" />
+              <span>2. Member Intake & Gmail OTP</span>
+            </span>
+            <span className={`flex items-center gap-1.5 ${currentStep >= 3 ? 'text-[#D97706]' : 'text-[#64748B]'}`}>
+              <StepPaymentIcon className="w-4 h-4" />
+              <span>3. Payment (2 Options)</span>
+            </span>
+            <span className={`flex items-center gap-1.5 ${currentStep === 4 ? 'text-[#D97706]' : 'text-[#64748B]'}`}>
+              <SecurityLockBadge className="w-4 h-4" />
+              <span>4. Confirmation</span>
+            </span>
+          </div>
+          <div className="w-full h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-[#D97706] to-[#FFB100] transition-all duration-300"
+              style={{ width: `${(currentStep / 4) * 100}%` }}
+            />
           </div>
         </div>
 
+        {/* Global Error Banner */}
         {generalError && (
-          <div className="mb-8 p-4 bg-[var(--burgundy-wash)] border border-[var(--burgundy)] text-[var(--burgundy)] rounded flex items-center gap-3 text-sm animate-in fade-in">
-            <span className="font-bold text-base">⚠</span>
+          <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-xl text-xs text-red-900 font-bold flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
             <span>{generalError}</span>
           </div>
         )}
 
-        {/* 2-Column Desktop Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          {/* Left Column: Interactive Form Steps */}
-          <div className="lg:col-span-8">
-            {/* STEP 1: PACKAGE SELECTION */}
-            {step === 1 && (
-              <div className="space-y-6">
-                <p className="t-body text-[#A1A1AA]">
-                  All memberships provide unrestricted access to the complete Panatta biomechanical equipment suite, executive locker rooms, and wellness thermal bays.
-                </p>
+        {/* ================= STEP 1: SELECT PLAN ================= */}
+        {currentStep === 1 && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
+                Select Your Membership Plan
+              </h1>
+              <p className="text-xs font-bold text-[#334155] mt-1">
+                Authentic 1-year access privileges at Sonovision Plaza, Patamata, Vijayawada
+              </p>
+            </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
-                  {packages.map((pkg) => {
-                    const isSelected = pkg.id === selectedPkgId;
-                    return (
-                      <div
-                        key={pkg.id}
-                        onClick={() => setSelectedPkgId(pkg.id)}
-                        className={`relative p-6 sm:p-7 rounded-lg transition-all duration-300 cursor-pointer flex flex-col justify-between border ${
-                          isSelected
-                            ? 'bg-gradient-to-b from-[#18181C] to-[#111113] border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.18)] ring-1 ring-[#D4AF37]'
-                            : 'bg-[#111113] border-white/10 hover:border-white/20 hover:bg-[#151518] hover:-translate-y-0.5'
-                        }`}
-                      >
-                        {pkg.isFeatured && (
-                          <span className="absolute -top-3 right-5 px-3 py-0.5 text-[0.625rem] font-bold tracking-widest uppercase rounded-full bg-[#8C2230] text-white shadow-md">
-                            Most Chosen
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              {packages.map((pkg) => {
+                const isSelected = selectedPkgId === pkg.id;
+                return (
+                  <div
+                    key={pkg.id}
+                    onClick={() => setSelectedPkgId(pkg.id)}
+                    className={`relative cursor-pointer rounded-xl p-5 border-2 transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-[#D97706] bg-[#FFFBEB] ring-2 ring-[#D97706]/40 shadow-sm'
+                        : 'border-[#CBD5E1] hover:border-[#D97706]/70 bg-white'
+                    }`}
+                  >
+                    {pkg.isFeatured && (
+                      <span className="absolute -top-3 right-4 bg-[#D97706] text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow">
+                        Most Popular
+                      </span>
+                    )}
+
+                    <div>
+                      {/* Top Row: SVG Tier Emblem + Radio */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {pkg.slug === 'founding' && <SilverTierBadge className="w-6 h-6" />}
+                          {pkg.slug === 'vip' && <GoldTierBadge className="w-6 h-6" />}
+                          {pkg.slug === 'vvip' && <DiamondTierBadge className="w-6 h-6" />}
+                          <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
+                            1 Year
                           </span>
-                        )}
-
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                              {pkg.slug === 'silver' && <SilverTierBadge className="w-9 h-9" />}
-                              {pkg.slug === 'gold' && <GoldTierBadge className="w-9 h-9" />}
-                              {pkg.slug === 'platinum' && <PlatinumTierBadge className="w-9 h-9" />}
-                              {pkg.slug === 'diamond' && <DiamondTierBadge className="w-9 h-9" />}
-                              <div>
-                                <span className="t-label text-white/40 block text-[0.6875rem]">
-                                  {pkg.durationDays} Days Commitment
-                                </span>
-                                <h3 className="t-h3 text-[#F5F5F2] font-semibold">
-                                  {pkg.name} Tier
-                                </h3>
-                              </div>
-                            </div>
-                            {isSelected && (
-                              <span className="t-micro px-2.5 py-1 bg-[#D4AF37] text-black font-bold tracking-wider rounded uppercase text-[0.625rem]">
-                                Selected
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="mt-4 flex items-baseline gap-1">
-                            <span className="nums t-h2 text-[#F5F5F2] font-semibold">
-                              {formatINR(pkg.pricePaise)}
-                            </span>
-                            <span className="t-small text-white/40">
-                              / {pkg.durationDays >= 365 ? 'yr' : `${pkg.durationDays / 30} mo`}
-                            </span>
-                          </div>
-
-                          <div className="h-px w-full bg-white/10 my-5" />
-
-                          <ul className="space-y-3">
-                            {pkg.benefits.map((b, i) => (
-                              <li key={i} className="flex items-start gap-2.5 text-xs text-[#C4C4C0]">
-                                <span className="text-[#D4AF37] font-bold mt-0.5">✓</span>
-                                <span>{b}</span>
-                              </li>
-                            ))}
-                          </ul>
                         </div>
-
-                        <button
-                          type="button"
-                          className={`mt-6 w-full text-xs font-semibold py-3 uppercase tracking-wider rounded transition-all ${
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                             isSelected
-                              ? 'bg-gradient-to-r from-[#D4AF37] to-[#B08D57] text-black font-bold shadow-md'
-                              : 'bg-[#18181B] text-[#F5F5F2] border border-white/10 hover:border-white/20'
+                              ? 'border-[#D97706] bg-[#D97706]'
+                              : 'border-[#94A3B8]'
                           }`}
                         >
-                          {isSelected ? 'Tier Selected' : 'Select Package'}
-                        </button>
+                          {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
 
-                <div className="flex justify-end pt-6 border-t border-[var(--line)]">
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="btn-solid-light"
-                  >
-                    Continue to Personal Details →
-                  </button>
-                </div>
-              </div>
-            )}
+                      <h3 className="text-base font-extrabold text-[#0F172A] mt-3">
+                        {pkg.name}
+                      </h3>
 
-            {/* STEP 2: PERSONAL DETAILS */}
-            {step === 2 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Full Legal Name <span className="text-[var(--burgundy)]">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Aditya Varma"
-                      value={formData.fullName}
-                      onChange={(e) => handleInputChange('fullName', e.target.value)}
-                      className={`light-input ${fieldErrors.fullName ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
-                    />
-                    {fieldErrors.fullName && (
-                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.fullName}</p>
-                    )}
-                  </div>
+                      <div className="mt-3">
+                        <span className="text-2xl font-black text-[#0F172A]">
+                          {formatINR(pkg.pricePaise)}
+                        </span>
+                        {pkg.originalPricePaise && (
+                          <span className="text-xs text-[#64748B] line-through ml-2 font-bold">
+                            {formatINR(pkg.originalPricePaise)}
+                          </span>
+                        )}
+                        <span className="text-[11px] font-bold text-[#475569] block mt-0.5">
+                          Annual All-Inclusive Fee
+                        </span>
+                      </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Mobile Number (+91) <span className="text-[var(--burgundy)]">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      maxLength={10}
-                      placeholder="10-digit mobile number"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value.replace(/\D/g, ''))}
-                      className={`light-input ${fieldErrors.phone ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
-                    />
-                    {fieldErrors.phone && (
-                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.phone}</p>
-                    )}
-                  </div>
+                      <ul className="mt-4 space-y-2 text-xs text-[#1E293B]">
+                        {pkg.benefits.map((b, i) => (
+                          <li key={i} className="flex items-start gap-1.5">
+                            <span className="text-[#D97706] font-extrabold mt-0.5">✓</span>
+                            <span className="font-semibold">{b}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Email Address <span className="text-[var(--burgundy)]">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="aditya@example.com"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className={`light-input ${fieldErrors.email ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
-                    />
-                    {fieldErrors.email && (
-                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.email}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Date of Birth <span className="text-[var(--burgundy)]">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.dateOfBirth}
-                      onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                      className={`light-input ${fieldErrors.dateOfBirth ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
-                    />
-                    {fieldErrors.dateOfBirth && (
-                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.dateOfBirth}</p>
-                    )}
-                    {clientAge !== null && !fieldErrors.dateOfBirth && (
-                      <span className="text-[0.6875rem] text-[var(--text-faint)] mt-1 block">
-                        Age: {clientAge} years {clientAge < 18 ? '(Guardian consent required)' : ''}
-                      </span>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Gender
-                    </label>
-                    <select
-                      value={formData.gender}
-                      onChange={(e) => handleInputChange('gender', e.target.value)}
-                      className="light-input"
-                    >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      ID Proof Verification (Optional)
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <select
-                        value={formData.idProofType}
-                        onChange={(e) => handleInputChange('idProofType', e.target.value)}
-                        className="light-input !text-xs"
+                    <div className="mt-6 pt-3 border-t border-[#E2E8F0]">
+                      <button
+                        type="button"
+                        className={`w-full py-2 px-3 rounded-lg text-xs font-bold transition ${
+                          isSelected
+                            ? 'bg-[#0F172A] text-white shadow-sm'
+                            : 'bg-[#F1F5F9] text-[#1E293B] hover:bg-[#E2E8F0]'
+                        }`}
                       >
-                        <option value="Aadhaar">Aadhaar (12 digits)</option>
-                        <option value="PAN">PAN Card</option>
-                        <option value="Driving License">Driving License</option>
-                        <option value="Passport">Passport</option>
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="Document number"
-                        value={formData.idProofNumber}
-                        onChange={(e) => handleInputChange('idProofNumber', e.target.value)}
-                        className={`light-input !text-xs ${fieldErrors.idProofNumber ? '!border-rose-500 !bg-rose-500/5' : ''}`}
-                      />
-                    </div>
-                    {fieldErrors.idProofNumber && (
-                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.idProofNumber}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                    Residential Address
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="Street, locality, Vijayawada"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    className="light-input !h-auto py-2.5 resize-none"
-                  />
-                </div>
-
-                {/* Under 18 Guardian Section */}
-                {clientAge !== null && clientAge < 18 && (
-                  <div className="p-4 bg-[var(--surface-2)] border border-[var(--line-2)] rounded space-y-3">
-                    <span className="t-label text-[var(--burgundy)] font-bold block">
-                      Under 18 Guardian Protocol
-                    </span>
-                    <div>
-                      <label className="block text-xs font-medium text-[var(--text-strong)] mb-1">
-                        Parent or Legal Guardian Full Name <span className="text-[var(--burgundy)]">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.guardianName}
-                        onChange={(e) => handleInputChange('guardianName', e.target.value)}
-                        placeholder="Guardian full name"
-                        className={`light-input ${fieldErrors.guardianName ? '!border-rose-500 !bg-rose-500/5' : ''}`}
-                      />
-                      {fieldErrors.guardianName && (
-                        <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.guardianName}</p>
-                      )}
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer text-xs text-[var(--text)]">
-                      <input
-                        type="checkbox"
-                        checked={formData.guardianConsent}
-                        onChange={(e) => handleInputChange('guardianConsent', e.target.checked)}
-                        className="w-4 h-4 rounded text-[var(--text-strong)]"
-                      />
-                      <span>I confirm that I am the legal guardian and consent to the minor’s membership enrollment.</span>
-                    </label>
-                    {fieldErrors.guardianConsent && (
-                      <p className="text-rose-400 text-[0.6875rem] font-medium">{fieldErrors.guardianConsent}</p>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-6 border-t border-[var(--line)]">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="btn-line-light"
-                  >
-                    ← Back to Packages
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (validateStep2()) setStep(3);
-                    }}
-                    className="btn-solid-light"
-                  >
-                    Continue to Health Details →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 3: FITNESS & EMERGENCY */}
-            {step === 3 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Primary Fitness Objective <span className="text-[var(--burgundy)]">*</span>
-                    </label>
-                    <select
-                      value={formData.fitnessGoal}
-                      onChange={(e) => handleInputChange('fitnessGoal', e.target.value)}
-                      className="light-input"
-                    >
-                      <option value="Hypertrophy & Muscle Gain">Hypertrophy & Muscle Gain</option>
-                      <option value="Athletic Conditioning & HYROX">Athletic Conditioning & HYROX</option>
-                      <option value="Reformer Pilates & Mobility">Reformer Pilates & Mobility</option>
-                      <option value="Fat Loss & Caloric Expenditure">Fat Loss & Caloric Expenditure</option>
-                      <option value="Cardiovascular Health & Longevity">Cardiovascular Health & Longevity</option>
-                      <option value="Post-Rehab & Joint Recovery">Post-Rehab & Joint Recovery</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Preferred Daily Time Slot
-                    </label>
-                    <select
-                      value={formData.preferredSlot}
-                      onChange={(e) => handleInputChange('preferredSlot', e.target.value)}
-                      className="light-input"
-                    >
-                      <option value="morning">Morning (06:00 – 11:00)</option>
-                      <option value="afternoon">Afternoon (11:00 – 16:00)</option>
-                      <option value="evening">Evening (16:00 – 22:00)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Membership Start Date <span className="text-[var(--burgundy)]">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      min={new Date().toISOString().split('T')[0]}
-                      value={formData.startDate}
-                      onChange={(e) => handleInputChange('startDate', e.target.value)}
-                      className="light-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      How Did You Discover Vyomi?
-                    </label>
-                    <select
-                      value={formData.referralSource}
-                      onChange={(e) => handleInputChange('referralSource', e.target.value)}
-                      className="light-input"
-                    >
-                      <option value="Instagram">Instagram / Social Media</option>
-                      <option value="Friend or Member">Member Recommendation</option>
-                      <option value="Walking By">Direct Club Visit</option>
-                      <option value="Google Search">Google Search</option>
-                      <option value="Billboard">Outdoor Billboard</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Emergency Contact Person <span className="text-[var(--burgundy)]">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Spouse, Parent, Sibling"
-                      value={formData.emergencyContactName}
-                      onChange={(e) => handleInputChange('emergencyContactName', e.target.value)}
-                      className={`light-input ${fieldErrors.emergencyContactName ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
-                    />
-                    {fieldErrors.emergencyContactName && (
-                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.emergencyContactName}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                      Emergency Contact Number <span className="text-[var(--burgundy)]">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      maxLength={10}
-                      placeholder="10-digit mobile number"
-                      value={formData.emergencyContactPhone}
-                      onChange={(e) => handleInputChange('emergencyContactPhone', e.target.value.replace(/\D/g, ''))}
-                      className={`light-input ${fieldErrors.emergencyContactPhone ? '!border-rose-500 focus:!border-rose-500 !bg-rose-500/5' : ''}`}
-                    />
-                    {fieldErrors.emergencyContactPhone && (
-                      <p className="text-rose-400 text-[0.6875rem] mt-1 font-medium">{fieldErrors.emergencyContactPhone}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[var(--text-strong)] mb-1.5 uppercase tracking-wider">
-                    Medical History / Prior Orthopedic Injuries (Optional)
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="List any past surgeries, disc herniations, cardiovascular conditions, or chronic joint issues our fitness coaches should be briefed on..."
-                    value={formData.medicalNotes}
-                    onChange={(e) => handleInputChange('medicalNotes', e.target.value)}
-                    className="light-input !h-auto py-2.5 resize-none text-xs"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pt-6 border-t border-[var(--line)]">
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="btn-line-light"
-                  >
-                    ← Back to Personal Details
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (validateStep3()) setStep(4);
-                    }}
-                    className="btn-solid-light"
-                  >
-                    Review & Payment →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 4: REVIEW, TERMS & PAYMENT */}
-            {step === 4 && (
-              <div className="space-y-6">
-                <div className="bg-[var(--surface)] border border-[var(--line)] p-6 rounded-[2px] space-y-4">
-                  <h3 className="t-h3 text-[var(--text-strong)] border-b border-[var(--line)] pb-3 font-medium">
-                    Enrolling Client Summary
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
-                    <div>
-                      <span className="text-[var(--text-faint)] block uppercase">Full Name</span>
-                      <span className="font-semibold text-[var(--text-strong)]">{formData.fullName}</span>
-                    </div>
-                    <div>
-                      <span className="text-[var(--text-faint)] block uppercase">Mobile</span>
-                      <span className="font-semibold text-[var(--text-strong)]">+91 {formData.phone}</span>
-                    </div>
-                    <div>
-                      <span className="text-[var(--text-faint)] block uppercase">Email</span>
-                      <span className="font-semibold text-[var(--text-strong)]">{formData.email}</span>
-                    </div>
-                    <div>
-                      <span className="text-[var(--text-faint)] block uppercase">Membership Tier</span>
-                      <span className="font-semibold text-[var(--bronze-text)]">
-                        {selectedPackage?.name ?? 'Gold'} ({selectedPackage?.durationDays ?? 90} Days)
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[var(--text-faint)] block uppercase">Activation Date</span>
-                      <span className="font-semibold text-[var(--text-strong)]">{formData.startDate}</span>
-                    </div>
-                    <div>
-                      <span className="text-[var(--text-faint)] block uppercase">Emergency Contact</span>
-                      <span className="font-semibold text-[var(--text-strong)]">{formData.emergencyContactName} ({formData.emergencyContactPhone})</span>
+                        {isSelected ? 'Selected Plan' : 'Choose Plan'}
+                      </button>
                     </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
 
-                {/* Terms and Waivers Checkboxes */}
-                <div className="bg-[var(--surface-2)] border border-[var(--line-2)] p-5 rounded space-y-3.5">
-                  <label className="flex items-start gap-3 cursor-pointer text-xs text-[var(--text-strong)]">
-                    <input
-                      type="checkbox"
-                      checked={formData.acceptedTerms}
-                      onChange={(e) => setFormData({ ...formData, acceptedTerms: e.target.checked })}
-                      className="mt-0.5 w-4 h-4 rounded text-[var(--text-strong)]"
-                    />
-                    <span>
-                      I agree to the <strong>Vyomi Fitness Club Rules & Code of Conduct</strong>, acknowledging access privileges, locker regulations, and standard cancellation policies.
-                    </span>
-                  </label>
-
-                  <label className="flex items-start gap-3 cursor-pointer text-xs text-[var(--text-strong)]">
-                    <input
-                      type="checkbox"
-                      checked={formData.acceptedWaiver}
-                      onChange={(e) => setFormData({ ...formData, acceptedWaiver: e.target.checked })}
-                      className="mt-0.5 w-4 h-4 rounded text-[var(--text-strong)]"
-                    />
-                    <span>
-                      I voluntarily assume all physical risks associated with strenuous athletic training, sauna/cold hydrotherapy protocols, and release Vyomi and its staff from injury liability (<strong>Health Waiver</strong>).
-                    </span>
-                  </label>
-
-                  <label className="flex items-start gap-3 cursor-pointer text-xs text-[var(--text-strong)]">
-                    <input
-                      type="checkbox"
-                      checked={formData.acceptedPrivacy}
-                      onChange={(e) => setFormData({ ...formData, acceptedPrivacy: e.target.checked })}
-                      className="mt-0.5 w-4 h-4 rounded text-[var(--text-strong)]"
-                    />
-                    <span>
-                      I consent to the collection and confidential processing of my personal details and emergency contacts in accordance with the <strong>Digital Personal Data Protection (DPDP) Act</strong>.
-                    </span>
-                  </label>
-                </div>
-
-                {/* Razorpay Gateway Test Scenarios & Sandbox Simulation Panel */}
-                <div className="bg-[#111114] border border-[#D4AF37]/30 rounded-lg p-5 sm:p-6 space-y-4 shadow-lg">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-                      <span className="t-label text-[#D4AF37] font-bold tracking-wider uppercase text-[0.6875rem]">
-                        Razorpay Gateway Test Cases & Sandbox
-                      </span>
-                    </div>
-                    <span className="nums text-[0.625rem] font-mono text-white/50 px-2 py-0.5 rounded bg-white/5 border border-white/10">
-                      SANDBOX KEY: rzp_test_vyomi2026
-                    </span>
-                  </div>
-
-                  {/* Test credentials cheatsheet */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-[#161619] p-3 rounded border border-white/5">
-                    <div>
-                      <span className="text-[#10B981] font-semibold block text-[0.625rem] uppercase">
-                        ✓ Success Test Credentials
-                      </span>
-                      <span className="font-mono text-[#F5F5F2] font-semibold">4111 1111 1111 1111</span>
-                      <span className="text-[0.625rem] text-white/50 block">Exp: 12/30 · CVV: 123 · OTP: Any 6 digits</span>
-                    </div>
-                    <div>
-                      <span className="text-[#8C2230] font-semibold block text-[0.625rem] uppercase">
-                        ✕ Decline / Failed Test Card
-                      </span>
-                      <span className="font-mono text-[#8C2230] font-semibold">4000 0000 0000 0002</span>
-                      <span className="text-[0.625rem] text-white/50 block">UPI: success@razorpay / failure@razorpay</span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-[#A1A1AA]">
-                    Click any simulated scenario below to test end-to-end gateway callbacks, membership activation, or failure error screens:
-                  </p>
-
-                  {/* 1-Click Test Scenarios Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                    <button
-                      type="button"
-                      disabled={submitting}
-                      onClick={() => handleSimulatedPayment('SUCCESS')}
-                      className="flex flex-col items-start p-3 rounded border border-[#10B981]/40 bg-[#10B981]/10 hover:bg-[#10B981]/20 transition-all text-left cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#10B981]">
-                        <span>✓</span>
-                        <span>Case 1: Success</span>
-                      </div>
-                      <span className="text-[0.6875rem] text-white/70 mt-1">
-                        Simulate 200 OK payment, activate membership & print receipt
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={submitting}
-                      onClick={() => handleSimulatedPayment('FAILURE')}
-                      className="flex flex-col items-start p-3 rounded border border-[#8C2230]/40 bg-[#8C2230]/10 hover:bg-[#8C2230]/20 transition-all text-left cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#FF6B6B]">
-                        <span>✕</span>
-                        <span>Case 2: Decline</span>
-                      </div>
-                      <span className="text-[0.6875rem] text-white/70 mt-1">
-                        Simulate bank card decline & test payment retry flow (/failed)
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={submitting}
-                      onClick={() => handleSimulatedPayment('PENDING')}
-                      className="flex flex-col items-start p-3 rounded border border-[#D4AF37]/40 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 transition-all text-left cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#D4AF37]">
-                        <span>⏳</span>
-                        <span>Case 3: Pending</span>
-                      </div>
-                      <span className="text-[0.6875rem] text-white/70 mt-1">
-                        Simulate gateway delay & test live status polling (/pending)
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Final Action Buttons */}
-                <div className="flex items-center justify-between pt-6 border-t border-[var(--line)]">
-                  <button
-                    type="button"
-                    onClick={() => setStep(3)}
-                    disabled={submitting}
-                    className="btn-line-light"
-                  >
-                    ← Back to Health Details
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={submitting || !formData.acceptedTerms || !formData.acceptedWaiver || !formData.acceptedPrivacy}
-                    onClick={handlePayAndRegister}
-                    className="btn-solid-light !h-12 !px-8 text-sm"
-                  >
-                    {submitting ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-[var(--live)] animate-ping" />
-                        Generating Secure Order...
-                      </span>
-                    ) : (
-                      `Proceed to Payment · ${formatINR(pricing.total)} →`
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
+            <div className="flex justify-end pt-4">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs sm:text-sm font-bold py-2.5 px-6 rounded-lg transition flex items-center gap-2 shadow-md"
+              >
+                <span>Continue to Member Intake</span>
+                <span>→</span>
+              </button>
+            </div>
           </div>
+        )}
 
-          {/* Right Column: Sticky Order Summary Card */}
-          <div className="lg:col-span-4 sticky top-28 space-y-5">
-            {/* Live Interactive VIP Digital Card Preview */}
-            <VipMembershipCard
-              clientName={formData.fullName}
-              packageName={selectedPackage?.name ?? 'Gold'}
-              durationDays={selectedPackage?.durationDays ?? 90}
-            />
+        {/* ================= STEP 2: MEMBER DETAILS & GMAIL OTP ================= */}
+        {currentStep === 2 && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+              <div>
+                <h2 className="text-lg font-black text-[#0F172A]">
+                  Personal & Membership Particulars
+                </h2>
+                <p className="text-xs font-bold text-[#334155]">
+                  Tier Selected: <strong className="text-[#0F172A]">{selectedPackage.name}</strong> ({formatINR(selectedPackage.pricePaise)})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="text-xs text-[#D97706] font-bold hover:underline"
+              >
+                Change Plan
+              </button>
+            </div>
 
-            <div className="bg-[#111113] border border-white/10 rounded-lg p-6 shadow-[var(--shadow-card)] space-y-5">
-              <div className="border-b border-white/10 pb-4">
-                <span className="t-label text-[#D4AF37] tracking-widest uppercase text-[0.6875rem] font-bold">
-                  Order Summary
+            {/* Live Interactive VIP Membership Card (No Muddy Glow, Shows End Date) */}
+            <div className="my-2 max-w-sm mx-auto">
+              <div className="text-center mb-1.5">
+                <span className="text-[10px] font-extrabold text-[#D97706] uppercase tracking-wider">
+                  Live VIP Membership Card Preview
                 </span>
-                <div className="flex items-baseline justify-between mt-1">
-                  <h3 className="t-h3 text-[#F5F5F2] font-semibold">
-                    {selectedPackage?.name ?? 'Gold'} Tier
-                  </h3>
-                  <span className="nums t-small text-[#D4AF37] font-medium">
-                    {selectedPackage?.durationDays ?? 90} Days Access
-                  </span>
-                </div>
               </div>
+              <VipMembershipCard
+                clientName={fullName || 'VALUED MEMBER'}
+                packageName={selectedPackage.name}
+                durationDays={selectedPackage.durationDays}
+                memberCode="VYO · 2026 · VIP"
+                endDate={projectedEndDate}
+              />
+            </div>
 
-              {/* Price rows */}
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-[#A1A1AA]">Base Membership Fee</span>
-                  <span className="nums font-medium text-[#F5F5F2]">
-                    {formatINR(pricing.basePrice)}
-                  </span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-[#A1A1AA]">One-Time Admission Fee</span>
-                  <span className="nums text-[#10B981] font-medium">
-                    {pricing.joiningFee === 0 ? 'Complimentary' : formatINR(pricing.joiningFee)}
-                  </span>
-                </div>
-
-                {pricing.discount > 0 && (
-                  <div className="flex justify-between text-[#10B981]">
-                    <span>Coupon Discount ({appliedCoupon?.code})</span>
-                    <span className="nums font-medium">−{formatINR(pricing.discount)}</span>
-                  </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Full Legal Name */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                  Full Legal Name <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Aditya Varma"
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    if (formErrors.fullName) {
+                      setFormErrors((prev) => ({ ...prev, fullName: '' }));
+                    }
+                  }}
+                  className={`w-full bg-white border-2 border-solid rounded-lg px-3.5 py-2.5 text-sm font-semibold text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#D97706] focus:ring-2 focus:ring-[#D97706]/20 transition ${
+                    formErrors.fullName ? 'border-red-500 bg-red-50/20' : 'border-[#94A3B8]'
+                  }`}
+                />
+                {formErrors.fullName && (
+                  <span className="text-[11px] text-red-600 mt-1 block font-bold">{formErrors.fullName}</span>
                 )}
-
-                <div className="flex justify-between text-white/40">
-                  <span>Goods & Services Tax (GST 18%)</span>
-                  <span className="nums font-medium text-[#A1A1AA]">
-                    {formatINR(pricing.gst)}
-                  </span>
-                </div>
-
-                <div className="h-px w-full bg-white/10 my-3" />
-
-                <div className="flex items-baseline justify-between pt-1">
-                  <span className="t-body font-semibold text-[#F5F5F2]">Total Payable</span>
-                  <span className="nums t-h3 font-bold text-[#D4AF37]">
-                    {formatINR(pricing.total)}
-                  </span>
-                </div>
               </div>
 
-              {/* Coupon Code input */}
-              <div className="pt-2">
-                <label className="block text-[0.6875rem] font-semibold text-white/50 mb-1.5 uppercase tracking-wider">
-                  Promotional Voucher Code
+              {/* Mobile Number (Contact) */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                  Mobile Number (Contact & Biometrics) <span className="text-red-600">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-xs text-[#334155] font-bold">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    maxLength={10}
+                    placeholder="9876543210"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value.replace(/\D/g, ''));
+                      if (formErrors.phone) {
+                        setFormErrors((prev) => ({ ...prev, phone: '' }));
+                      }
+                    }}
+                    className={`w-full pl-12 bg-white border-2 border-solid rounded-lg px-3.5 py-2.5 text-sm font-semibold text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#D97706] focus:ring-2 focus:ring-[#D97706]/20 transition ${
+                      formErrors.phone ? 'border-red-500 bg-red-50/20' : 'border-[#94A3B8]'
+                    }`}
+                  />
+                </div>
+                {formErrors.phone && (
+                  <span className="text-[11px] text-red-600 mt-1 block font-bold">{formErrors.phone}</span>
+                )}
+              </div>
+
+              {/* Email Address with Real-Time Gmail OTP Verification */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                  Gmail / Email Address (Real-Time OTP Verification) <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-2">
                   <input
-                    type="text"
-                    placeholder="e.g. NEWYEAR10"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    className="light-input !h-9 text-xs uppercase"
+                    type="email"
+                    disabled={emailVerified}
+                    placeholder="e.g. aditya@gmail.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (formErrors.email) {
+                        setFormErrors((prev) => ({ ...prev, email: '' }));
+                      }
+                    }}
+                    className={`flex-1 bg-white border-2 border-solid rounded-lg px-3.5 py-2.5 text-sm font-semibold text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#D97706] focus:ring-2 focus:ring-[#D97706]/20 transition ${
+                      emailVerified
+                        ? 'border-emerald-500 bg-emerald-50/60 text-emerald-950 font-bold'
+                        : formErrors.email
+                        ? 'border-red-500 bg-red-50/20'
+                        : 'border-[#94A3B8]'
+                    }`}
                   />
-                  <button
-                    type="button"
-                    disabled={isApplyingCoupon || !couponCode.trim()}
-                    onClick={handleApplyCoupon}
-                    className="btn-line-light !h-9 !px-3.5 text-xs"
-                  >
-                    {isApplyingCoupon ? '...' : 'Apply'}
-                  </button>
+                  {!emailVerified ? (
+                    <button
+                      type="button"
+                      disabled={otpSending || otpTimer > 0}
+                      onClick={handleSendEmailOtp}
+                      className="bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-bold px-4 py-2.5 rounded-lg disabled:opacity-50 transition whitespace-nowrap shadow-sm"
+                    >
+                      {otpSending ? 'Sending Code...' : otpTimer > 0 ? `Resend (${otpTimer}s)` : otpSent ? 'Resend Code' : 'Send Gmail OTP'}
+                    </button>
+                  ) : (
+                    <span className="bg-emerald-100 text-emerald-900 border border-emerald-400 text-xs font-bold px-3 py-2.5 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                      <span>✓</span> Gmail Verified
+                    </span>
+                  )}
                 </div>
-                {couponError && (
-                  <span className="text-[0.6875rem] text-[var(--burgundy)] mt-1 block">
-                    {couponError}
-                  </span>
+
+                {formErrors.email && (
+                  <span className="text-[11px] text-red-600 mt-1 block font-bold">{formErrors.email}</span>
                 )}
-                {appliedCoupon && (
-                  <span className="text-[0.6875rem] text-[#10B981] mt-1 block font-medium">
-                    ✓ Voucher {appliedCoupon.code} applied successfully!
-                  </span>
-                )}
-              </div>
 
-              {/* Security info & Payment SVGs */}
-              <div className="border-t border-white/10 pt-4 space-y-3">
-                <div className="flex items-center gap-2.5 text-[0.6875rem] text-white/50">
-                  <SecurityLockBadge className="w-4 h-4 text-[#10B981] shrink-0" />
-                  <span>
-                    Bank-grade 256-bit TLS encrypted session via Razorpay.
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[0.625rem] text-white/40">
-                  <div className="flex items-center gap-2">
-                    <UpiIconSvg className="h-4 w-auto" />
-                    <span>Cards & NetBanking</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[#8C2230] font-semibold">
-                    <PanattaEmblemSvg className="w-3.5 h-3.5" />
-                    <span>Panatta Studio</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Mobile Sticky Bottom Floating Bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 light-glass-bar z-30 p-4 flex items-center justify-between">
-        <div>
-          <span className="text-[0.6875rem] text-[var(--text-faint)] block uppercase">Total Payable</span>
-          <span className="nums text-base font-bold text-[var(--text-strong)]">{formatINR(pricing.total)}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {step < 4 ? (
-            <button
-              type="button"
-              onClick={() => {
-                if (step === 1) setStep(2);
-                else if (step === 2 && validateStep2()) setStep(3);
-                else if (step === 3 && validateStep3()) setStep(4);
-              }}
-              className="btn-solid-light !h-10 !px-4 !text-xs"
-            >
-              Next Step →
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={submitting || !formData.acceptedTerms || !formData.acceptedWaiver || !formData.acceptedPrivacy}
-              onClick={handlePayAndRegister}
-              className="btn-solid-light !h-10 !px-4 !text-xs"
-            >
-              {submitting ? 'Processing...' : 'Pay Now'}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* VYOMI LUXURY IN-APP PAYMENT MODAL */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl bg-[#0F0F12] border border-[#D4AF37]/40 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden text-[#F5F5F2]">
-            {/* Top Gold Accent Bar */}
-            <div className="h-1 w-full bg-gradient-to-r from-[#8C2230] via-[#D4AF37] to-[#8C2230]" />
-
-            {/* Modal Header */}
-            <div className="p-5 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] font-bold text-sm">
-                  V
-                </div>
-                <div>
-                  <span className="text-[0.625rem] text-[#D4AF37] uppercase tracking-widest font-bold block">
-                    Vyomi Luxury Payment Gateway
-                  </span>
-                  <h3 className="text-base font-semibold text-white">
-                    {selectedPackage?.name ?? 'Gold'} Tier · Admission Checkout
-                  </h3>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowPaymentModal(false)}
-                className="w-8 h-8 rounded-full border border-white/15 bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/60 hover:text-white transition-all text-sm"
-                aria-label="Close modal"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Amount Banner */}
-            <div className="px-6 py-4 bg-[#141418] border-b border-white/10 flex items-center justify-between">
-              <div>
-                <span className="text-[0.6875rem] text-[#A1A1AA] uppercase tracking-wider block">
-                  Amount Due (Incl. 18% GST)
-                </span>
-                <span className="text-2xl font-bold nums text-[#D4AF37]">
-                  {formatINR(pricing.total)}
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-[0.625rem] text-white/40 uppercase block">Reference ID</span>
-                <span className="text-xs font-mono font-semibold text-[#F5F5F2]">
-                  {createdRegistrationRef || 'VY-2026-PENDING'}
-                </span>
-                <span className="text-[0.625rem] text-emerald-400 flex items-center justify-end gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  256-Bit SSL Secured
-                </span>
-              </div>
-            </div>
-
-            {/* Payment Method Tabs */}
-            <div className="flex border-b border-white/10 bg-[#0C0C0E] text-xs">
-              <button
-                type="button"
-                onClick={() => setPaymentTab('upi')}
-                className={`flex-1 py-3 px-2 text-center font-semibold transition-all border-b-2 ${
-                  paymentTab === 'upi'
-                    ? 'border-[#D4AF37] text-[#D4AF37] bg-white/[0.03]'
-                    : 'border-transparent text-white/50 hover:text-white'
-                }`}
-              >
-                UPI / QR Code
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentTab('card')}
-                className={`flex-1 py-3 px-2 text-center font-semibold transition-all border-b-2 ${
-                  paymentTab === 'card'
-                    ? 'border-[#D4AF37] text-[#D4AF37] bg-white/[0.03]'
-                    : 'border-transparent text-white/50 hover:text-white'
-                }`}
-              >
-                Credit / Debit Card
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentTab('netbanking')}
-                className={`flex-1 py-3 px-2 text-center font-semibold transition-all border-b-2 ${
-                  paymentTab === 'netbanking'
-                    ? 'border-[#D4AF37] text-[#D4AF37] bg-white/[0.03]'
-                    : 'border-transparent text-white/50 hover:text-white'
-                }`}
-              >
-                NetBanking
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentTab('sandbox')}
-                className={`flex-1 py-3 px-2 text-center font-semibold transition-all border-b-2 ${
-                  paymentTab === 'sandbox'
-                    ? 'border-[#D4AF37] text-[#D4AF37] bg-white/[0.03]'
-                    : 'border-transparent text-white/50 hover:text-white'
-                }`}
-              >
-                Test Cases ⚡
-              </button>
-            </div>
-
-            {/* Tab Contents */}
-            <div className="p-6">
-              {/* TAB 1: UPI */}
-              {paymentTab === 'upi' && (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-lg bg-[#141417] border border-white/10">
-                    {/* High-res SVG QR Code */}
-                    <div className="p-3 bg-white rounded-lg shadow-md flex flex-col items-center justify-center shrink-0">
-                      <svg
-                        className="w-32 h-32"
-                        viewBox="0 0 100 100"
-                        fill="black"
-                      >
-                        <rect x="0" y="0" width="30" height="30" fill="black" />
-                        <rect x="5" y="5" width="20" height="20" fill="white" />
-                        <rect x="10" y="10" width="10" height="10" fill="black" />
-                        
-                        <rect x="70" y="0" width="30" height="30" fill="black" />
-                        <rect x="75" y="5" width="20" height="20" fill="white" />
-                        <rect x="80" y="10" width="10" height="10" fill="black" />
-                        
-                        <rect x="0" y="70" width="30" height="30" fill="black" />
-                        <rect x="5" y="75" width="20" height="20" fill="white" />
-                        <rect x="10" y="80" width="10" height="10" fill="black" />
-                        
-                        <rect x="40" y="10" width="10" height="20" fill="black" />
-                        <rect x="45" y="35" width="20" height="10" fill="black" />
-                        <rect x="35" y="50" width="30" height="15" fill="black" />
-                        <rect x="70" y="45" width="20" height="20" fill="black" />
-                        <rect x="40" y="75" width="15" height="15" fill="black" />
-                        <rect x="65" y="75" width="25" height="20" fill="black" />
-                      </svg>
-                      <span className="text-[0.625rem] text-black font-mono font-bold mt-1">
-                        SCAN & PAY
+                {/* OTP Input Box */}
+                {otpSent && !emailVerified && (
+                  <div className="mt-3 p-4 bg-[#FFFBEB] border-2 border-[#D97706]/40 rounded-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+                      <span className="text-xs font-extrabold text-[#92400E]">
+                        Enter 6-digit Code sent to your Gmail:
                       </span>
+                      {otpMessage && (
+                        <span className="text-[11px] text-[#B45309] font-bold">{otpMessage}</span>
+                      )}
                     </div>
-
-                    <div className="space-y-2 text-left">
-                      <div className="flex items-center gap-2">
-                        <UpiIconSvg className="w-5 h-5 text-[#D4AF37]" />
-                        <span className="text-xs font-semibold text-white">Instant UPI Autopay</span>
-                      </div>
-                      <p className="text-xs text-white/60">
-                        Scan the QR code with any UPI app on your phone, or enter your VPA / UPI ID below to receive a payment collect request.
-                      </p>
-                      <div className="flex items-center gap-2 pt-1 text-[0.6875rem] text-[#D4AF37]">
-                        <span>Google Pay</span> · <span>PhonePe</span> · <span>Paytm</span> · <span>BHIM</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-white/80 mb-1.5 uppercase tracking-wider">
-                      Or Enter UPI ID / Virtual Payment Address
-                    </label>
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="e.g. member@okhdfcbank"
-                        value={upiId}
-                        onChange={(e) => setUpiId(e.target.value)}
-                        className="light-input !bg-[#141418] !border-white/15 !text-white flex-1"
+                        maxLength={6}
+                        placeholder="123456"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                        className="w-36 tracking-widest text-center font-mono font-black bg-white border-2 border-solid border-[#94A3B8] rounded-lg px-3 py-2 text-base text-[#0F172A] focus:outline-none focus:border-[#D97706]"
                       />
                       <button
                         type="button"
-                        disabled={paymentProcessing}
-                        onClick={() => executePaymentVerification()}
-                        className="btn-solid-light !h-11 !px-5 text-xs font-bold shrink-0"
+                        disabled={otpVerifying || otpCode.length !== 6}
+                        onClick={handleVerifyEmailOtp}
+                        className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-bold px-4 py-2 rounded-lg disabled:opacity-50 transition shadow-sm"
                       >
-                        {paymentProcessing ? 'Verifying...' : `Pay ${formatINR(pricing.total)}`}
+                        {otpVerifying ? 'Verifying...' : 'Verify Gmail'}
                       </button>
                     </div>
+                    {otpError && (
+                      <span className="text-[11px] text-red-600 mt-1.5 block font-bold">{otpError}</span>
+                    )}
                   </div>
+                )}
+                {formErrors.otp && (
+                  <span className="text-[11px] text-red-600 mt-1 block font-bold">{formErrors.otp}</span>
+                )}
+              </div>
+
+              {/* Preferred Time Slot */}
+              <div>
+                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                  Preferred Time Slot <span className="text-red-600">*</span>
+                </label>
+                <select
+                  value={preferredSlot}
+                  onChange={(e) => setPreferredSlot(e.target.value)}
+                  className="w-full bg-white border-2 border-solid border-[#94A3B8] rounded-lg px-3 py-2.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:ring-2 focus:ring-[#D97706]/20 transition"
+                >
+                  {TIME_SLOTS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Start Date */}
+              <div>
+                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                  Membership Start Date <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-white border-2 border-solid border-[#94A3B8] rounded-lg px-3.5 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:ring-2 focus:ring-[#D97706]/20 transition"
+                />
+              </div>
+
+              {/* Gender Preference */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                  Gender Preference
+                </label>
+                <div className="flex gap-4 text-xs font-semibold text-[#1E293B]">
+                  {['Male', 'Female', 'Prefer not to say'].map((g) => (
+                    <label key={g} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="gender"
+                        checked={gender === g}
+                        onChange={() => setGender(g)}
+                        className="accent-[#D97706] w-4 h-4"
+                      />
+                      <span>{g}</span>
+                    </label>
+                  ))}
                 </div>
-              )}
+              </div>
 
-              {/* TAB 2: CREDIT / DEBIT CARD */}
-              {paymentTab === 'card' && (
-                <div className="space-y-4">
-                  {/* Luxury Card Preview */}
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#1C1C22] to-[#0A0A0C] border border-[#D4AF37]/30 shadow-lg text-[#F5F5F2] space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[0.6875rem] uppercase tracking-widest text-[#D4AF37] font-semibold">
-                        Vyomi VIP Titanium
-                      </span>
-                      <span className="text-xs font-mono font-bold text-white/60">VISA / MASTERCARD</span>
-                    </div>
-                    <div className="text-lg font-mono tracking-widest text-[#D4AF37]">
-                      {cardNumber || '•••• •••• •••• ••••'}
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <div>
-                        <span className="text-[0.625rem] text-white/40 uppercase block">Cardholder</span>
-                        <span className="font-semibold text-white">{cardHolder || formData.fullName || 'MEMBER NAME'}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[0.625rem] text-white/40 uppercase block">Expires</span>
-                        <span className="font-semibold font-mono text-white">{cardExpiry || '12/28'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 1-Click Test Card Helper */}
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCardNumber('4111 1111 1111 1111');
-                        setCardExpiry('12/28');
-                        setCardCvv('777');
-                        setCardHolder(formData.fullName || 'Aditya Varma');
-                      }}
-                      className="text-[0.6875rem] text-[#D4AF37] hover:underline cursor-pointer flex items-center gap-1 font-medium"
-                    >
-                      ⚡ Auto-fill Razorpay Test Card (4111 1111...)
-                    </button>
-                  </div>
-
-                  {/* Card Inputs */}
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="col-span-2">
-                      <label className="block text-xs font-medium text-white/80 mb-1 uppercase tracking-wider">
-                        Card Number
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="16-digit card number"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
-                        className="light-input !bg-[#141418] !border-white/15 !text-white font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-white/80 mb-1 uppercase tracking-wider">
-                        Expiry (MM/YY)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="MM/YY"
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
-                        className="light-input !bg-[#141418] !border-white/15 !text-white font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-white/80 mb-1 uppercase tracking-wider">
-                        CVV / CVC
-                      </label>
-                      <input
-                        type="password"
-                        maxLength={4}
-                        placeholder="3 or 4 digits"
-                        value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value)}
-                        className="light-input !bg-[#141418] !border-white/15 !text-white font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={paymentProcessing}
-                    onClick={() => executePaymentVerification()}
-                    className="w-full btn-solid-light !h-12 !text-xs font-bold tracking-wider mt-2"
-                  >
-                    {paymentProcessing ? 'Authorizing Transaction...' : `Authorize ${formatINR(pricing.total)} →`}
-                  </button>
-                </div>
-              )}
-
-              {/* TAB 3: NETBANKING */}
-              {paymentTab === 'netbanking' && (
-                <div className="space-y-4">
-                  <span className="text-xs text-white/70 block">
-                    Select your bank to proceed with direct net banking authorization:
+              {/* Terms Acceptance */}
+              <div className="sm:col-span-2 pt-2">
+                <label className="flex items-start gap-2.5 cursor-pointer text-xs font-medium text-[#1E293B]">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 accent-[#D97706] w-4 h-4 rounded"
+                  />
+                  <span>
+                    I agree to the Vyomi Fitness Club membership code of conduct, health waiver, and biometric entry rules.
                   </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {['HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Kotak Mahindra', 'Punjab National Bank'].map((bank) => (
-                      <button
-                        key={bank}
-                        type="button"
-                        onClick={() => setSelectedBank(bank)}
-                        className={`p-3 rounded border text-left text-xs transition-all ${
-                          selectedBank === bank
-                            ? 'border-[#D4AF37] bg-[#D4AF37]/15 text-[#D4AF37] font-semibold'
-                            : 'border-white/10 bg-[#141418] text-white/70 hover:border-white/20'
-                        }`}
-                      >
-                        {bank}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={paymentProcessing}
-                    onClick={() => executePaymentVerification()}
-                    className="w-full btn-solid-light !h-12 !text-xs font-bold tracking-wider mt-4"
-                  >
-                    {paymentProcessing ? 'Connecting Gateway...' : `Proceed to ${selectedBank} (${formatINR(pricing.total)}) →`}
-                  </button>
-                </div>
-              )}
-
-              {/* TAB 4: SANDBOX TEST CASES */}
-              {paymentTab === 'sandbox' && (
-                <div className="space-y-3">
-                  <p className="text-xs text-white/70">
-                    Direct integration diagnostics for Razorpay webhooks, status callbacks, and receipt generation:
-                  </p>
-
-                  <div className="space-y-2.5 pt-1">
-                    <button
-                      type="button"
-                      disabled={paymentProcessing}
-                      onClick={() => executePaymentVerification()}
-                      className="w-full p-3.5 rounded border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-left transition-all flex items-start gap-3"
-                    >
-                      <span className="text-emerald-400 font-bold text-base mt-0.5">✓</span>
-                      <div>
-                        <span className="text-xs font-semibold text-emerald-400 block">
-                          Test Case 1: Verified Success (200 OK)
-                        </span>
-                        <span className="text-[0.6875rem] text-white/60">
-                          Issues official Vyomi Membership ID, sends welcome confirmation, and redirects to VIP Welcome page.
-                        </span>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={paymentProcessing}
-                      onClick={() =>
-                        executePaymentVerification({
-                          simulateFailure: true,
-                          failureReason: 'Card declined by issuing bank (Simulated Razorpay Test Case)',
-                        })
-                      }
-                      className="w-full p-3.5 rounded border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-left transition-all flex items-start gap-3"
-                    >
-                      <span className="text-rose-400 font-bold text-base mt-0.5">✕</span>
-                      <div>
-                        <span className="text-xs font-semibold text-rose-400 block">
-                          Test Case 2: Issuer Card Decline (402)
-                        </span>
-                        <span className="text-[0.6875rem] text-white/60">
-                          Simulates bank decline / insufficient funds, logs audit record, and redirects to Payment Failed screen with retry options.
-                        </span>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={paymentProcessing}
-                      onClick={() =>
-                        executePaymentVerification({
-                          simulatePending: true,
-                        })
-                      }
-                      className="w-full p-3.5 rounded border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-left transition-all flex items-start gap-3"
-                    >
-                      <span className="text-amber-400 font-bold text-base mt-0.5">⏳</span>
-                      <div>
-                        <span className="text-xs font-semibold text-amber-400 block">
-                          Test Case 3: Gateway Delay / Pending (202)
-                        </span>
-                        <span className="text-[0.6875rem] text-white/60">
-                          Simulates bank webhook reconciliation delay, and redirects to Payment Pending polling screen.
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-
-                  <div className="pt-3 border-t border-white/10 flex items-center justify-between">
-                    <span className="text-[0.6875rem] text-white/40">Need live Razorpay popup?</span>
-                    <button
-                      type="button"
-                      onClick={launchNativeRazorpay}
-                      className="text-[0.6875rem] text-[#D4AF37] hover:underline"
-                    >
-                      Open Native Razorpay Popup →
-                    </button>
-                  </div>
-                </div>
-              )}
+                </label>
+                {formErrors.terms && (
+                  <span className="text-[11px] text-red-600 mt-1 block font-bold">{formErrors.terms}</span>
+                )}
+              </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 bg-[#0A0A0C] border-t border-white/10 flex items-center justify-between text-[0.6875rem] text-white/50">
-              <div className="flex items-center gap-1.5">
-                <SecurityLockBadge className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span>PCI-DSS Level 1 · 256-Bit TLS Encryption</span>
-              </div>
-              <span>Vyomi Fitness Club, Vijayawada</span>
+            <div className="flex items-center justify-between pt-4 border-t border-[#E2E8F0]">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="text-xs font-bold text-[#334155] hover:text-[#0F172A] py-2 px-3 transition"
+              >
+                ← Back to Plans
+              </button>
+              <button
+                type="button"
+                onClick={handleContinueToPayment}
+                className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs sm:text-sm font-bold py-2.5 px-6 rounded-lg transition flex items-center gap-2 shadow-md"
+              >
+                <span>Proceed to Payment</span>
+                <span>→</span>
+              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* ================= STEP 3: PAYMENT (STRICTLY 2 OPTIONS) ================= */}
+        {currentStep === 3 && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+              <div>
+                <h2 className="text-lg font-black text-[#0F172A]">
+                  Select Payment Option
+                </h2>
+                <p className="text-xs font-bold text-[#334155]">
+                  Payable for {selectedPackage.name}:{' '}
+                  <strong className="text-base font-black text-[#0F172A]">
+                    {formatINR(selectedPackage.pricePaise)}
+                  </strong>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="text-xs text-[#D97706] font-bold hover:underline"
+              >
+                Edit Info
+              </button>
+            </div>
+
+            {/* Strictly Two Payment Options */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setPaymentOption('UPI')}
+                className={`p-4 rounded-xl border-2 border-solid text-left transition ${
+                  paymentOption === 'UPI'
+                    ? 'border-[#D97706] bg-[#FFFBEB] ring-2 ring-[#D97706]/30 shadow-sm'
+                    : 'border-[#CBD5E1] bg-white hover:border-[#D97706]/60'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <UpiIconSvg className="w-7 h-4" />
+                    <span className="text-xs font-extrabold text-[#0F172A]">
+                      Online Payment (UPI QR)
+                    </span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold px-1.5 py-0.5 rounded">
+                    Instant
+                  </span>
+                </div>
+                <p className="text-xs font-medium text-[#334155]">
+                  Scan in PhonePe / GPay / Paytm. Amount locks automatically.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPaymentOption('CASH')}
+                className={`p-4 rounded-xl border-2 border-solid text-left transition ${
+                  paymentOption === 'CASH'
+                    ? 'border-[#D97706] bg-[#FFFBEB] ring-2 ring-[#D97706]/30 shadow-sm'
+                    : 'border-[#CBD5E1] bg-white hover:border-[#D97706]/60'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-extrabold text-[#0F172A]">
+                    Offline Cash (Front Desk)
+                  </span>
+                  <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
+                    Front Desk
+                  </span>
+                </div>
+                <p className="text-xs font-medium text-[#334155]">
+                  Reserve slot and pay cash at Sonovision Plaza club desk.
+                </p>
+              </button>
+            </div>
+
+            {/* OPTION 1 CONTENT: Dynamic QR Code */}
+            {paymentOption === 'UPI' && (
+              <div className="p-5 bg-[#F8FAFC] border-2 border-solid border-[#CBD5E1] rounded-2xl space-y-4">
+                <div className="text-center">
+                  <span className="text-xs font-extrabold text-[#D97706] uppercase tracking-wider block">
+                    Official Merchant Dynamic QR Code
+                  </span>
+                  <p className="text-xs font-bold text-[#334155] mt-0.5">
+                    Payee: <strong className="text-[#0F172A]">VALLABHANENI</strong> (9666636563@axisbank)
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
+                  {/* Dynamic QR Display */}
+                  <div className="p-4 bg-white border-2 border-solid border-[#CBD5E1] rounded-2xl shadow-sm text-center">
+                    {qrDataUrl ? (
+                      <img
+                        src={qrDataUrl}
+                        alt="Vyomi UPI QR Code"
+                        className="w-48 h-48 sm:w-52 sm:h-52 mx-auto rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-48 h-48 flex items-center justify-center text-xs text-[#64748B] font-semibold">
+                        Generating Dynamic QR...
+                      </div>
+                    )}
+                    <span className="text-xs font-black text-[#0F172A] block mt-2.5 bg-[#FFFBEB] py-1 px-2 rounded border border-[#FDE68A]">
+                      Amount Locked: {formatINR(selectedPackage.pricePaise)}
+                    </span>
+                  </div>
+
+                  {/* Instructions */}
+                  <div className="space-y-3 max-w-xs text-xs text-[#1E293B]">
+                    <div className="p-3.5 bg-white border-2 border-solid border-[#CBD5E1] rounded-xl space-y-1.5">
+                      <p className="font-extrabold text-[#0F172A]">How to pay:</p>
+                      <p>1. Open PhonePe, Google Pay, or Paytm.</p>
+                      <p>2. Scan this QR code.</p>
+                      <p className="text-[#D97706] font-bold">
+                        3. The amount of {formatINR(selectedPackage.pricePaise)} locks automatically in your UPI app.
+                      </p>
+                      <p>4. Complete payment and enter the 12-digit UTR reference below.</p>
+                    </div>
+
+                    {upiIntentUri && (
+                      <a
+                        href={upiIntentUri}
+                        className="sm:hidden block w-full py-2.5 bg-[#0F172A] text-white text-center rounded-lg font-bold text-xs shadow-md"
+                      >
+                        Tap to Pay directly via UPI App
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {/* UTR Input */}
+                <div className="pt-2 border-t border-[#E2E8F0]">
+                  <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                    Enter 12-digit UPI / UTR Transaction ID <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 432109876543 (from PhonePe / GPay receipt)"
+                    value={utrNumber}
+                    onChange={(e) => setUtrNumber(e.target.value.trim())}
+                    className="w-full bg-white border-2 border-solid border-[#94A3B8] rounded-lg px-3.5 py-2.5 text-xs font-bold text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#D97706]"
+                  />
+                  <span className="text-xs font-medium text-[#334155] mt-1 block">
+                    Your enrollment will be verified against this transaction reference.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* OPTION 2 CONTENT: Offline Cash */}
+            {paymentOption === 'CASH' && (
+              <div className="p-5 bg-white border-2 border-solid border-[#CBD5E1] rounded-2xl space-y-3 text-xs text-[#1E293B]">
+                <h4 className="font-extrabold text-sm text-[#0F172A]">
+                  Pay Cash at Club Front Desk
+                </h4>
+                <p className="font-medium text-[#334155]">
+                  You can register now to reserve your membership slot and preferred training hours.
+                </p>
+                <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 space-y-1">
+                  <p className="font-extrabold">Desk Payment Note:</p>
+                  <p className="font-medium">
+                    Amount of <strong className="font-extrabold">{formatINR(selectedPackage.pricePaise)}</strong> will be collected in cash at the Vyomi Fitness Club front desk (Sonovision Plaza, Patamata) prior to collecting your biometric wristband.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-4 border-t border-[#E2E8F0]">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="text-xs font-bold text-[#334155] hover:text-[#0F172A] py-2 px-3 transition"
+              >
+                ← Back to Intake
+              </button>
+              <button
+                type="button"
+                disabled={submittingPayment}
+                onClick={handleCompleteRegistration}
+                className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs sm:text-sm font-bold py-2.5 px-6 rounded-lg transition flex items-center gap-2 disabled:opacity-50 shadow-md"
+              >
+                {submittingPayment ? (
+                  <span>Processing Enrollment...</span>
+                ) : (
+                  <>
+                    <span>
+                      {paymentOption === 'UPI' ? 'Verify & Confirm Enrollment' : 'Confirm Cash Enrollment'}
+                    </span>
+                    <span>✓</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ================= STEP 4: CONFIRMATION & PDF RECEIPT ================= */}
+        {currentStep === 4 && confirmationData && (
+          <div className="space-y-6 text-center py-4">
+            <div className="w-14 h-14 bg-emerald-100 border border-emerald-300 rounded-full flex items-center justify-center mx-auto text-emerald-800 text-2xl font-black">
+              ✓
+            </div>
+
+            <div>
+              <span className="text-xs font-extrabold text-[#D97706] uppercase tracking-wider block">
+                {confirmationData.paymentMethod === 'UPI' ? 'Enrollment Confirmed & Activated' : 'Reserved · Pending Front Desk Cash'}
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-[#0F172A] mt-1">
+                Welcome to Vyomi Fitness Club
+              </h2>
+              <p className="text-xs font-bold text-[#334155] mt-1">
+                Your luxury club membership records have been committed to Supabase.
+              </p>
+            </div>
+
+            {/* Official VIP Card Display (Crisp, No Glow, Unique ID & End Date) */}
+            <div className="my-4 max-w-sm mx-auto">
+              <VipMembershipCard
+                clientName={confirmationData.fullName}
+                packageName={confirmationData.packageName}
+                durationDays={confirmationData.durationDays}
+                memberCode={confirmationData.memberCode}
+                endDate={confirmationData.endDate}
+              />
+            </div>
+
+            {/* Member Identification Card */}
+            <div className="max-w-md mx-auto p-5 bg-white border-2 border-solid border-[#CBD5E1] rounded-2xl text-left space-y-3 shadow-sm">
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2">
+                <span className="text-[11px] font-extrabold text-[#334155] uppercase">
+                  Official Member Code
+                </span>
+                <span className="font-mono text-base font-black text-[#0F172A]">
+                  {confirmationData.memberCode}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-[#475569] font-medium block">Member Name:</span>
+                  <span className="font-bold text-[#0F172A]">{confirmationData.fullName}</span>
+                </div>
+                <div>
+                  <span className="text-[#475569] font-medium block">Phone:</span>
+                  <span className="font-bold text-[#0F172A]">+91 {confirmationData.phone}</span>
+                </div>
+                <div>
+                  <span className="text-[#475569] font-medium block">Tier:</span>
+                  <span className="font-bold text-[#0F172A]">{confirmationData.packageName}</span>
+                </div>
+                <div>
+                  <span className="text-[#475569] font-medium block">Total Amount:</span>
+                  <span className="font-black text-[#0F172A]">{formatINR(confirmationData.totalAmount * 100)}</span>
+                </div>
+                <div>
+                  <span className="text-[#475569] font-medium block">Plan Validity:</span>
+                  <span className="font-bold text-[#D97706]">365 Days (1 Year)</span>
+                </div>
+                <div>
+                  <span className="text-[#475569] font-medium block">Time Slot:</span>
+                  <span className="font-bold text-[#0F172A]">{confirmationData.preferredSlot}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* PDF Receipt & Email Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                className="w-full sm:w-auto bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-bold py-2.5 px-6 rounded-lg transition flex items-center justify-center gap-2 shadow-md"
+              >
+                <span>📥 Download PDF Payment Receipt</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={emailSending}
+                onClick={handleSendEmailReceipt}
+                className="w-full sm:w-auto bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-bold py-2.5 px-5 rounded-lg transition flex items-center justify-center gap-2 shadow-sm"
+              >
+                <span>✉️ {emailSending ? 'Sending to Gmail...' : 'Email Receipt to Gmail'}</span>
+              </button>
+            </div>
+
+            {emailStatus && (
+              <p className="text-xs text-[#D97706] font-bold">{emailStatus}</p>
+            )}
+
+            <div className="pt-6 border-t border-[#E2E8F0] flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmationData(null);
+                  setCurrentStep(1);
+                  setFullName('');
+                  setPhone('');
+                  setEmail('');
+                  setEmailVerified(false);
+                  setOtpSent(false);
+                  setOtpCode('');
+                  setUtrNumber('');
+                  setPaymentOption('UPI');
+                  router.push('/register');
+                }}
+                className="w-full sm:w-auto px-8 py-3 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm flex items-center justify-center gap-2"
+              >
+                <span>← Back to Home</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1940,12 +1201,12 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#080808] flex items-center justify-center text-xs text-neutral-400">
-          Loading membership portal...
+        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-xs font-bold text-[#334155]">
+          Loading Vyomi Membership Intake...
         </div>
       }
     >
-      <RegisterFormContent />
+      <RegisterContent />
     </Suspense>
   );
 }

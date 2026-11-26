@@ -28,6 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [clock, setClock] = useState<string>('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   const isLoginPage = pathname === '/admin/login';
@@ -59,6 +60,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .finally(() => setLoading(false));
   }, [pathname, isLoginPage, router]);
 
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const handleLogout = async () => {
     await fetch('/api/v1/admin/auth/logout', { method: 'POST' });
     startTransition(() => {
@@ -72,10 +78,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading) {
     return (
-      <div data-theme="light" className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-xs text-[var(--text-faint)]">
-          <span className="w-2.5 h-2.5 rounded-full bg-[var(--live)] animate-ping" />
+      <div data-theme="light" className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-xs text-[#64748B] font-bold">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] animate-ping" />
           <span>Authenticating Vyomi Admin Portal...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!admin) {
+    return (
+      <div data-theme="light" className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-xs text-[#64748B] font-bold">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] animate-ping" />
+          <span>Access Restricted. Redirecting to Staff Login...</span>
         </div>
       </div>
     );
@@ -92,25 +109,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div data-theme="light" className="min-h-screen bg-[var(--bg)] text-[var(--text)] font-sans flex antialiased">
-      {/* Left Sidebar */}
-      <aside className="w-60 bg-[var(--surface)] border-r border-[var(--line)] flex flex-col justify-between shrink-0 fixed inset-y-0 left-0 z-30">
+    <div data-theme="light" className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans flex flex-col antialiased">
+      {/* Mobile Backdrop Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar: Desktop fixed, Mobile slide-in drawer */}
+      <aside
+        className={`w-64 bg-white border-r border-[#E2E8F0] flex flex-col justify-between shrink-0 fixed inset-y-0 left-0 z-50 transition-transform duration-200 ease-in-out md:translate-x-0 ${
+          mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
         <div>
           {/* Logo & Brand */}
-          <div className="h-16 px-5 border-b border-[var(--line)] flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5">
+          <div className="h-16 px-5 border-b border-[#E2E8F0] flex items-center justify-between bg-white">
+            <Link href="/admin" className="flex items-center gap-2.5">
               <Image
                 src={SUPPLIED.logo.src}
                 alt="Vyomi"
                 width={56}
                 height={28}
                 unoptimized
-                className="h-7 w-auto"
+                className="h-7 w-auto brightness-90"
               />
-              <span className="text-[0.6875rem] font-bold tracking-widest text-[var(--text-strong)] uppercase border-l border-[var(--line-2)] pl-2.5">
+              <span className="text-[0.6875rem] font-extrabold tracking-widest text-[#0F172A] uppercase border-l border-[#CBD5E1] pl-2.5">
                 Staff Ops
               </span>
             </Link>
+
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="md:hidden w-7 h-7 rounded-full bg-[#F1F5F9] flex items-center justify-center text-xs text-[#334155]"
+            >
+              ✕
+            </button>
           </div>
 
           {/* Navigation Links */}
@@ -121,18 +159,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-[2px] text-xs font-medium transition-all ${
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs transition-all ${
                     active
-                      ? 'bg-[var(--surface-2)] text-[var(--text-strong)] shadow-sm'
-                      : 'text-[var(--text)] hover:text-[var(--text-strong)] hover:bg-[var(--surface-2)]/60'
+                      ? 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A] shadow-sm font-extrabold'
+                      : 'text-[#334155] font-semibold hover:text-[#0F172A] hover:bg-[#F8FAFC]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span>{item.icon}</span>
+                    <span className="text-sm">{item.icon}</span>
                     <span>{item.label}</span>
                   </div>
                   {active && (
-                    <span className="w-1.5 h-4 rounded-full bg-gradient-to-b from-[var(--bronze)] to-[var(--live)]" />
+                    <span className="w-1.5 h-3.5 rounded-full bg-[#D97706]" />
                   )}
                 </Link>
               );
@@ -141,31 +179,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* User Card & Logout */}
-        <div className="p-3 border-t border-[var(--line)] bg-[var(--surface)]">
-          <div className="p-2.5 rounded bg-[var(--surface-2)] mb-2 flex items-center justify-between text-xs">
+        <div className="p-3 border-t border-[#E2E8F0] bg-white">
+          <div className="p-2.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] mb-2 flex items-center justify-between text-xs">
             <div className="truncate pr-2">
-              <span className="font-semibold text-[var(--text-strong)] block truncate">
+              <span className="font-extrabold text-[#0F172A] block truncate">
                 {admin?.name || 'Administrator'}
               </span>
-              <span className="text-[0.625rem] uppercase tracking-wider text-[var(--bronze-text)] font-semibold">
+              <span className="text-[0.625rem] uppercase tracking-wider text-[#D97706] font-extrabold">
                 {admin?.role || 'SUPER_ADMIN'}
               </span>
             </div>
-            <span className="w-2 h-2 rounded-full bg-[var(--live)] shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
           </div>
 
           <div className="flex items-center gap-2">
             <Link
               href="/register"
               target="_blank"
-              className="btn-line-light !h-8 !px-2.5 !text-[0.6875rem] w-1/2 text-center"
+              className="w-1/2 py-1.5 text-center text-[11px] font-bold bg-[#F1F5F9] border border-[#CBD5E1] hover:bg-[#E2E8F0] text-[#0F172A] rounded-lg transition"
             >
               Public Form ↗
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="btn-line-light !h-8 !px-2.5 !text-[0.6875rem] w-1/2 text-[var(--burgundy)] hover:!border-[var(--burgundy)]"
+              className="w-1/2 py-1.5 text-center text-[11px] font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition"
             >
               Sign Out
             </button>
@@ -174,38 +212,94 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 pl-60 flex flex-col min-h-screen">
+      <div className="flex-1 pl-0 md:pl-64 flex flex-col min-h-screen pb-16 md:pb-0">
         {/* Top Header Bar */}
-        <header className="h-16 border-b border-[var(--line)] bg-[var(--surface)] sticky top-0 z-20 px-6 flex items-center justify-between">
+        <header className="h-16 border-b border-[#E2E8F0] bg-white sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-3">
-            <span className="text-xs uppercase tracking-wider font-semibold text-[var(--text-strong)]">
+            {/* Hamburger Button on Mobile */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-2 rounded-lg bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] text-base hover:bg-white transition"
+              aria-label="Open Navigation Menu"
+            >
+              ☰
+            </button>
+
+            <span className="text-xs uppercase tracking-wider font-extrabold text-[#0F172A]">
               {navLinks.find((l) => l.href === pathname)?.label || 'Administration'}
             </span>
-            <span className="text-[var(--line-2)]">/</span>
-            <span className="text-xs text-[var(--text-faint)]">Vyomi Luxury Fitness Club</span>
+            <span className="hidden sm:inline text-[#94A3B8]">/</span>
+            <span className="hidden sm:inline text-xs font-semibold text-[#334155]">
+              Vyomi Fitness Club · Patamata
+            </span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-2 text-[var(--text-faint)]">
+          <div className="flex items-center gap-3 text-xs">
+            <div className="hidden sm:flex items-center gap-2 text-[#334155] font-semibold">
               <span>Vijayawada</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--live)]" />
-              <span className="nums font-medium text-[var(--text-strong)]">{clock} IST</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="nums font-bold text-[#0F172A]">{clock} IST</span>
             </div>
 
             <Link
               href="/admin/registrations/new"
-              className="btn-solid-light !h-8 !px-3 !text-xs !tracking-wider"
+              className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-bold py-1.5 px-3 rounded-lg transition flex items-center gap-1.5 shadow-sm"
             >
-              + Walk-in Reg
+              <span>+</span>
+              <span className="hidden xs:inline">Walk-in Reg</span>
+              <span className="xs:hidden">Reg</span>
             </Link>
           </div>
         </header>
 
         {/* Page Content View */}
-        <main className="p-6 sm:p-8 flex-1 max-w-7xl w-full mx-auto">
+        <main className="p-4 sm:p-6 md:p-8 flex-1 max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar (< md screens) */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#E2E8F0] h-14 z-30 flex items-center justify-around px-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+        <Link
+          href="/admin"
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-bold transition ${
+            pathname === '/admin' ? 'text-[#D97706]' : 'text-[#475569] hover:text-[#0F172A]'
+          }`}
+        >
+          <span className="text-base">📊</span>
+          <span>Overview</span>
+        </Link>
+        <Link
+          href="/admin/registrations"
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-bold transition ${
+            pathname.startsWith('/admin/registrations') && pathname !== '/admin/registrations/new'
+              ? 'text-[#D97706]'
+              : 'text-[#475569] hover:text-[#0F172A]'
+          }`}
+        >
+          <span className="text-base">📋</span>
+          <span>Registry</span>
+        </Link>
+        <Link
+          href="/admin/registrations/new"
+          className="flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-bold text-[#0F172A]"
+        >
+          <div className="w-8 h-8 rounded-full bg-[#D97706] text-white flex items-center justify-center -mt-3 shadow-md">
+            +
+          </div>
+          <span>Walk-in</span>
+        </Link>
+        <Link
+          href="/admin/payments"
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-bold transition ${
+            pathname === '/admin/payments' ? 'text-[#D97706]' : 'text-[#475569] hover:text-[#0F172A]'
+          }`}
+        >
+          <span className="text-base">💳</span>
+          <span>Payments</span>
+        </Link>
+      </nav>
     </div>
   );
 }

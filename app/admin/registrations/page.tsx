@@ -37,6 +37,14 @@ function formatINR(paise: number): string {
   }).format(paise / 100);
 }
 
+function formatPaymentMethod(method?: string): string {
+  const m = (method || '').toUpperCase();
+  if (m === 'CASH' || m === 'OFFLINE' || m === 'POS') {
+    return 'Offline Cash (Front Desk)';
+  }
+  return 'Online Payment (UPI QR)';
+}
+
 export default function AdminRegistrationsPage() {
   const [items, setItems] = useState<RegistrationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,15 +82,15 @@ export default function AdminRegistrationsPage() {
   }, [fetchRegistrations]);
 
   const handleMarkPaid = async (ref: string) => {
-    if (!confirm(`Mark offline cash/terminal payment for ${ref} and activate membership?`)) return;
+    if (!confirm(`Mark offline cash collected for ${ref}? This will activate the membership and email the Digital VIP Card to member's Gmail.`)) return;
     try {
       const res = await fetch(`/api/v1/admin/registrations/${ref}/mark-paid`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'POS' }),
+        body: JSON.stringify({ method: 'CASH' }),
       });
       if (res.ok) {
-        alert('Payment verified and membership activated.');
+        alert('Payment confirmed, membership activated, and Digital VIP Card sent to member Gmail!');
         fetchRegistrations();
       }
     } catch {
@@ -113,37 +121,38 @@ export default function AdminRegistrationsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Title & Top Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
+      {/* Page Title & Top Actions - Refined Font Size */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="t-label text-[var(--bronze-text)] uppercase tracking-wider font-semibold">
+          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
             Member Registry
           </span>
-          <h1 className="t-h2 text-[var(--text-strong)] font-semibold mt-1">
+          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
             Client Registrations & Access ({totalCount})
           </h1>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <a
             href={`/api/v1/admin/registrations/export?${statusFilter !== 'ALL' ? `status=${statusFilter}&` : ''}${search ? `q=${encodeURIComponent(search)}` : ''}`}
             download
-            className="btn-line-light !h-9 !px-3.5 !text-xs"
+            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition text-center shadow-sm"
           >
-            📥 Export Filtered CSV
+            📥 Export CSV
           </a>
           <Link
-            href="/admin/registrations/new"
-            className="btn-solid-light !h-9 !px-4 !text-xs"
+            href="/register"
+            target="_blank"
+            className="px-3.5 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition text-center shadow-sm"
           >
-            + New Walk-in Registration
+            + New Membership Intake
           </Link>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-[var(--surface)] border border-[var(--line)] p-4 rounded-[2px] shadow-[var(--shadow-card)] flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3 flex-1">
+      <div className="bg-white border-2 border-[#CBD5E1] p-3 sm:p-4 rounded-xl shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-1">
           <input
             type="text"
             placeholder="Search by name, phone, email, Member Code, reference..."
@@ -152,7 +161,7 @@ export default function AdminRegistrationsPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="light-input !h-9 text-xs flex-1 min-w-[240px]"
+            className="bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706] flex-1 min-w-0"
           />
 
           <select
@@ -161,10 +170,11 @@ export default function AdminRegistrationsPage() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="light-input !h-9 text-xs !w-auto"
+            className="bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706] w-full sm:w-auto"
           >
             <option value="ALL">All Statuses</option>
             <option value="CONFIRMED">CONFIRMED (Active)</option>
+            <option value="PENDING_CASH_COLLECTION">PENDING CASH COLLECTION</option>
             <option value="PENDING">PENDING (Awaiting Pay)</option>
             <option value="FAILED">FAILED</option>
             <option value="CANCELLED">CANCELLED (Refunded)</option>
@@ -175,116 +185,113 @@ export default function AdminRegistrationsPage() {
         <button
           type="button"
           onClick={() => fetchRegistrations()}
-          className="btn-line-light !h-9 !px-3 text-xs"
+          className="px-3 py-2 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition w-full sm:w-auto justify-center shadow-sm"
         >
           🔄 Refresh
         </button>
       </div>
 
       {/* Registrations Table */}
-      <div className="bg-[var(--surface)] border border-[var(--line)] rounded-[2px] shadow-[var(--shadow-card)] overflow-hidden">
+      <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
+        {/* Mobile Swipe Hint */}
+        <div className="sm:hidden px-3 py-1.5 bg-[#F8FAFC] border-b border-[#E2E8F0] text-xs font-bold text-[#334155] flex items-center justify-between">
+          <span>Swipe sideways to view all columns</span>
+          <span>↔️</span>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[var(--surface-2)] border-b border-[var(--line)] text-[var(--text-faint)] uppercase tracking-wider text-[0.6875rem]">
-                <th className="py-3 px-4 font-semibold">Reference</th>
-                <th className="py-3 px-4 font-semibold">Member Code</th>
-                <th className="py-3 px-4 font-semibold">Client Name</th>
-                <th className="py-3 px-4 font-semibold">Phone</th>
-                <th className="py-3 px-4 font-semibold">Tier</th>
-                <th className="py-3 px-4 font-semibold">Amount</th>
-                <th className="py-3 px-4 font-semibold">Payment</th>
-                <th className="py-3 px-4 font-semibold">Reg Status</th>
-                <th className="py-3 px-4 font-semibold">Term Validity</th>
-                <th className="py-3 px-4 font-semibold text-right">Actions</th>
+              <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
+                <th className="py-3 px-4 font-extrabold">Reference</th>
+                <th className="py-3 px-4 font-extrabold">Member Code</th>
+                <th className="py-3 px-4 font-extrabold">Client Name</th>
+                <th className="py-3 px-4 font-extrabold">Phone</th>
+                <th className="py-3 px-4 font-extrabold">Tier</th>
+                <th className="py-3 px-4 font-extrabold">Amount</th>
+                <th className="py-3 px-4 font-extrabold">Payment Mode</th>
+                <th className="py-3 px-4 font-extrabold">Reg Status</th>
+                <th className="py-3 px-4 font-extrabold">Term Validity</th>
+                <th className="py-3 px-4 font-extrabold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--line)]">
+            <tbody className="divide-y divide-[#E2E8F0]">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-[var(--text-faint)]">
+                  <td colSpan={10} className="py-12 text-center text-[#475569] font-medium">
                     Loading registrations...
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-[var(--text-faint)]">
+                  <td colSpan={10} className="py-12 text-center text-[#475569] font-medium">
                     No matching client records found.
                   </td>
                 </tr>
               ) : (
                 items.map((r) => (
-                  <tr key={r.id} className="hover:bg-[var(--surface-2)]/40 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-medium text-[var(--text-strong)]">
+                  <tr key={r.id} className="hover:bg-[#F8FAFC] transition">
+                    <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A]">
                       <Link href={`/admin/registrations/${r.reference}`} className="hover:underline">
                         {r.reference}
                       </Link>
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-[var(--bronze-text)]">
+                    <td className="py-3.5 px-4 font-mono font-black text-[#D97706]">
                       {r.client?.memberCode ? (
                         <span className="nums tracking-wider">{r.client.memberCode}</span>
                       ) : (
-                        <span className="text-[var(--text-faint)] italic">Pending Pay</span>
+                        <span className="text-[#64748B] italic font-sans font-normal">Pending Pay</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-[var(--text-strong)]">
+                    <td className="py-3.5 px-4 font-bold text-[#0F172A]">
                       {r.client?.fullName || 'N/A'}
                     </td>
-                    <td className="py-3.5 px-4 nums text-[var(--text)]">
+                    <td className="py-3.5 px-4 text-[#334155] font-semibold">
                       <a href={`tel:${r.client?.phone}`} className="hover:underline">
                         +91 {r.client?.phone}
                       </a>
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 font-bold text-[#0F172A]">
                       {r.package?.name} ({r.package?.durationDays}d)
                     </td>
-                    <td className="py-3.5 px-4 nums font-semibold text-[var(--text-strong)]">
+                    <td className="py-3.5 px-4 font-black text-[#0F172A]">
                       {formatINR(r.totalPaise)}
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="text-[0.6875rem] font-medium text-[var(--text-strong)] block">
-                        {r.payment?.method || 'N/A'}
-                      </span>
-                      <span className="text-[0.625rem] text-[var(--text-faint)]">
-                        {r.payment?.status || 'CREATED'}
+                      <span className="font-bold text-[#0F172A] block">
+                        {formatPaymentMethod(r.payment?.method)}
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
                       <span
-                        className={`px-2 py-0.5 rounded text-[0.625rem] font-bold uppercase tracking-wider border ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${
                           r.status === 'CONFIRMED'
-                            ? 'border-[var(--success)] text-[var(--success)] bg-[var(--surface)]'
+                            ? 'border-emerald-300 text-emerald-900 bg-emerald-100'
+                            : r.status === 'PENDING_CASH_COLLECTION'
+                            ? 'border-amber-300 text-amber-900 bg-amber-100'
                             : r.status === 'PENDING'
-                            ? 'border-[var(--bronze)] text-[var(--bronze-text)] bg-[var(--surface)]'
-                            : 'border-[var(--burgundy)] text-[var(--burgundy)] bg-[var(--surface)]'
+                            ? 'border-amber-300 text-amber-900 bg-amber-100'
+                            : 'border-red-300 text-red-900 bg-red-100'
                         }`}
                       >
-                        {r.status}
+                        {r.status === 'PENDING_CASH_COLLECTION' ? 'Cash Pending' : r.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-[0.6875rem] nums text-[var(--text-faint)]">
+                    <td className="py-3.5 px-4 text-xs font-semibold text-[#334155]">
                       {r.startDate} → {r.endDate || '—'}
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <Link
                           href={`/admin/registrations/${r.reference}`}
-                          className="px-2 py-1 border border-[var(--line-2)] rounded hover:border-[var(--text-strong)] font-medium text-[0.6875rem]"
+                          className="px-2.5 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-[11px] font-bold text-[#0F172A] shadow-sm"
                         >
                           View
                         </Link>
-                        <Link
-                          href={`/admin/registrations/${r.reference}/edit`}
-                          className="px-2 py-1 border border-[#D4AF37]/40 text-[#D4AF37] rounded hover:bg-[#D4AF37]/10 font-medium text-[0.6875rem]"
-                          title="Correct Member Details"
-                        >
-                          ✏️ Edit
-                        </Link>
-                        {r.status === 'PENDING' && (
+                        {(r.status === 'PENDING' || r.status === 'PENDING_CASH_COLLECTION') && (
                           <button
                             type="button"
                             onClick={() => handleMarkPaid(r.reference)}
-                            className="px-2 py-1 bg-[var(--success)] text-white rounded font-medium text-[0.6875rem] hover:opacity-90"
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow-sm"
                           >
                             Mark Paid
                           </button>
@@ -293,7 +300,7 @@ export default function AdminRegistrationsPage() {
                           <button
                             type="button"
                             onClick={() => handleRefund(r.id, r.reference)}
-                            className="px-2 py-1 text-[var(--burgundy)] border border-[var(--burgundy)]/40 rounded hover:bg-[var(--burgundy-wash)] font-medium text-[0.6875rem]"
+                            className="px-2.5 py-1 text-red-700 bg-red-50 border border-red-200 rounded text-[11px] font-bold"
                           >
                             Refund
                           </button>
@@ -308,8 +315,8 @@ export default function AdminRegistrationsPage() {
         </div>
 
         {/* Pagination Bar */}
-        <div className="p-4 border-t border-[var(--line)] bg-[var(--surface-2)] flex items-center justify-between text-xs">
-          <span className="text-[var(--text-faint)]">
+        <div className="p-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between text-xs">
+          <span className="text-[#334155] font-semibold">
             Page {page} of {totalPages} ({totalCount} total entries)
           </span>
 
@@ -318,7 +325,7 @@ export default function AdminRegistrationsPage() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="btn-line-light !h-7 !px-2.5 !text-xs disabled:opacity-40"
+              className="px-3 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A] disabled:opacity-40 shadow-sm"
             >
               Previous
             </button>
@@ -326,7 +333,7 @@ export default function AdminRegistrationsPage() {
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="btn-line-light !h-7 !px-2.5 !text-xs disabled:opacity-40"
+              className="px-3 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A] disabled:opacity-40 shadow-sm"
             >
               Next
             </button>

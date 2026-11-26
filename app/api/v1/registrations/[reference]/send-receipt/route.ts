@@ -1,0 +1,128 @@
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
+import { generatePdfReceipt } from '@/lib/pdfReceipt';
+import { sendMembershipReceiptEmail } from '@/lib/email';
+
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ reference: string }> }
+) {
+  try {
+    const { reference } = await params;
+
+    if (!reference) {
+      return NextResponse.json(
+        { error: { code: 'MISSING_REF', message: 'Registration reference is required.' } },
+        { status: 400 }
+      );
+    }
+
+    // 1. Fetch registration from Supabase
+    const { data: reg, error: regError } = await supabaseAdmin
+      .from('registrations')
+      .select('*, client:clients(*), package:packages(*), payment:payments(*)')
+      .eq('reference', reference)
+      .single();
+
+    if (regError || !reg) {
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Registration record not found.' } },
+        { status: 404 }
+      );
+    }
+
+    const client = Array.isArray(reg.client) ? reg.client[0] : reg.client;
+    const pkg = Array.isArray(reg.package) ? reg.package[0] : reg.package;
+    const payment = Array.isArray(reg.payment) ? reg.payment[0] : reg.payment;
+    const clientEmail = client?.email || 'member@vyomifitness.com';
+    const clientName = client?.full_name || 'Valued Member';
+    const memberCode = client?.member_code || 'VYO-2026-MEMBER';
+    const packageName = pkg?.name || reg.package_name || 'Vyomi Membership';
+    const receiptNum = `REC-2026-${reference.replace(/\D/g, '').slice(-5) || Math.floor(10000 + Math.random() * 90000)}`;
+
+    // 2. Generate PDF Base64 Attachment
+    let pdfBase64: string | undefined = undefined;
+    try {
+      const pdfDoc = generatePdfReceipt({
+        receiptNumber: receiptNum,
+        reference: reg.reference,
+        memberCode,
+        clientName,
+        phone: client?.phone || '',
+        email: clientEmail,
+        packageName,
+        durationDays: pkg?.duration_days || 365,
+        timeSlot: reg.preferred_slot || '06:00 – 09:00 AM (Morning Prime)',
+        fitnessGoal: client?.fitness_goal || (reg.notes?.startsWith('Goal:') ? reg.notes.replace('Goal:', '').trim() : 'General Fitness'),
+        startDate: reg.start_date || new Date().toISOString().split('T')[0],
+        endDate: reg.end_date || new Date(Date.now() + 365*86400000).toISOString().split('T')[0],
+        amountInr: Number(reg.amount_inr || 0),
+        paymentMethod: payment?.method === 'CASH' ? 'CASH' : 'UPI',
+        paymentStatus: reg.status === 'CONFIRMED' ? 'PAID' : 'PENDING_CASH_COLLECTION',
+        utrNumber: payment?.utr_number || undefined,
+        paymentDate: reg.created_at ? new Date(reg.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      });
+      pdfBase64 = Buffer.from(pdfDoc.output('arraybuffer')).toString('base64');
+    } catch (pdfErr) {
+      console.warn('PDF generation notice:', pdfErr);
+    }
+
+    // 3. Dispatch Email via Resend
+    const emailResult = await sendMembershipReceiptEmail({
+      toEmail: clientEmail,
+      clientName,
+      memberCode,
+      receiptNumber: receiptNum,
+      reference: reg.reference,
+      packageName,
+      amountInr: Number(reg.amount_inr || 0),
+      timeSlot: reg.preferred_slot || '06:00 – 09:00 AM',
+      fitnessGoal: client?.fitness_goal || undefined,
+      startDate: reg.start_date,
+      endDate: reg.end_date,
+      paymentMethod: payment?.method || 'UPI',
+      paymentStatus: reg.status === 'CONFIRMED' ? 'PAID' : 'PENDING_CASH_COLLECTION',
+      utrNumber: payment?.utr_number || undefined,
+      pdfBase64,
+    });
+
+    // 4. Record / Update receipts audit in Supabase
+    await supabaseAdmin
+      .from('receipts')
+      .upsert(
+        {
+          registration_reference: reference,
+          client_email: clientEmail,
+          receipt_number: receiptNum,
+          payload: {
+            memberCode,
+            clientName,
+            amountInr: reg.amount_inr,
+            status: reg.status,
+            preferredSlot: reg.preferred_slot,
+            emailedTo: clientEmail,
+            provider: emailResult.provider,
+            dispatched: emailResult.sent,
+          },
+          is_emailed: emailResult.sent,
+          emailed_at: emailResult.sent ? new Date().toISOString() : null,
+        },
+        { onConflict: 'receipt_number' }
+      );
+
+    return NextResponse.json({
+      success: true,
+      message: emailResult.sent
+        ? `Official PDF receipt & Digital VIP Card successfully dispatched to ${clientEmail}`
+        : `Receipt recorded for ${clientEmail}.`,
+      receiptNumber: receiptNum,
+      emailedTo: clientEmail,
+      dispatched: emailResult.sent,
+      provider: emailResult.provider,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Receipt dispatch failed';
+    return NextResponse.json({ error: { code: 'DISPATCH_ERROR', message } }, { status: 500 });
+  }
+}
