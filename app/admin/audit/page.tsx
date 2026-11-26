@@ -28,57 +28,57 @@ export default function AdminAuditPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="t-label text-[var(--bronze-text)] uppercase tracking-wider font-semibold">
+          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
             Compliance & Security
           </span>
-          <h1 className="t-h2 text-[var(--text-strong)] font-semibold mt-1">
+          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
             System Activity & Audit Trail ({logs.length})
           </h1>
         </div>
       </div>
 
-      <div className="bg-[var(--surface)] border border-[var(--line)] rounded-[2px] shadow-[var(--shadow-card)] overflow-hidden">
+      <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="bg-[var(--surface-2)] border-b border-[var(--line)] text-[var(--text-faint)] uppercase tracking-wider text-[0.6875rem]">
-              <th className="py-3 px-4 font-semibold">Timestamp</th>
-              <th className="py-3 px-4 font-semibold">Actor / Staff</th>
-              <th className="py-3 px-4 font-semibold">Action</th>
-              <th className="py-3 px-4 font-semibold">Entity Type</th>
-              <th className="py-3 px-4 font-semibold">Details</th>
+            <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
+              <th className="py-3 px-4 font-extrabold">Timestamp</th>
+              <th className="py-3 px-4 font-extrabold">Actor / Staff</th>
+              <th className="py-3 px-4 font-extrabold">Action</th>
+              <th className="py-3 px-4 font-extrabold">Entity Type</th>
+              <th className="py-3 px-4 font-extrabold">Details</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--line)]">
+          <tbody className="divide-y divide-[#E2E8F0]">
             {loading ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-[var(--text-faint)]">
+                <td colSpan={5} className="py-12 text-center text-[#64748B] font-medium">
                   Loading audit events...
                 </td>
               </tr>
             ) : logs.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-[var(--text-faint)]">
+                <td colSpan={5} className="py-12 text-center text-[#64748B] font-medium">
                   No activity logged yet.
                 </td>
               </tr>
             ) : (
               logs.map((l) => (
-                <tr key={l.id} className="hover:bg-[var(--surface-2)]/40 transition-colors">
-                  <td className="py-3 px-4 nums text-[var(--text-faint)] whitespace-nowrap">
+                <tr key={l.id} className="hover:bg-[#F8FAFC] transition">
+                  <td className="py-3 px-4 text-[#475569] whitespace-nowrap">
                     {new Date(l.createdAt).toLocaleString('en-GB')}
                   </td>
-                  <td className="py-3 px-4 font-semibold text-[var(--text-strong)]">
+                  <td className="py-3 px-4 font-bold text-[#0F172A]">
                     {l.adminName}
                   </td>
-                  <td className="py-3 px-4 font-mono font-medium text-[var(--bronze-text)]">
+                  <td className="py-3 px-4 font-mono font-bold text-[#D97706]">
                     {l.action}
                   </td>
-                  <td className="py-3 px-4 uppercase text-[0.625rem] font-semibold text-[var(--text-faint)]">
+                  <td className="py-3 px-4 uppercase text-[10px] font-bold text-[#475569]">
                     {l.entityType}
                   </td>
-                  <td className="py-3 px-4 font-mono text-[0.6875rem] text-[var(--text)]">
+                  <td className="py-3 px-4 font-mono text-[11px] text-[#1E293B]">
                     {l.details ? JSON.stringify(l.details) : '—'}
                   </td>
                 </tr>

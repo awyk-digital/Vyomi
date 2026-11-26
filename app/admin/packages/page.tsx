@@ -91,20 +91,20 @@ export default function AdminPackagesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="t-label text-[var(--bronze-text)] uppercase tracking-wider font-semibold">
+          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
             Product Configuration
           </span>
-          <h1 className="t-h2 text-[var(--text-strong)] font-semibold mt-1">
-            Membership Packages ({packages.length})
+          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
+            Official Membership Tiers ({packages.length})
           </h1>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {loading ? (
-          <div className="col-span-2 py-12 text-center text-xs text-[var(--text-faint)]">
+          <div className="col-span-3 py-12 text-center text-xs text-[#64748B] font-semibold">
             Loading packages...
           </div>
         ) : (
@@ -113,20 +113,20 @@ export default function AdminPackagesPage() {
             return (
               <div
                 key={pkg.id}
-                className="bg-[var(--surface)] border border-[var(--line)] p-6 rounded-[2px] shadow-[var(--shadow-card)] flex flex-col justify-between space-y-4"
+                className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm flex flex-col justify-between space-y-4"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="t-label text-[var(--text-faint)] uppercase text-[0.625rem]">
-                      Slug: {pkg.slug}
+                    <span className="text-[11px] font-mono font-bold text-[#64748B] uppercase">
+                      ID: {pkg.slug}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleToggleActive(pkg)}
-                      className={`px-2 py-0.5 rounded text-[0.625rem] font-bold uppercase tracking-wider border cursor-pointer ${
+                      className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border cursor-pointer ${
                         pkg.isActive
-                          ? 'border-[var(--success)] text-[var(--success)]'
-                          : 'border-[var(--text-faint)] text-[var(--text-faint)]'
+                          ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                          : 'border-slate-300 bg-slate-100 text-slate-700'
                       }`}
                     >
                       {pkg.isActive ? 'Active' : 'Disabled'}
@@ -136,86 +136,86 @@ export default function AdminPackagesPage() {
                   {isEditing ? (
                     <div className="space-y-3 mt-3">
                       <div>
-                        <label className="text-[0.6875rem] font-medium text-[var(--text-faint)] uppercase block">
+                        <label className="text-[11px] font-bold text-[#0F172A] uppercase block mb-1">
                           Tier Name
                         </label>
                         <input
                           type="text"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          className="light-input !h-8 text-xs font-semibold"
+                          className="w-full bg-white border-2 border-[#CBD5E1] rounded px-2.5 py-1.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[0.6875rem] font-medium text-[var(--text-faint)] uppercase block">
+                          <label className="text-[11px] font-bold text-[#0F172A] uppercase block mb-1">
                             Price (₹)
                           </label>
                           <input
                             type="number"
                             value={editPriceRupees}
                             onChange={(e) => setEditPriceRupees(Number(e.target.value))}
-                            className="light-input !h-8 text-xs font-semibold"
+                            className="w-full bg-white border-2 border-[#CBD5E1] rounded px-2.5 py-1.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
                           />
                         </div>
                         <div>
-                          <label className="text-[0.6875rem] font-medium text-[var(--text-faint)] uppercase block">
+                          <label className="text-[11px] font-bold text-[#0F172A] uppercase block mb-1">
                             Duration (Days)
                           </label>
                           <input
                             type="number"
                             value={editDays}
                             onChange={(e) => setEditDays(Number(e.target.value))}
-                            className="light-input !h-8 text-xs font-semibold"
+                            className="w-full bg-white border-2 border-[#CBD5E1] rounded px-2.5 py-1.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
                           />
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-2">
-                      <h3 className="t-h3 text-[var(--text-strong)] font-semibold">
-                        {pkg.name} Tier
+                    <div className="mt-3">
+                      <h3 className="text-base font-extrabold text-[#0F172A]">
+                        {pkg.name}
                       </h3>
                       <div className="mt-1 flex items-baseline gap-2">
-                        <span className="nums text-2xl font-bold text-[var(--text-strong)]">
+                        <span className="text-2xl font-black text-[#0F172A]">
                           {formatINR(pkg.pricePaise)}
                         </span>
-                        <span className="text-xs text-[var(--text-faint)]">
+                        <span className="text-xs font-semibold text-[#475569]">
                           / {pkg.durationDays} days
                         </span>
                       </div>
                     </div>
                   )}
 
-                  <div className="mt-4 pt-4 border-t border-[var(--line)]">
-                    <span className="text-[0.6875rem] font-semibold text-[var(--text-faint)] uppercase tracking-wider block mb-2">
-                      Included Privileges
+                  <div className="mt-4 pt-3 border-t border-[#E2E8F0]">
+                    <span className="text-[11px] font-bold text-[#334155] uppercase tracking-wider block mb-2">
+                      Official Privileges
                     </span>
-                    <ul className="space-y-1.5 text-xs text-[var(--text)]">
+                    <ul className="space-y-1.5 text-xs text-[#1E293B]">
                       {pkg.benefits.map((b, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="text-[var(--bronze)] font-bold">✓</span>
-                          <span>{b}</span>
+                        <li key={i} className="flex items-start gap-1.5">
+                          <span className="text-[#D97706] font-bold">✓</span>
+                          <span className="font-medium">{b}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-4 border-t border-[var(--line)]">
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
                   {isEditing ? (
                     <>
                       <button
                         type="button"
                         onClick={() => setEditingId(null)}
-                        className="btn-line-light !h-8 !px-3 text-xs"
+                        className="px-3 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A]"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={() => handleSave(pkg.id)}
-                        className="btn-solid-light !h-8 !px-4 text-xs"
+                        className="px-3 py-1 bg-[#D97706] hover:bg-[#B45309] text-white rounded text-xs font-bold"
                       >
                         Save Tier
                       </button>
@@ -224,7 +224,7 @@ export default function AdminPackagesPage() {
                     <button
                       type="button"
                       onClick={() => handleStartEdit(pkg)}
-                      className="btn-line-light !h-8 !px-3 text-xs"
+                      className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A] shadow-sm transition"
                     >
                       ✏️ Edit Pricing & Duration
                     </button>

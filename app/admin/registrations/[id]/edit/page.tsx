@@ -36,7 +36,6 @@ export default function EditRegistrationPage({
   const [submitting, setSubmitting] = useState(false);
   const [reference, setReference] = useState('');
   const [memberCode, setMemberCode] = useState<string | null>(null);
-  const [packageName, setPackageName] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -67,7 +66,6 @@ export default function EditRegistrationPage({
         if (data.registration) {
           const r = data.registration;
           setReference(r.reference);
-          setPackageName(r.package?.name || 'Standard');
           setMemberCode(r.client?.memberCode || null);
 
           setForm({
@@ -145,7 +143,7 @@ export default function EditRegistrationPage({
 
   if (loading) {
     return (
-      <div className="py-16 text-center text-xs text-white/50">
+      <div className="py-16 text-center text-xs font-semibold text-[#64748B]">
         Loading member record for correction...
       </div>
     );
@@ -154,41 +152,41 @@ export default function EditRegistrationPage({
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* Top Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
           <div className="flex items-center gap-2 text-xs">
             <Link
               href="/admin/registrations"
-              className="text-white/50 hover:text-white"
+              className="font-bold text-[#64748B] hover:text-[#0F172A]"
             >
               Registrations
             </Link>
-            <span className="text-white/20">/</span>
+            <span className="text-[#CBD5E1]">/</span>
             <Link
               href={`/admin/registrations/${id}`}
-              className="text-white/50 hover:text-white"
+              className="font-bold text-[#64748B] hover:text-[#0F172A]"
             >
               {reference}
             </Link>
-            <span className="text-white/20">/</span>
-            <span className="text-[#D4AF37] uppercase font-semibold">
+            <span className="text-[#CBD5E1]">/</span>
+            <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider">
               Correction & Update
             </span>
           </div>
-          <h1 className="t-h2 text-white font-semibold mt-1">
+          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-1 tracking-tight">
             Edit Member Dossier · {form.fullName || 'Client'}
           </h1>
         </div>
 
         <div className="flex items-center gap-3">
           {memberCode && (
-            <span className="nums text-xs font-mono font-bold text-[#D4AF37] px-2.5 py-1 rounded border border-[#D4AF37]/30 bg-[#D4AF37]/10">
+            <span className="text-xs font-mono font-extrabold text-[#D97706] px-2.5 py-1 rounded-md border border-[#FDE68A] bg-[#FEF3C7]">
               {memberCode}
             </span>
           )}
           <Link
             href={`/admin/registrations/${id}`}
-            className="btn-line-light !h-9 !px-3.5 !text-xs"
+            className="inline-flex items-center h-9 px-3.5 text-xs font-bold rounded-lg border border-[#CBD5E1] bg-[#FFFFFF] text-[#334155] hover:bg-[#F8FAFC] transition-colors"
           >
             ← Cancel & Back to Dossier
           </Link>
@@ -196,14 +194,14 @@ export default function EditRegistrationPage({
       </div>
 
       {successMessage && (
-        <div className="p-4 bg-[#10B981]/15 border border-[#10B981] text-[#10B981] rounded text-xs flex items-center justify-between">
+        <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-lg text-xs font-bold flex items-center justify-between">
           <span>✓ {successMessage}</span>
-          <span className="text-[0.6875rem] text-white/70">Redirecting to dossier...</span>
+          <span className="text-[11px] text-emerald-600">Redirecting to dossier...</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="p-4 bg-[var(--burgundy-wash)] border border-[var(--burgundy)] text-[var(--burgundy)] rounded text-xs">
+        <div className="p-3.5 bg-red-50 border border-red-300 text-red-800 rounded-lg text-xs font-bold">
           ⚠ {errorMessage}
         </div>
       )}
@@ -211,28 +209,28 @@ export default function EditRegistrationPage({
       {/* Editing Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section 1: Personal Identification */}
-        <div className="bg-[#111114] border border-white/10 rounded-lg p-6 space-y-5 shadow-lg">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#D4AF37] border-b border-white/10 pb-2.5">
+        <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 space-y-5 shadow-sm">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#D97706] border-b border-[#F1F5F9] pb-2.5">
             01. Personal Identity & Contact Information
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
-                Full Legal Name <span className="text-[#8C2230]">*</span>
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
+                Full Legal Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               />
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
-                Mobile Number (+91) <span className="text-[#8C2230]">*</span>
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
+                Mobile Number (+91) <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
@@ -240,43 +238,43 @@ export default function EditRegistrationPage({
                 maxLength={10}
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               />
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
-                Email Address <span className="text-[#8C2230]">*</span>
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
+                Email Address <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
                 required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               />
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
                 Date of Birth
               </label>
               <input
                 type="date"
                 value={form.dateOfBirth}
                 onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               />
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
                 Gender
               </label>
               <select
                 value={form.gender}
                 onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -286,14 +284,14 @@ export default function EditRegistrationPage({
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
                 ID Document Verification
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <select
                   value={form.idProofType}
                   onChange={(e) => setForm({ ...form, idProofType: e.target.value })}
-                  className="light-input !text-xs"
+                  className="h-10 px-2 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
                 >
                   <option value="Aadhaar">Aadhaar</option>
                   <option value="PAN">PAN</option>
@@ -305,48 +303,48 @@ export default function EditRegistrationPage({
                   placeholder="ID Number"
                   value={form.idProofNumber}
                   onChange={(e) => setForm({ ...form, idProofNumber: e.target.value })}
-                  className="light-input !text-xs"
+                  className="h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
                 />
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium text-xs">
+            <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
               Residential Address
             </label>
             <textarea
               rows={2}
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
-              className="light-input !h-auto py-2.5 resize-none text-xs"
+              className="w-full p-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF] resize-none"
             />
           </div>
         </div>
 
         {/* Section 2: Emergency & Health Protocol */}
-        <div className="bg-[#111114] border border-white/10 rounded-lg p-6 space-y-5 shadow-lg">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#D4AF37] border-b border-white/10 pb-2.5">
+        <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 space-y-5 shadow-sm">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#D97706] border-b border-[#F1F5F9] pb-2.5">
             02. Emergency Contact & Medical Notes
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
-                Emergency Contact Person <span className="text-[#8C2230]">*</span>
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
+                Emergency Contact Person <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={form.emergencyContactName}
                 onChange={(e) => setForm({ ...form, emergencyContactName: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               />
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
-                Emergency Contact Number <span className="text-[#8C2230]">*</span>
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
+                Emergency Contact Number <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
@@ -354,30 +352,30 @@ export default function EditRegistrationPage({
                 maxLength={10}
                 value={form.emergencyContactPhone}
                 onChange={(e) => setForm({ ...form, emergencyContactPhone: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               />
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
                 Primary Fitness Objective
               </label>
               <input
                 type="text"
                 value={form.fitnessGoal}
                 onChange={(e) => setForm({ ...form, fitnessGoal: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               />
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
                 Preferred Daily Time Slot
               </label>
               <select
                 value={form.preferredSlot}
                 onChange={(e) => setForm({ ...form, preferredSlot: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               >
                 <option value="morning">Morning (06:00 – 11:00)</option>
                 <option value="afternoon">Afternoon (11:00 – 16:00)</option>
@@ -387,33 +385,33 @@ export default function EditRegistrationPage({
           </div>
 
           <div>
-            <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium text-xs">
+            <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
               Medical History / Injuries / Restrictions
             </label>
             <textarea
               rows={2}
               value={form.medicalNotes}
               onChange={(e) => setForm({ ...form, medicalNotes: e.target.value })}
-              className="light-input !h-auto py-2.5 resize-none text-xs"
+              className="w-full p-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF] resize-none"
             />
           </div>
         </div>
 
         {/* Section 3: Membership Status & Concierge Operations */}
-        <div className="bg-[#111114] border border-white/10 rounded-lg p-6 space-y-5 shadow-lg">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#D4AF37] border-b border-white/10 pb-2.5">
+        <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 space-y-5 shadow-sm">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#D97706] border-b border-[#F1F5F9] pb-2.5">
             03. Operational Status & Concierge Audit Notes
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-xs">
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
                 Enrollment Status
               </label>
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               >
                 <option value="CONFIRMED">CONFIRMED (Active)</option>
                 <option value="PENDING">PENDING (Awaiting Payment)</option>
@@ -423,32 +421,32 @@ export default function EditRegistrationPage({
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
                 Start Date
               </label>
               <input
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               />
             </div>
 
             <div>
-              <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium">
+              <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
                 End Date (Expiration)
               </label>
               <input
                 type="date"
                 value={form.endDate}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                className="light-input"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-white/70 mb-1.5 uppercase tracking-wider font-medium text-xs">
+            <label className="block text-[#475569] mb-1.5 uppercase tracking-wider font-bold text-[11px]">
               Staff Internal Notes & Corrections Log
             </label>
             <textarea
@@ -456,16 +454,16 @@ export default function EditRegistrationPage({
               placeholder="e.g. Corrected member phone number per WhatsApp verification on 24 Nov..."
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              className="light-input !h-auto py-2.5 resize-none text-xs"
+              className="w-full p-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF] resize-none"
             />
           </div>
         </div>
 
         {/* Save Bar */}
-        <div className="flex items-center justify-between pt-4 border-t border-white/10">
+        <div className="flex items-center justify-between pt-4 border-t border-[#E2E8F0]">
           <Link
             href={`/admin/registrations/${id}`}
-            className="btn-line-light"
+            className="inline-flex items-center h-10 px-4 text-xs font-bold rounded-lg border border-[#CBD5E1] bg-[#FFFFFF] text-[#334155] hover:bg-[#F8FAFC] transition-colors"
           >
             Discard Changes
           </Link>
@@ -473,7 +471,7 @@ export default function EditRegistrationPage({
           <button
             type="submit"
             disabled={submitting}
-            className="btn-solid-light !h-12 !px-8 text-sm"
+            className="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-extrabold tracking-wide uppercase shadow-sm transition-colors disabled:opacity-50"
           >
             {submitting ? 'Saving Corrections...' : 'Save Member Corrections →'}
           </button>

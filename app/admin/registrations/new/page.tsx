@@ -26,7 +26,7 @@ export default function NewWalkinRegistrationPage() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'POS' | 'BANK_TRANSFER'>('POS');
+  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CASH'>('CASH');
   const [markPaid, setMarkPaid] = useState(true);
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
@@ -80,32 +80,32 @@ export default function NewWalkinRegistrationPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between border-b border-[var(--line)] pb-5">
+      <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <Link href="/admin/registrations" className="text-xs text-[var(--text-faint)] hover:text-[var(--text-strong)]">
+            <Link href="/admin/registrations" className="text-xs font-bold text-[#64748B] hover:text-[#0F172A]">
               ← Registrations
             </Link>
-            <span className="text-[var(--line-2)]">/</span>
-            <span className="t-label text-[var(--bronze-text)] uppercase font-semibold">Concierge Desk</span>
+            <span className="text-[#CBD5E1]">/</span>
+            <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider">Concierge Desk</span>
           </div>
-          <h1 className="t-h2 text-[var(--text-strong)] font-semibold mt-1">
+          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-1 tracking-tight">
             New Walk-in Registration
           </h1>
         </div>
       </div>
 
       {error && (
-        <div className="p-3 bg-[var(--burgundy-wash)] border border-[var(--burgundy)] text-[var(--burgundy)] rounded text-xs">
+        <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs font-bold">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-[var(--surface)] border border-[var(--line)] p-6 sm:p-8 rounded-[2px] shadow-[var(--shadow-card)] space-y-5">
+      <form onSubmit={handleSubmit} className="bg-white border-2 border-[#CBD5E1] p-6 sm:p-8 rounded-xl shadow-sm space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
-              Client Full Name *
+            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
+              Client Full Legal Name *
             </label>
             <input
               type="text"
@@ -113,12 +113,12 @@ export default function NewWalkinRegistrationPage() {
               placeholder="e.g. Ramesh Chandra"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="light-input"
+              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
               Mobile Number (+91) *
             </label>
             <input
@@ -126,32 +126,32 @@ export default function NewWalkinRegistrationPage() {
               required
               placeholder="10-digit mobile"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="light-input"
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
-              Email Address (Optional)
+            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
+              Email Address (Receipt & Digital Pass)
             </label>
             <input
               type="email"
-              placeholder="client@example.com"
+              placeholder="client@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="light-input"
+              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
               Selected Package Tier *
             </label>
             <select
               value={selectedPkgId}
               onChange={(e) => setSelectedPkgId(e.target.value)}
-              className="light-input"
+              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
             >
               {packages.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -162,82 +162,97 @@ export default function NewWalkinRegistrationPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
               Activation Start Date
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="light-input"
+              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
             />
           </div>
         </div>
 
         {/* Payment details */}
-        <div className="p-4 bg-[var(--surface-2)] border border-[var(--line-2)] rounded space-y-3">
-          <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[var(--text-strong)]">
+        <div className="p-4 bg-[#F8FAFC] border-2 border-[#CBD5E1] rounded-xl space-y-3">
+          <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#0F172A]">
             <input
               type="checkbox"
               checked={markPaid}
               onChange={(e) => setMarkPaid(e.target.checked)}
-              className="w-4 h-4 rounded text-[var(--text-strong)]"
+              className="w-4 h-4 rounded text-[#D97706]"
             />
             <span>Payment received now at front desk (Activate immediately)</span>
           </label>
 
           {markPaid && (
             <div>
-              <label className="block text-xs font-medium text-[var(--text-faint)] mb-1 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-[#475569] mb-1.5 uppercase tracking-wider">
                 Payment Channel
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['POS', 'CASH', 'BANK_TRANSFER'] as const).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setPaymentMethod(m)}
-                    className={`py-2 px-3 text-xs font-semibold rounded border transition-all ${
-                      paymentMethod === m
-                        ? 'bg-[var(--text-strong)] text-[var(--bg)] border-[var(--text-strong)]'
-                        : 'bg-[var(--surface)] border-[var(--line-2)] text-[var(--text)]'
-                    }`}
-                  >
-                    {m === 'POS' ? 'POS Terminal' : m === 'CASH' ? 'Cash' : 'Bank Transfer'}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('CASH')}
+                  className={`py-2 px-3 text-xs font-bold rounded-lg border transition ${
+                    paymentMethod === 'CASH'
+                      ? 'bg-[#0F172A] text-white border-[#0F172A]'
+                      : 'bg-white border-[#CBD5E1] text-[#0F172A]'
+                  }`}
+                >
+                  Offline Cash (Front Desk)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('UPI')}
+                  className={`py-2 px-3 text-xs font-bold rounded-lg border transition ${
+                    paymentMethod === 'UPI'
+                      ? 'bg-[#0F172A] text-white border-[#0F172A]'
+                      : 'bg-white border-[#CBD5E1] text-[#0F172A]'
+                  }`}
+                >
+                  Online Payment (UPI QR)
+                </button>
               </div>
             </div>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-[var(--text-strong)] mb-1 uppercase tracking-wider">
+          <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
             Concierge Notes / Locker Allocation
           </label>
           <textarea
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Assigned Locker #14, personal trainer consultation booked..."
-            className="light-input !h-auto py-2.5 resize-none text-xs"
+            placeholder="Assigned Locker #14, trainer consultation booked..."
+            className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-medium text-[#0F172A] focus:outline-none focus:border-[#D97706]"
           />
         </div>
 
         {selectedPkg && (
-          <div className="flex justify-between items-center text-xs p-3 border-t border-[var(--line)]">
-            <span className="text-[var(--text-faint)]">Total with 18% GST:</span>
-            <span className="nums font-bold text-sm text-[var(--text-strong)]">
-              {formatINR(Math.round(selectedPkg.pricePaise * 1.18))}
+          <div className="flex justify-between items-center text-xs p-3 border-t border-[#E2E8F0] font-bold">
+            <span className="text-[#475569]">All-Inclusive Annual Fee:</span>
+            <span className="text-base font-black text-[#0F172A]">
+              {formatINR(selectedPkg.pricePaise)}
             </span>
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-[var(--line)]">
-          <Link href="/admin/registrations" className="btn-line-light">
+        <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
+          <Link
+            href="/admin/registrations"
+            className="px-4 py-2 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition"
+          >
             Cancel
           </Link>
-          <button type="submit" disabled={loading} className="btn-solid-light">
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-5 py-2 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition shadow-sm"
+          >
             {loading ? 'Creating...' : 'Enroll Walk-in Member →'}
           </button>
         </div>
