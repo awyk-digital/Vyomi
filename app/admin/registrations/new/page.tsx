@@ -124,7 +124,7 @@ export default function NewWalkinRegistrationPage() {
             <input
               type="tel"
               required
-              placeholder="10-digit mobile"
+              placeholder="e.g. 9876543210"
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
               className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
@@ -137,7 +137,7 @@ export default function NewWalkinRegistrationPage() {
             </label>
             <input
               type="email"
-              placeholder="client@gmail.com"
+              placeholder="e.g. ramesh.chandra@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
@@ -201,7 +201,7 @@ export default function NewWalkinRegistrationPage() {
                       : 'bg-white border-[#CBD5E1] text-[#0F172A]'
                   }`}
                 >
-                  Offline Cash (Front Desk)
+                  Front Desk Settlement (Cash)
                 </button>
                 <button
                   type="button"
@@ -212,7 +212,7 @@ export default function NewWalkinRegistrationPage() {
                       : 'bg-white border-[#CBD5E1] text-[#0F172A]'
                   }`}
                 >
-                  Online Payment (UPI QR)
+                  Instant UPI Settlement (QR)
                 </button>
               </div>
             </div>

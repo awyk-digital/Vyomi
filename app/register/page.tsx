@@ -659,7 +659,7 @@ function RegisterContent() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Aditya Varma"
+                  placeholder="e.g. Rajesh Kumar"
                   value={fullName}
                   onChange={(e) => {
                     setFullName(e.target.value);
@@ -715,7 +715,7 @@ function RegisterContent() {
                   <input
                     type="email"
                     disabled={emailVerified}
-                    placeholder="e.g. aditya@gmail.com"
+                    placeholder="e.g. rajesh.kumar@gmail.com"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
@@ -921,7 +921,7 @@ function RegisterContent() {
                   <div className="flex items-center gap-1.5">
                     <UpiIconSvg className="w-7 h-4" />
                     <span className="text-xs font-extrabold text-[#0F172A]">
-                      Online Payment (UPI QR)
+                      Instant UPI Settlement (Dynamic QR)
                     </span>
                   </div>
                   <span className="text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold px-1.5 py-0.5 rounded">
@@ -944,7 +944,7 @@ function RegisterContent() {
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-extrabold text-[#0F172A]">
-                    Offline Cash (Front Desk)
+                    Front Desk Settlement (Cash / Reception)
                   </span>
                   <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
                     Front Desk

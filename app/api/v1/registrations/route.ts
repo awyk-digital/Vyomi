@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
     if (!fullName || fullName.length < 3 || fullName.split(/\s+/).length < 2) {
       return NextResponse.json(
-        { error: { code: 'INVALID_NAME', message: 'Full legal name requires both first and last name (e.g. Aditya Varma).' } },
+        { error: { code: 'INVALID_NAME', message: 'Full legal name requires both first and last name (e.g. Rajesh Kumar).' } },
         { status: 400 }
       );
     }

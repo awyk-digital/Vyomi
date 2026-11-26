@@ -52,9 +52,9 @@ function formatINR(paise: number): string {
 function formatPaymentMethod(method?: string): string {
   const m = (method || '').toUpperCase();
   if (m === 'CASH' || m === 'OFFLINE' || m === 'POS') {
-    return 'Offline Cash (Front Desk)';
+    return 'Front Desk Settlement (Cash)';
   }
-  return 'Online Payment (UPI QR)';
+  return 'Instant UPI Settlement (QR)';
 }
 
 export default function RegistrationDetailPage({

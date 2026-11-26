@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const admin = db.findAdminByEmail(email);
     if (!admin || !admin.isActive) {
       return NextResponse.json(
-        { error: { code: 'AUTH_FAILED', message: 'Invalid email or password' } },
+        { error: { code: 'AUTH_FAILED', message: 'Invalid credentials. Access denied.' } },
         { status: 401 }
       );
     }
@@ -25,19 +25,32 @@ export async function POST(req: Request) {
     const valid = db.verifyAdminPassword(admin, password);
     if (!valid) {
       return NextResponse.json(
-        { error: { code: 'AUTH_FAILED', message: 'Invalid email or password' } },
+        { error: { code: 'AUTH_FAILED', message: 'Invalid credentials. Access denied.' } },
         { status: 401 }
       );
     }
+
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+    const loginTimeIST = new Date().toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'medium',
+      timeStyle: 'medium',
+    });
 
     db.updateAdminLogin(admin.id);
     db.logAudit({
       adminId: admin.id,
       adminName: admin.name,
-      action: 'ADMIN_LOGIN',
-      entityType: 'AUTH',
+      action: 'STAFF_AUTHENTICATION',
+      entityType: 'SECURITY_ACCESS',
       entityId: admin.id,
-      details: { email: admin.email, role: admin.role },
+      details: {
+        staffEmail: admin.email,
+        assignedRole: admin.role,
+        terminalIp: clientIp,
+        authenticatedAtIST: loginTimeIST,
+        sessionType: 'SECURE_WEB_PORTAL',
+      },
     });
 
     const token = createSessionToken({

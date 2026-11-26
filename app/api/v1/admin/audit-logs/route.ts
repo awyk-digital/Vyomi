@@ -4,8 +4,8 @@ import { db } from '@/lib/db';
 
 export async function GET() {
   const session = await getAdminSession();
-  if (!session || session.role !== 'SUPER_ADMIN') {
-    return NextResponse.json({ error: { code: 'FORBIDDEN', message: 'Super Admin access required' } }, { status: 403 });
+  if (!session) {
+    return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, { status: 401 });
   }
 
   const logs = db.getAuditLogs();

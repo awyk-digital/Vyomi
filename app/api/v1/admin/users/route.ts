@@ -4,8 +4,8 @@ import { db } from '@/lib/db';
 
 export async function GET() {
   const session = await getAdminSession();
-  if (!session || session.role !== 'SUPER_ADMIN') {
-    return NextResponse.json({ error: { code: 'FORBIDDEN', message: 'Super Admin access required' } }, { status: 403 });
+  if (!session) {
+    return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: 'Staff authentication required' } }, { status: 401 });
   }
 
   const admins = db.getAdmins().map((a) => ({
@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const session = await getAdminSession();
   if (!session || session.role !== 'SUPER_ADMIN') {
-    return NextResponse.json({ error: { code: 'FORBIDDEN', message: 'Super Admin access required' } }, { status: 403 });
+    return NextResponse.json({ error: { code: 'FORBIDDEN', message: 'Super Admin access required to provision staff' } }, { status: 403 });
   }
 
   try {
@@ -51,23 +51,23 @@ export async function POST(req: Request) {
     db.logAudit({
       adminId: session.id,
       adminName: session.name,
-      action: 'ADMIN_USER_CREATED',
-      entityType: 'ADMIN',
+      action: 'PROVISION_STAFF_ACCOUNT',
+      entityType: 'SECURITY_ACCESS',
       entityId: created.id,
       details: { email: created.email, role: created.role },
     });
 
     return NextResponse.json({
-      success: true,
       admin: {
         id: created.id,
         name: created.name,
         email: created.email,
         role: created.role,
+        isActive: created.isActive,
       },
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'User creation failed';
+    const message = err instanceof Error ? err.message : 'Provisioning failed';
     return NextResponse.json({ error: { code: 'SERVER_ERROR', message } }, { status: 500 });
   }
 }
