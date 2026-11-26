@@ -198,7 +198,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               target="_blank"
               className="w-1/2 py-1.5 text-center text-[11px] font-bold bg-[#F1F5F9] border border-[#CBD5E1] hover:bg-[#E2E8F0] text-[#0F172A] rounded-lg transition"
             >
-              Public Form ↗
+              Member Intake ↗
             </Link>
             <button
               type="button"

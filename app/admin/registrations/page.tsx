@@ -40,9 +40,46 @@ function formatINR(paise: number): string {
 function formatPaymentMethod(method?: string): string {
   const m = (method || '').toUpperCase();
   if (m === 'CASH' || m === 'OFFLINE' || m === 'POS') {
-    return 'Offline Cash (Front Desk)';
+    return 'Front Desk Settlement (Cash)';
   }
-  return 'Online Payment (UPI QR)';
+  return 'Instant UPI Settlement (QR)';
+}
+
+function formatStatus(status: string): { label: string; className: string } {
+  if (status === 'CONFIRMED') {
+    return {
+      label: 'Active Member (Confirmed)',
+      className: 'border-emerald-300 text-emerald-900 bg-emerald-100',
+    };
+  }
+  if (status === 'PENDING_CASH_COLLECTION') {
+    return {
+      label: 'Awaiting Front Desk Settlement',
+      className: 'border-amber-300 text-amber-900 bg-amber-100',
+    };
+  }
+  if (status === 'PENDING') {
+    return {
+      label: 'Settlement Processing',
+      className: 'border-amber-300 text-amber-900 bg-amber-100',
+    };
+  }
+  if (status === 'CANCELLED') {
+    return {
+      label: 'Membership Terminated',
+      className: 'border-red-300 text-red-900 bg-red-100',
+    };
+  }
+  if (status === 'EXPIRED') {
+    return {
+      label: 'Membership Expired',
+      className: 'border-[#CBD5E1] text-[#475569] bg-[#F1F5F9]',
+    };
+  }
+  return {
+    label: status,
+    className: 'border-[#CBD5E1] text-[#0F172A] bg-[#F8FAFC]',
+  };
 }
 
 export default function AdminRegistrationsPage() {
@@ -82,7 +119,7 @@ export default function AdminRegistrationsPage() {
   }, [fetchRegistrations]);
 
   const handleMarkPaid = async (ref: string) => {
-    if (!confirm(`Mark offline cash collected for ${ref}? This will activate the membership and email the Digital VIP Card to member's Gmail.`)) return;
+    if (!confirm(`Confirm front desk cash clearance for registration ${ref}? This will activate the membership and email the official Digital VIP Card to member's Gmail.`)) return;
     try {
       const res = await fetch(`/api/v1/admin/registrations/${ref}/mark-paid`, {
         method: 'POST',
@@ -90,16 +127,19 @@ export default function AdminRegistrationsPage() {
         body: JSON.stringify({ method: 'CASH' }),
       });
       if (res.ok) {
-        alert('Payment confirmed, membership activated, and Digital VIP Card sent to member Gmail!');
+        alert('Front desk payment settled, membership activated, and Digital VIP Card sent to member Gmail!');
         fetchRegistrations();
+      } else {
+        const d = await res.json();
+        alert(d.error?.message || 'Failed to settle front desk payment');
       }
     } catch {
-      alert('Failed to mark payment');
+      alert('Failed to settle payment');
     }
   };
 
   const handleRefund = async (id: string, ref: string) => {
-    const reason = prompt(`Enter refund justification reason for ${ref}:`);
+    const reason = prompt(`Enter authorized termination / refund justification for ${ref}:`);
     if (!reason) return;
     try {
       const res = await fetch(`/api/v1/admin/registrations/${id}/refund`, {
@@ -108,27 +148,27 @@ export default function AdminRegistrationsPage() {
         body: JSON.stringify({ reason }),
       });
       if (res.ok) {
-        alert('Refund recorded and registration cancelled.');
+        alert('Membership termination recorded.');
         fetchRegistrations();
       } else {
         const d = await res.json();
         alert(d.error?.message || 'Refund failed');
       }
     } catch {
-      alert('Failed to refund');
+      alert('Failed to process termination');
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Page Title & Top Actions - Refined Font Size */}
+      {/* Page Title & Top Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
         <div>
           <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
-            Member Registry
+            Member Operations & Registry
           </span>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
-            Client Registrations & Access ({totalCount})
+            Certified Member Intake Records ({totalCount})
           </h1>
         </div>
 
@@ -136,16 +176,16 @@ export default function AdminRegistrationsPage() {
           <a
             href={`/api/v1/admin/registrations/export?${statusFilter !== 'ALL' ? `status=${statusFilter}&` : ''}${search ? `q=${encodeURIComponent(search)}` : ''}`}
             download
-            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition text-center shadow-sm"
+            className="px-3.5 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition text-center shadow-sm"
           >
-            📥 Export CSV
+            📥 Export Registry CSV
           </a>
           <Link
             href="/register"
             target="_blank"
             className="px-3.5 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition text-center shadow-sm"
           >
-            + New Membership Intake
+            + New Member Enrollment
           </Link>
         </div>
       </div>
@@ -155,7 +195,7 @@ export default function AdminRegistrationsPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-1">
           <input
             type="text"
-            placeholder="Search by name, phone, email, Member Code, reference..."
+            placeholder="Search by member name, phone, email, Member Code, reference..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -173,21 +213,20 @@ export default function AdminRegistrationsPage() {
             className="bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706] w-full sm:w-auto"
           >
             <option value="ALL">All Statuses</option>
-            <option value="CONFIRMED">CONFIRMED (Active)</option>
-            <option value="PENDING_CASH_COLLECTION">PENDING CASH COLLECTION</option>
-            <option value="PENDING">PENDING (Awaiting Pay)</option>
-            <option value="FAILED">FAILED</option>
-            <option value="CANCELLED">CANCELLED (Refunded)</option>
-            <option value="EXPIRED">EXPIRED</option>
+            <option value="CONFIRMED">Active Members (Confirmed)</option>
+            <option value="PENDING_CASH_COLLECTION">Awaiting Front Desk Settlement</option>
+            <option value="PENDING">Settlement Processing</option>
+            <option value="CANCELLED">Terminated / Refunded</option>
+            <option value="EXPIRED">Expired</option>
           </select>
         </div>
 
         <button
           type="button"
           onClick={() => fetchRegistrations()}
-          className="px-3 py-2 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition w-full sm:w-auto justify-center shadow-sm"
+          className="px-3.5 py-2 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition w-full sm:w-auto justify-center shadow-sm"
         >
-          🔄 Refresh
+          🔄 Synchronize Registry
         </button>
       </div>
 
@@ -195,120 +234,115 @@ export default function AdminRegistrationsPage() {
       <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
         {/* Mobile Swipe Hint */}
         <div className="sm:hidden px-3 py-1.5 bg-[#F8FAFC] border-b border-[#E2E8F0] text-xs font-bold text-[#334155] flex items-center justify-between">
-          <span>Swipe sideways to view all columns</span>
+          <span>Swipe sideways to view full record</span>
           <span>↔️</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4 font-extrabold">Reference</th>
+                <th className="py-3 px-4 font-extrabold">Reference ID</th>
                 <th className="py-3 px-4 font-extrabold">Member Code</th>
-                <th className="py-3 px-4 font-extrabold">Client Name</th>
-                <th className="py-3 px-4 font-extrabold">Phone</th>
-                <th className="py-3 px-4 font-extrabold">Tier</th>
-                <th className="py-3 px-4 font-extrabold">Amount</th>
-                <th className="py-3 px-4 font-extrabold">Payment Mode</th>
-                <th className="py-3 px-4 font-extrabold">Reg Status</th>
+                <th className="py-3 px-4 font-extrabold">Member Name</th>
+                <th className="py-3 px-4 font-extrabold">Mobile Contact</th>
+                <th className="py-3 px-4 font-extrabold">Membership Tier</th>
+                <th className="py-3 px-4 font-extrabold">Settlement Amount</th>
+                <th className="py-3 px-4 font-extrabold">Settlement Channel</th>
+                <th className="py-3 px-4 font-extrabold">Operational Status</th>
                 <th className="py-3 px-4 font-extrabold">Term Validity</th>
-                <th className="py-3 px-4 font-extrabold text-right">Actions</th>
+                <th className="py-3 px-4 font-extrabold text-right">Concierge Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
               {loading ? (
                 <tr>
                   <td colSpan={10} className="py-12 text-center text-[#475569] font-medium">
-                    Loading registrations...
+                    Synchronizing live member registry from Supabase...
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-12 text-center text-[#475569] font-medium">
-                    No matching client records found.
+                    No matching member enrollment records found.
                   </td>
                 </tr>
               ) : (
-                items.map((r) => (
-                  <tr key={r.id} className="hover:bg-[#F8FAFC] transition">
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A]">
-                      <Link href={`/admin/registrations/${r.reference}`} className="hover:underline">
-                        {r.reference}
-                      </Link>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono font-black text-[#D97706]">
-                      {r.client?.memberCode ? (
-                        <span className="nums tracking-wider">{r.client.memberCode}</span>
-                      ) : (
-                        <span className="text-[#64748B] italic font-sans font-normal">Pending Pay</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 font-bold text-[#0F172A]">
-                      {r.client?.fullName || 'N/A'}
-                    </td>
-                    <td className="py-3.5 px-4 text-[#334155] font-semibold">
-                      <a href={`tel:${r.client?.phone}`} className="hover:underline">
-                        +91 {r.client?.phone}
-                      </a>
-                    </td>
-                    <td className="py-3.5 px-4 font-bold text-[#0F172A]">
-                      {r.package?.name} ({r.package?.durationDays}d)
-                    </td>
-                    <td className="py-3.5 px-4 font-black text-[#0F172A]">
-                      {formatINR(r.totalPaise)}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-bold text-[#0F172A] block">
-                        {formatPaymentMethod(r.payment?.method)}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${
-                          r.status === 'CONFIRMED'
-                            ? 'border-emerald-300 text-emerald-900 bg-emerald-100'
-                            : r.status === 'PENDING_CASH_COLLECTION'
-                            ? 'border-amber-300 text-amber-900 bg-amber-100'
-                            : r.status === 'PENDING'
-                            ? 'border-amber-300 text-amber-900 bg-amber-100'
-                            : 'border-red-300 text-red-900 bg-red-100'
-                        }`}
-                      >
-                        {r.status === 'PENDING_CASH_COLLECTION' ? 'Cash Pending' : r.status}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-xs font-semibold text-[#334155]">
-                      {r.startDate} → {r.endDate || '—'}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Link
-                          href={`/admin/registrations/${r.reference}`}
-                          className="px-2.5 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-[11px] font-bold text-[#0F172A] shadow-sm"
-                        >
-                          View
+                items.map((r) => {
+                  const statusInfo = formatStatus(r.status);
+                  return (
+                    <tr key={r.id} className="hover:bg-[#F8FAFC] transition">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A]">
+                        <Link href={`/admin/registrations/${r.reference}`} className="hover:underline">
+                          {r.reference}
                         </Link>
-                        {(r.status === 'PENDING' || r.status === 'PENDING_CASH_COLLECTION') && (
-                          <button
-                            type="button"
-                            onClick={() => handleMarkPaid(r.reference)}
-                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow-sm"
-                          >
-                            Mark Paid
-                          </button>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono font-black text-[#D97706]">
+                        {r.client?.memberCode ? (
+                          <span className="nums tracking-wider">{r.client.memberCode}</span>
+                        ) : (
+                          <span className="text-[#64748B] italic font-sans font-normal">Pending Settlement</span>
                         )}
-                        {r.status === 'CONFIRMED' && (
-                          <button
-                            type="button"
-                            onClick={() => handleRefund(r.id, r.reference)}
-                            className="px-2.5 py-1 text-red-700 bg-red-50 border border-red-200 rounded text-[11px] font-bold"
+                      </td>
+                      <td className="py-3.5 px-4 font-bold text-[#0F172A]">
+                        {r.client?.fullName || 'N/A'}
+                      </td>
+                      <td className="py-3.5 px-4 text-[#334155] font-semibold">
+                        <a href={`tel:${r.client?.phone}`} className="hover:underline">
+                          +91 {r.client?.phone}
+                        </a>
+                      </td>
+                      <td className="py-3.5 px-4 font-bold text-[#0F172A]">
+                        {r.package?.name} ({r.package?.durationDays}d)
+                      </td>
+                      <td className="py-3.5 px-4 font-black text-[#0F172A]">
+                        {formatINR(r.totalPaise)}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="font-bold text-[#0F172A] block">
+                          {formatPaymentMethod(r.payment?.method)}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${statusInfo.className}`}
+                        >
+                          {statusInfo.label}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-xs font-semibold text-[#334155]">
+                        {r.startDate} → {r.endDate || '—'}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/admin/registrations/${r.reference}`}
+                            className="px-2.5 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-[11px] font-bold text-[#0F172A] shadow-sm"
                           >
-                            Refund
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                            Dossier
+                          </Link>
+                          {(r.status === 'PENDING' || r.status === 'PENDING_CASH_COLLECTION') && (
+                            <button
+                              type="button"
+                              onClick={() => handleMarkPaid(r.reference)}
+                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow-sm whitespace-nowrap"
+                            >
+                              Clear Cash ✓
+                            </button>
+                          )}
+                          {r.status === 'CONFIRMED' && (
+                            <button
+                              type="button"
+                              onClick={() => handleRefund(r.id, r.reference)}
+                              className="px-2.5 py-1 text-red-700 bg-red-50 border border-red-200 rounded text-[11px] font-bold"
+                            >
+                              Terminate
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -317,7 +351,7 @@ export default function AdminRegistrationsPage() {
         {/* Pagination Bar */}
         <div className="p-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between text-xs">
           <span className="text-[#334155] font-semibold">
-            Page {page} of {totalPages} ({totalCount} total entries)
+            Registry Page {page} of {totalPages} ({totalCount} total entries)
           </span>
 
           <div className="flex items-center gap-2">
@@ -325,17 +359,17 @@ export default function AdminRegistrationsPage() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-3 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A] disabled:opacity-40 shadow-sm"
+              className="px-3 py-1 bg-white border border-[#CBD5E1] rounded text-xs font-bold text-[#0F172A] disabled:opacity-40"
             >
-              Previous
+              ← Previous
             </button>
             <button
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="px-3 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A] disabled:opacity-40 shadow-sm"
+              className="px-3 py-1 bg-white border border-[#CBD5E1] rounded text-xs font-bold text-[#0F172A] disabled:opacity-40"
             >
-              Next
+              Next →
             </button>
           </div>
         </div>

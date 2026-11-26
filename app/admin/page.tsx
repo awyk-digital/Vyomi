@@ -35,9 +35,9 @@ function formatINR(paise: number): string {
 function formatPaymentMethod(method?: string): string {
   const m = (method || '').toUpperCase();
   if (m === 'CASH' || m === 'OFFLINE' || m === 'POS') {
-    return 'Offline Cash (Front Desk)';
+    return 'Front Desk Settlement (Cash)';
   }
-  return 'Online Payment (UPI QR)';
+  return 'Instant UPI Settlement (QR)';
 }
 
 export default function AdminDashboardPage() {
@@ -59,7 +59,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   const handleMarkPaid = async (ref: string) => {
-    if (!confirm(`Confirm cash receipt for registration ${ref}? This will dispatch the Digital VIP Card to member's Gmail.`)) return;
+    if (!confirm(`Confirm front desk cash clearance for registration ${ref}? This will activate membership and dispatch the official Digital VIP Card to member's Gmail.`)) return;
     try {
       const res = await fetch(`/api/v1/admin/registrations/${ref}/mark-paid`, {
         method: 'POST',
@@ -67,7 +67,7 @@ export default function AdminDashboardPage() {
         body: JSON.stringify({ method: 'CASH' }),
       });
       if (res.ok) {
-        alert('Cash payment confirmed, membership activated, and Digital VIP Card sent to member Gmail!');
+        alert('Front desk payment settled, membership activated, and Digital VIP Card sent to member Gmail!');
         fetchStats();
       }
     } catch {
@@ -78,7 +78,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="py-12 flex items-center justify-center">
-        <span className="text-xs text-[#64748B] font-semibold">Loading club operations...</span>
+        <span className="text-xs text-[#64748B] font-semibold">Loading live operational telemetry from Supabase...</span>
       </div>
     );
   }
@@ -97,10 +97,10 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
         <div>
           <span className="text-[11px] font-extrabold tracking-widest text-[#D97706] uppercase block">
-            Club Operations
+            Executive Operations Telemetry
           </span>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
-            Performance Overview & Intake
+            Club Performance & Member Intake
           </h1>
         </div>
 
@@ -110,25 +110,25 @@ export default function AdminDashboardPage() {
             download
             className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition shadow-sm"
           >
-            📥 Export CSV
+            📥 Export Registry CSV
           </a>
           <Link
             href="/register"
             target="_blank"
             className="px-3.5 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition shadow-sm"
           >
-            + New Membership Intake
+            + New Member Enrollment
           </Link>
         </div>
       </div>
 
-      {/* 4 Essential KPI Cards (High Contrast & Clear) */}
+      {/* 4 Essential KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Verified Monthly Revenue */}
         <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
-              Monthly Revenue
+              Monthly Settled Revenue
             </span>
             <span className="text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold px-1.5 py-0.5 rounded">
               Verified
@@ -146,90 +146,111 @@ export default function AdminDashboardPage() {
         <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
-              Active Members
+              Active Memberships
             </span>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span className="text-[10px] bg-sky-100 text-sky-900 border border-sky-300 font-extrabold px-1.5 py-0.5 rounded">
+              Valid
+            </span>
           </div>
           <div className="text-2xl font-black text-[#0F172A]">
             {stats.activeMembers}
           </div>
-          <span className="text-xs font-semibold text-[#475569] block">
-            Patamata Club enrolled
+          <span className="text-xs font-medium text-[#475569] block">
+            Certified active access privileges
           </span>
         </div>
 
-        {/* Card 3: New Registrations MTD */}
+        {/* Card 3: New Enrollees */}
         <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
-              New Intake
+              New Enrollees
             </span>
-            <span className="text-[10px] text-[#D97706] font-extrabold">MTD</span>
+            <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
+              MTD
+            </span>
           </div>
           <div className="text-2xl font-black text-[#0F172A]">
             {stats.newMonth}
           </div>
           <span className="text-xs font-medium text-[#475569] block">
-            Today: <strong className="text-[#0F172A] font-bold">+{stats.newToday} members</strong>
+            Today: <strong className="text-[#0F172A] font-bold">+{stats.newToday}</strong> enrollees
           </span>
         </div>
 
-        {/* Card 4: Pending Cash Collections */}
+        {/* Card 4: Action Required */}
         <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
-              Pending Cash Desk
+              Front Desk Settlements
             </span>
             <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
-              Action Req.
+              Action
             </span>
           </div>
-          <div className="text-2xl font-black text-amber-700">
+          <div className="text-2xl font-black text-[#D97706]">
             {stats.pendingCount}
           </div>
           <span className="text-xs font-medium text-[#475569] block">
-            Awaiting front desk collection
+            Awaiting desk cash clearance
           </span>
         </div>
       </div>
 
-      {/* Recent Member Intake Registry Table */}
+      {/* Quick Action Bar for Staff */}
+      <div className="bg-white border-2 border-[#CBD5E1] p-3.5 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-bold text-[#0F172A]">Reception Terminal Active</span>
+          <span className="text-[#64748B]">· Sonovision Plaza, Patamata</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/registrations?status=PENDING_CASH_COLLECTION"
+            className="px-3 py-1.5 bg-[#FFFBEB] border border-[#FDE68A] text-[#D97706] font-bold rounded-lg hover:bg-[#FEF3C7] transition"
+          >
+            Review Pending Cash ({stats.pendingCount}) →
+          </Link>
+          <Link
+            href="/admin/payments"
+            className="px-3 py-1.5 bg-[#F8FAFC] border border-[#CBD5E1] text-[#334155] font-bold rounded-lg hover:bg-[#F1F5F9] transition"
+          >
+            Settlement Ledger →
+          </Link>
+        </div>
+      </div>
+
+      {/* Recent Registrations Table */}
       <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between bg-white">
+        <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-extrabold text-[#0F172A]">
-              Recent Client Registrations & Onboarding
+            <h2 className="text-xs font-extrabold text-[#0F172A] uppercase tracking-wider">
+              Recent Member Intakes
             </h2>
-            <span className="text-xs font-semibold text-[#334155]">
-              Live records synced with Supabase PostgreSQL
-            </span>
+            <p className="text-xs text-[#475569] font-medium mt-0.5">
+              Live registration records synced from Supabase
+            </p>
           </div>
           <Link
             href="/admin/registrations"
-            className="text-xs font-extrabold text-[#D97706] hover:underline"
+            className="text-xs font-bold text-[#D97706] hover:underline"
           >
-            View Full Registry ({stats.activeMembers + stats.pendingCount}) →
+            View Full Registry →
           </Link>
-        </div>
-
-        {/* Swipe hint on mobile */}
-        <div className="sm:hidden px-3 py-1.5 bg-[#F8FAFC] border-b border-[#E2E8F0] text-xs font-bold text-[#334155] flex items-center justify-between">
-          <span>Swipe sideways to view full record</span>
-          <span>↔️</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4 font-extrabold">Reference</th>
+                <th className="py-3 px-4 font-extrabold">Reference ID</th>
                 <th className="py-3 px-4 font-extrabold">Member Code</th>
-                <th className="py-3 px-4 font-extrabold">Client Name</th>
-                <th className="py-3 px-4 font-extrabold">Phone</th>
-                <th className="py-3 px-4 font-extrabold">Tier</th>
+                <th className="py-3 px-4 font-extrabold">Member Name</th>
+                <th className="py-3 px-4 font-extrabold">Contact</th>
+                <th className="py-3 px-4 font-extrabold">Membership Tier</th>
                 <th className="py-3 px-4 font-extrabold">Amount</th>
-                <th className="py-3 px-4 font-extrabold">Payment Mode</th>
-                <th className="py-3 px-4 font-extrabold">Status</th>
+                <th className="py-3 px-4 font-extrabold">Settlement Channel</th>
+                <th className="py-3 px-4 font-extrabold">Clearance Status</th>
                 <th className="py-3 px-4 font-extrabold text-right">Actions</th>
               </tr>
             </thead>
@@ -278,7 +299,7 @@ export default function AdminDashboardPage() {
                             : 'border-amber-300 bg-amber-100 text-amber-900'
                         }`}
                       >
-                        {r.status === 'CONFIRMED' ? 'PAID' : 'CASH PENDING'}
+                        {r.status === 'CONFIRMED' ? 'SETTLED & ACTIVE' : 'AWAITING CASH'}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">
@@ -287,15 +308,15 @@ export default function AdminDashboardPage() {
                           href={`/admin/registrations/${r.reference}`}
                           className="px-2.5 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-[11px] font-bold text-[#0F172A] shadow-sm"
                         >
-                          View
+                          Dossier
                         </Link>
                         {r.status !== 'CONFIRMED' && (
                           <button
                             type="button"
                             onClick={() => handleMarkPaid(r.reference)}
-                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow-sm"
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow-sm whitespace-nowrap"
                           >
-                            Mark Paid
+                            Clear Cash ✓
                           </button>
                         )}
                       </div>

@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
     if (!fullName || fullName.length < 3 || fullName.split(/\s+/).length < 2) {
       return NextResponse.json(
-        { error: { code: 'INVALID_NAME', message: 'Full legal name requires both first and last name (e.g. Aditya Varma).' } },
+        { error: { code: 'INVALID_NAME', message: 'Full legal name requires both first and last name (e.g. Rajesh Kumar).' } },
         { status: 400 }
       );
     }
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
           duration_days: supPkg.duration_days,
         };
       }
-    } catch {}
+    } catch { }
 
     if (!pkg) {
       // Fallback
@@ -298,7 +298,7 @@ export async function POST(req: Request) {
         preferredSlot: slot,
         acceptedIp: '127.0.0.1',
       });
-    } catch {}
+    } catch { }
 
     return NextResponse.json({
       success: true,
