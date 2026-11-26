@@ -5,6 +5,20 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  serverExternalPackages: ['jspdf', 'nodemailer'],
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      html2canvas: false,
+      canvg: false,
+    };
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      html2canvas: false,
+      canvg: false,
+    };
+    return config;
+  },
   images: {
     /**
      * All imagery is served from /public once the approved assets land, so no
