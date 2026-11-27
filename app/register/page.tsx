@@ -1032,7 +1032,7 @@ function RegisterContent() {
                   
                 </div>
                 <VipMembershipCard
-                  clientName={fullName || 'VALUED MEMBER'}
+                  clientName={fullName}
                   packageName={selectedPackage.name}
                   durationDays={selectedPackage.durationDays}
                   memberCode={`VYO · 2026 · ${selectedPackage.name.replace(/\s*membership\s*/i, '').trim().toUpperCase()}`}

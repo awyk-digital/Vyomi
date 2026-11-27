@@ -249,7 +249,7 @@ export function buildReceiptEmailHtml(params: SendReceiptEmailParams): string {
             </td></tr>
             <tr><td style="padding:26px 22px 4px;">
               <div style="font-size:9px;letter-spacing:3px;color:#C7D4F5;">MEMBER</div>
-              <div style="font-size:20px;letter-spacing:1px;color:#FFFFFF;font-weight:700;margin-top:4px;"><span style="color:#E8C25A;">${esc(String(params.clientName || '').trim().charAt(0).toUpperCase())}</span>${esc(String(params.clientName || '').trim().slice(1).toUpperCase())}</div>
+              <div style="font-size:20px;letter-spacing:1px;color:#FFFFFF;font-weight:700;margin-top:4px;">${esc(String(params.clientName || '').trim().toUpperCase())}</div>
             </td></tr>
             <tr><td style="padding:12px 22px 0;"><div style="height:1px;line-height:1px;font-size:0;background:#C9A03E;">&nbsp;</div></td></tr>
             <tr><td style="padding:12px 22px 20px;">

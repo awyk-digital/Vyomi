@@ -82,7 +82,7 @@ function SuccessContent() {
       {/* VIP Digital Membership Card Display */}
       <div className="my-8 max-w-md mx-auto">
         <VipMembershipCard
-          clientName={detail?.clientName || 'Club Member'}
+          clientName={detail?.clientName || ''}
           packageName={detail?.packageName || 'Gold'}
           durationDays={detail?.durationDays || 90}
           memberCode={detail?.memberCode || 'VYO · 2026 · VIP'}

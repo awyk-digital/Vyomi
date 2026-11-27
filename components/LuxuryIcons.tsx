@@ -106,6 +106,13 @@ interface VipCardProps {
   className?: string;
 }
 
+/** Card artwork per tier (logo, wordmark, tier pill and labels are in the image). */
+function cardArtFor(tierUpper: string): string {
+  if (tierUpper.includes('VVIP')) return '/img/cards/card-vvip.webp';
+  if (tierUpper.includes('VIP')) return '/img/cards/card-vip.webp';
+  return '/img/cards/card-founding.webp';
+}
+
 export function VipMembershipCard({
   clientName,
   packageName,
@@ -114,107 +121,48 @@ export function VipMembershipCard({
   endDate,
   className = '',
 }: VipCardProps) {
-  const name = clientName.trim() ? clientName.trim().toUpperCase() : 'VALUED MEMBER';
+  const typed = clientName.trim();
+  // Placeholder names from callers count as "no name yet"
+  const hasName = !!typed && !/^valued member$/i.test(typed);
   const tier = (packageName || 'VIP').toUpperCase().replace(/\s*MEMBERSHIP\s*/, '').trim() || 'VIP';
-  // "VYO-2026-709736" or "VYO · 2026 · VIP" -> parts, last part highlighted in gold
   const idParts = memberCode.split(/\s*[-·]\s*/).filter(Boolean);
   const idHead = idParts.slice(0, -1).join(' · ');
   const idTail = idParts[idParts.length - 1] || '';
 
   return (
     <div
-      className={`relative w-full aspect-[1.586] rounded-2xl overflow-hidden text-white shadow-[0_24px_48px_-20px_rgba(10,25,80,0.7),0_2px_6px_rgba(10,25,80,0.2)] ${className}`}
-      style={{
-        background:
-          'radial-gradient(90% 70% at 20% 30%, #2348B8 0%, rgba(35,72,184,0) 60%),' +
-          'radial-gradient(80% 90% at 85% 80%, #0B1E55 0%, rgba(11,30,85,0) 65%),' +
-          'linear-gradient(140deg, #1B3A9C 0%, #13307F 45%, #0A1D57 100%)',
-      }}
+      className={`relative w-full aspect-[1581/995] rounded-[4.5%/7%] overflow-hidden text-white shadow-[0_24px_48px_-20px_rgba(10,25,80,0.7),0_2px_6px_rgba(10,25,80,0.2)] ${className}`}
+      style={{ containerType: 'inline-size' }}
     >
-      {/* Faint logo watermark on the right */}
-      <Image
-        src="/img/vyomi-brand-logo.png"
-        alt=""
-        aria-hidden="true"
-        width={300}
-        height={330}
-        unoptimized
-        className="pointer-events-none absolute right-[3%] top-1/2 -translate-y-[46%] h-[78%] w-auto opacity-[0.13] mix-blend-luminosity"
-      />
+      <Image src={cardArtFor(tier)} alt={`Vyomi ${tier} membership card`} fill unoptimized priority className="object-cover select-none" />
 
-      {/* Gold swooshes: top-left and bottom-right */}
-      <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full" viewBox="0 0 400 252" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="vy-gold" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#F6DD8A" />
-            <stop offset="50%" stopColor="#D4A52E" />
-            <stop offset="100%" stopColor="#9C7417" />
-          </linearGradient>
-          <linearGradient id="vy-glow" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#5B8CFF" stopOpacity="0" />
-            <stop offset="60%" stopColor="#7FA6FF" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#5B8CFF" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d="M0 0 H150 C95 6 40 26 0 62 Z" fill="url(#vy-gold)" opacity="0.95" />
-        <path d="M0 70 C45 30 110 10 190 4" stroke="url(#vy-gold)" strokeWidth="1.4" fill="none" opacity="0.8" />
-        <path d="M400 252 H230 C300 246 360 222 400 186 Z" fill="url(#vy-gold)" opacity="0.95" />
-        <path d="M400 176 C355 220 290 242 200 249" stroke="url(#vy-gold)" strokeWidth="1.4" fill="none" opacity="0.8" />
-        <path d="M120 252 C220 236 320 210 400 150" stroke="url(#vy-glow)" strokeWidth="3" fill="none" />
-      </svg>
+      {/* Member name (or "V CLUB MEMBER" until a name is typed) */}
+      <div className="absolute left-[5.8%] right-[8%] top-[40%]">
+        <span className="block text-[2.4cqw] font-medium tracking-[0.3em] text-white/80">MEMBER</span>
+        <span className="block mt-[1.2cqw] text-[5.6cqw] leading-none font-semibold tracking-[0.04em] truncate [text-shadow:0_2px_8px_rgba(0,0,0,0.35)]">
+          {hasName ? (
+            typed.toUpperCase()
+          ) : (
+            <>
+              <span className="gold-shimmer">V</span> CLUB MEMBER
+            </>
+          )}
+        </span>
+      </div>
 
-      {/* Soft gloss */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.03) 38%, rgba(255,255,255,0) 39%)' }}
-      />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/15" />
+      {/* Member ID (under the printed "MEMBER ID" label) */}
+      <div className="absolute left-[5.9%] top-[73%] max-w-[58%]">
+        <span className="block text-[3.6cqw] leading-none font-medium tracking-[0.06em] truncate">
+          {idHead && <>{idHead} · </>}
+          <span className="text-[#F2CF6A] font-semibold">{idTail}</span>
+        </span>
+      </div>
 
-      <div className="relative h-full flex flex-col justify-between p-[6%]">
-        {/* Top: logo tile | wordmark ......... tier pill */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center justify-center w-[52px] h-[52px] sm:w-14 sm:h-14 rounded-xl bg-white shadow-md">
-              <Image src="/img/vyomi-brand-logo.png" alt="Vyomi" width={48} height={52} unoptimized className="h-[86%] w-auto object-contain" />
-            </span>
-            <span className="w-px self-stretch bg-gradient-to-b from-transparent via-[#E8C25A] to-transparent" />
-            <div className="leading-none">
-              <span className="block text-base sm:text-lg font-semibold tracking-[0.26em]">VYOMI</span>
-              <span className="block text-[9px] sm:text-[10px] font-medium tracking-[0.3em] text-white/75 mt-1.5">FITNESS CLUB</span>
-            </div>
-          </div>
-          <span className="shrink-0 text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] uppercase text-[#1A1405] px-3 py-1.5 rounded-full bg-gradient-to-b from-[#F6DD8A] to-[#C99A2E] shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_10px_-4px_rgba(0,0,0,0.5)]">
-            {tier}
-          </span>
-        </div>
-
-        {/* Member name: first letter in gold, like the club's "V" */}
-        <div>
-          <span className="block text-[9px] sm:text-[10px] font-medium uppercase tracking-[0.28em] text-white/70">Member</span>
-          <span className="block text-lg sm:text-2xl font-semibold tracking-[0.04em] truncate mt-1 [text-shadow:0_2px_6px_rgba(0,0,0,0.3)]">
-            <span className="text-[#F2CF6A]">{name.charAt(0)}</span>
-            {name.slice(1)}
-          </span>
-        </div>
-
-        <div>
-          <div className="h-px w-full bg-gradient-to-r from-[#E8C25A] via-[#E8C25A]/50 to-transparent mb-3" />
-          <div className="flex items-end justify-between gap-3">
-            <div className="min-w-0">
-              <span className="block text-[9px] sm:text-[10px] font-medium uppercase tracking-[0.26em] text-white/70">Member ID</span>
-              <span className="block text-xs sm:text-sm tracking-wider mt-1 truncate">
-                {idHead && <>{idHead} · </>}
-                <span className="text-[#F2CF6A] font-semibold">{idTail}</span>
-              </span>
-            </div>
-            <span className="w-px h-8 bg-[#E8C25A]/60 shrink-0" />
-            <div className="text-right shrink-0">
-              <span className="block text-[9px] sm:text-[10px] font-medium uppercase tracking-[0.26em] text-white/70">Valid thru</span>
-              <span className="block text-xs sm:text-sm font-semibold text-[#F2CF6A] mt-1">{endDate || `${durationDays} days`}</span>
-            </div>
-          </div>
-        </div>
+      {/* Valid thru (under the printed "VALID THRU" label) */}
+      <div className="absolute right-[5.4%] top-[73%] text-right">
+        <span className="block text-[3.6cqw] leading-none font-semibold tracking-[0.04em] text-[#F2CF6A]">
+          {endDate || `${durationDays} days`}
+        </span>
       </div>
     </div>
   );

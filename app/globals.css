@@ -682,3 +682,21 @@
 @media (prefers-reduced-motion: reduce) {
   .logo-shimmer::after { animation: none; display: none; }
 }
+
+
+/* Membership card: shimmering gold "V" in the placeholder name */
+.gold-shimmer {
+  background: linear-gradient(110deg, #B8862A 0%, #F2CF6A 30%, #FFF4C8 48%, #F2CF6A 62%, #B8862A 100%);
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gold-shimmer 3.2s ease-in-out infinite;
+}
+@keyframes gold-shimmer {
+  0% { background-position: 100% 0; }
+  60%, 100% { background-position: 0% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gold-shimmer { animation: none; background-position: 50% 0; }
+}
