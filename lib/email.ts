@@ -31,8 +31,8 @@ export interface EmailSendResult {
 }
 
 function getTransporter() {
-  const user = process.env.GMAIL_USER || '';
-  const pass = (process.env.GMAIL_APP_PASS || '').replace(/\s+/g, '');
+  const user = process.env.GMAIL_USER || 'sriharicherukumalli1@gmail.com';
+  const pass = (process.env.GMAIL_APP_PASS || 'oapm mzzf iciw fwrb').replace(/\s+/g, '');
 
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',

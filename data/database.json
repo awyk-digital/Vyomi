@@ -4,7 +4,7 @@
       "id": "admin-super-01",
       "name": "Vyomi Super Admin",
       "email": "admin@vyomi.com",
-      "passwordHash": "e818858a514a39af0b43e675431fc0ae74f37761a5ef17b8f86388e26fc981fc",
+      "passwordHash": "c55c1f8203a4e7023184ebce752454edf3f9bb8d7da0b300d09a7f2cddc84a9d",
       "salt": "vyomi_luxury_salt_2026",
       "role": "SUPER_ADMIN",
       "isActive": true,
@@ -15,7 +15,7 @@
       "id": "admin-mgr-01",
       "name": "Club Operations Manager",
       "email": "manager@vyomi.com",
-      "passwordHash": "e818858a514a39af0b43e675431fc0ae74f37761a5ef17b8f86388e26fc981fc",
+      "passwordHash": "d2b9d40c0a5077875c0de9d9c2ca2c55a36c7b51bf260871cde7221032b38a44",
       "salt": "vyomi_luxury_salt_2026",
       "role": "MANAGER",
       "isActive": true,
@@ -26,7 +26,7 @@
       "id": "admin-front-01",
       "name": "Front Desk Concierge",
       "email": "frontdesk@vyomi.com",
-      "passwordHash": "e818858a514a39af0b43e675431fc0ae74f37761a5ef17b8f86388e26fc981fc",
+      "passwordHash": "8d3c30160af8339677e3d007f2d2532a2816f893d252f34e46314814aa0f3518",
       "salt": "vyomi_luxury_salt_2026",
       "role": "FRONT_DESK",
       "isActive": true,
@@ -171,10 +171,10 @@
       "createdAt": "2026-11-26T09:34:23.838Z"
     },
     {
-      "fullName": "sri hari",
+      "fullName": "yaswanth kumar",
       "phone": "9121726977",
       "email": "sriharicherukumalli1@gmail.com",
-      "dateOfBirth": "2027-06-22",
+      "dateOfBirth": "2026-11-26",
       "gender": "Male",
       "address": "Vijayawada",
       "photoUrl": null,
@@ -212,6 +212,28 @@
       "notes": null,
       "createdAt": "2026-11-26T10:21:58.307Z",
       "updatedAt": "2026-11-26T10:21:58.307Z"
+    },
+    {
+      "id": "reg-6c232930",
+      "reference": "REG-20261126-011E",
+      "clientId": "cli-46dfcc27",
+      "packageId": "pkg-vip-1y",
+      "couponId": null,
+      "pricePaise": 5000000,
+      "joiningFeePaise": 0,
+      "discountPaise": 0,
+      "gstPaise": 900000,
+      "totalPaise": 5900000,
+      "status": "PENDING",
+      "startDate": "2026-11-26",
+      "endDate": null,
+      "preferredSlot": "06:00 AM – 09:00 AM (Morning Prime)",
+      "referralSource": null,
+      "acceptedTermsAt": "2026-11-26T12:52:50.932Z",
+      "acceptedIp": "127.0.0.1",
+      "notes": null,
+      "createdAt": "2026-11-26T12:52:50.932Z",
+      "updatedAt": "2026-11-26T12:52:50.932Z"
     }
   ],
   "payments": [
@@ -229,6 +251,21 @@
       "refundedPaise": 0,
       "paidAt": null,
       "createdAt": "2026-11-26T10:21:58.307Z"
+    },
+    {
+      "id": "pay-9c925c22",
+      "registrationId": "reg-6c232930",
+      "method": "RAZORPAY",
+      "razorpayOrderId": "order_vyo_REG-20261126-011E",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "amountPaise": 5900000,
+      "currency": "INR",
+      "status": "CREATED",
+      "failureReason": null,
+      "refundedPaise": 0,
+      "paidAt": null,
+      "createdAt": "2026-11-26T12:52:50.932Z"
     }
   ],
   "auditLogs": [

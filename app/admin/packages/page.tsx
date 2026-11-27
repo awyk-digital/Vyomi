@@ -104,7 +104,7 @@ export default function AdminPackagesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {loading ? (
-          <div className="col-span-3 py-12 text-center text-xs text-[#64748B] font-semibold">
+          <div className="col-span-3 py-12 text-center text-xs text-[#0F172A] font-bold">
             Loading packages...
           </div>
         ) : (
@@ -117,16 +117,16 @@ export default function AdminPackagesPage() {
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-mono font-bold text-[#64748B] uppercase">
+                    <span className="text-xs font-mono font-bold text-[#0F172A] uppercase">
                       ID: {pkg.slug}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleToggleActive(pkg)}
-                      className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border cursor-pointer ${
+                      className={`px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider border cursor-pointer ${
                         pkg.isActive
-                          ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                          : 'border-slate-300 bg-slate-100 text-slate-700'
+                          ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
+                          : 'border-slate-300 bg-slate-100 text-slate-800'
                       }`}
                     >
                       {pkg.isActive ? 'Active' : 'Disabled'}
@@ -136,7 +136,7 @@ export default function AdminPackagesPage() {
                   {isEditing ? (
                     <div className="space-y-3 mt-3">
                       <div>
-                        <label className="text-[11px] font-bold text-[#0F172A] uppercase block mb-1">
+                        <label className="text-xs font-bold text-[#0F172A] uppercase block mb-1">
                           Tier Name
                         </label>
                         <input
@@ -148,7 +148,7 @@ export default function AdminPackagesPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[11px] font-bold text-[#0F172A] uppercase block mb-1">
+                          <label className="text-xs font-bold text-[#0F172A] uppercase block mb-1">
                             Price (₹)
                           </label>
                           <input
@@ -159,7 +159,7 @@ export default function AdminPackagesPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-[11px] font-bold text-[#0F172A] uppercase block mb-1">
+                          <label className="text-xs font-bold text-[#0F172A] uppercase block mb-1">
                             Duration (Days)
                           </label>
                           <input
@@ -180,7 +180,7 @@ export default function AdminPackagesPage() {
                         <span className="text-2xl font-black text-[#0F172A]">
                           {formatINR(pkg.pricePaise)}
                         </span>
-                        <span className="text-xs font-semibold text-[#475569]">
+                        <span className="text-xs font-bold text-[#0F172A]">
                           / {pkg.durationDays} days
                         </span>
                       </div>
@@ -188,7 +188,7 @@ export default function AdminPackagesPage() {
                   )}
 
                   <div className="mt-4 pt-3 border-t border-[#E2E8F0]">
-                    <span className="text-[11px] font-bold text-[#334155] uppercase tracking-wider block mb-2">
+                    <span className="text-xs font-black text-[#0F172A] uppercase tracking-wider block mb-2">
                       Official Privileges
                     </span>
                     <ul className="space-y-1.5 text-xs text-[#1E293B]">

@@ -914,10 +914,10 @@ function RegisterContent() {
                     <img
                       src={qrDataUrl}
                       alt="Vyomi UPI QR Code"
-                      className="w-36 h-36 sm:w-40 sm:h-40 mx-auto rounded-lg"
+                      className="w-48 h-48 sm:w-56 sm:h-56 md:w-60 md:h-60 mx-auto rounded-xl shadow-inner"
                     />
                   ) : (
-                    <div className="w-36 h-36 flex items-center justify-center text-xs text-[#64748B] font-semibold">
+                    <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-60 md:h-60 flex items-center justify-center text-xs text-[#0F172A] font-bold">
                       Generating Dynamic QR...
                     </div>
                   )}

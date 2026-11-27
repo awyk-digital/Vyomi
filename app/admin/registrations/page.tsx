@@ -240,29 +240,29 @@ export default function AdminRegistrationsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4 font-extrabold">Reference ID</th>
-                <th className="py-3 px-4 font-extrabold">Member Code</th>
-                <th className="py-3 px-4 font-extrabold">Member Name</th>
-                <th className="py-3 px-4 font-extrabold">Mobile Contact</th>
-                <th className="py-3 px-4 font-extrabold">Membership Tier</th>
-                <th className="py-3 px-4 font-extrabold">Settlement Amount</th>
-                <th className="py-3 px-4 font-extrabold">Settlement Channel</th>
-                <th className="py-3 px-4 font-extrabold">Operational Status</th>
-                <th className="py-3 px-4 font-extrabold">Term Validity</th>
-                <th className="py-3 px-4 font-extrabold text-right">Concierge Actions</th>
+              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+                <th className="py-3 px-4 font-black w-32 whitespace-nowrap">Reference ID</th>
+                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Member Code</th>
+                <th className="py-3 px-4 font-black min-w-[140px]">Member Name</th>
+                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Mobile Contact</th>
+                <th className="py-3 px-4 font-black w-40 whitespace-nowrap">Membership Tier</th>
+                <th className="py-3 px-4 font-black w-32 whitespace-nowrap">Settlement Amount</th>
+                <th className="py-3 px-4 font-black min-w-[180px]">Settlement Channel</th>
+                <th className="py-3 px-4 font-black min-w-[170px]">Operational Status</th>
+                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Term Validity</th>
+                <th className="py-3 px-4 font-black w-48 text-center whitespace-nowrap">Concierge Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-[#475569] font-medium">
+                  <td colSpan={10} className="py-12 text-center text-[#0F172A] font-bold">
                     Synchronizing live member registry from Supabase...
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-[#475569] font-medium">
+                  <td colSpan={10} className="py-12 text-center text-[#0F172A] font-bold">
                     No matching member enrollment records found.
                   </td>
                 </tr>
@@ -271,52 +271,52 @@ export default function AdminRegistrationsPage() {
                   const statusInfo = formatStatus(r.status);
                   return (
                     <tr key={r.id} className="hover:bg-[#F8FAFC] transition">
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A]">
-                        <Link href={`/admin/registrations/${r.reference}`} className="hover:underline">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A] w-32 whitespace-nowrap">
+                        <Link href={`/admin/registrations/${r.reference}`} className="hover:underline text-[#0F172A]">
                           {r.reference}
                         </Link>
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-black text-[#D97706]">
+                      <td className="py-3.5 px-4 font-mono font-black text-[#D97706] w-36 whitespace-nowrap">
                         {r.client?.memberCode ? (
                           <span className="nums tracking-wider">{r.client.memberCode}</span>
                         ) : (
-                          <span className="text-[#64748B] italic font-sans font-normal">Pending Settlement</span>
+                          <span className="text-[#334155] font-semibold">Pending Settlement</span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 font-bold text-[#0F172A]">
+                      <td className="py-3.5 px-4 font-extrabold text-[#0F172A] min-w-[140px]">
                         {r.client?.fullName || 'N/A'}
                       </td>
-                      <td className="py-3.5 px-4 text-[#334155] font-semibold">
+                      <td className="py-3.5 px-4 text-[#0F172A] font-bold w-36 whitespace-nowrap">
                         <a href={`tel:${r.client?.phone}`} className="hover:underline">
                           +91 {r.client?.phone}
                         </a>
                       </td>
-                      <td className="py-3.5 px-4 font-bold text-[#0F172A]">
+                      <td className="py-3.5 px-4 font-extrabold text-[#0F172A] w-40 whitespace-nowrap">
                         {r.package?.name} ({r.package?.durationDays}d)
                       </td>
-                      <td className="py-3.5 px-4 font-black text-[#0F172A]">
+                      <td className="py-3.5 px-4 font-black text-[#0F172A] w-32 whitespace-nowrap">
                         {formatINR(r.totalPaise)}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className="font-bold text-[#0F172A] block">
+                      <td className="py-3.5 px-4 min-w-[180px]">
+                        <span className="font-extrabold text-[#0F172A] block">
                           {formatPaymentMethod(r.payment?.method)}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 min-w-[170px]">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${statusInfo.className}`}
+                          className={`px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider border ${statusInfo.className}`}
                         >
                           {statusInfo.label}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-xs font-semibold text-[#334155]">
+                      <td className="py-3.5 px-4 text-xs font-bold text-[#0F172A] w-36 whitespace-nowrap">
                         {r.startDate} → {r.endDate || '—'}
                       </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="py-3.5 px-4 text-center w-48 whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-2">
                           <Link
                             href={`/admin/registrations/${r.reference}`}
-                            className="px-2.5 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-[11px] font-bold text-[#0F172A] shadow-sm"
+                            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-extrabold text-[#0F172A] shadow-sm transition"
                           >
                             Dossier
                           </Link>
@@ -324,7 +324,7 @@ export default function AdminRegistrationsPage() {
                             <button
                               type="button"
                               onClick={() => handleMarkPaid(r.reference)}
-                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow-sm whitespace-nowrap"
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-extrabold shadow-sm whitespace-nowrap transition"
                             >
                               Clear Cash ✓
                             </button>
@@ -333,7 +333,7 @@ export default function AdminRegistrationsPage() {
                             <button
                               type="button"
                               onClick={() => handleRefund(r.id, r.reference)}
-                              className="px-2.5 py-1 text-red-700 bg-red-50 border border-red-200 rounded text-[11px] font-bold"
+                              className="px-3 py-1.5 text-red-800 bg-red-100 border border-red-300 rounded text-xs font-extrabold transition"
                             >
                               Terminate
                             </button>

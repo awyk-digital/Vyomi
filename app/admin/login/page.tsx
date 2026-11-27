@@ -58,7 +58,7 @@ export default function AdminLoginPage() {
           <h1 className="text-xl font-black text-[#0F172A] mt-1 tracking-tight">
             Staff Authentication Terminal
           </h1>
-          <p className="text-xs font-semibold text-[#64748B] mt-1.5 leading-relaxed">
+          <p className="text-xs font-bold text-[#0F172A] mt-1.5 leading-relaxed">
             Authorized personnel access for member registry management, front desk settlements, and operational telemetry.
           </p>
         </div>

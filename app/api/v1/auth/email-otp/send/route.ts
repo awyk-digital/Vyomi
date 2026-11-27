@@ -33,7 +33,16 @@ export async function POST(req: Request) {
     });
 
     if (!emailResult.sent) {
-      console.warn(`[EMAIL_OTP_DISPATCH_WARNING] SMTP reported error:`, emailResult.error);
+      console.error(`[EMAIL_OTP_DISPATCH_ERROR] Failed sending OTP to ${email}:`, emailResult.error);
+      return NextResponse.json(
+        {
+          error: {
+            code: 'EMAIL_DISPATCH_FAILED',
+            message: `Could not deliver verification email to ${email}. Please ensure the address is correct and accessible.`,
+          },
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -41,7 +50,7 @@ export async function POST(req: Request) {
       message: `Verification code sent to ${email}`,
       email,
       expiresInSeconds: 600,
-      dispatched: emailResult.sent,
+      dispatched: true,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to send email OTP';
