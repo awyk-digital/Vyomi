@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
+import { phoneOtpEnabled } from '@/lib/minimoth';
 
 export async function GET() {
   const session = await getAdminSession();
@@ -15,6 +16,6 @@ export async function GET() {
       role: session.role,
     },
     // Phone OTP on /register is switched on only after SMS sending is confirmed
-    phoneOtp: process.env.PHONE_OTP_ENABLED === 'true',
+    phoneOtp: phoneOtpEnabled(),
   });
 }

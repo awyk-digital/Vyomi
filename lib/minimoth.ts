@@ -71,3 +71,12 @@ export async function minimothSendOtp(phone10: string) {
 export async function minimothVerifyOtp(phone10: string, code: string) {
   return call('/v1/otp/verify', { phone: `+91${phone10}`, code });
 }
+
+/** Phone OTP on /register is on when PHONE_OTP_ENABLED is true/1/yes/on (any case, quotes/spaces ignored). */
+export function phoneOtpEnabled(): boolean {
+  const v = String(process.env.PHONE_OTP_ENABLED || '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .toLowerCase();
+  return ['true', '1', 'yes', 'on'].includes(v);
+}

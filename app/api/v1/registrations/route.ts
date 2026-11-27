@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
 import { logActivity } from '@/lib/activity';
+import { phoneOtpEnabled } from '@/lib/minimoth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
 import { sendMembershipReceiptEmail } from '@/lib/email';
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
     // Mobile must be OTP-verified (last 30 min) once an SMS provider is set up.
     // Managers/admins may skip it for admin walk-ins.
     const canSkipOtp = body.skipPhoneOtp === true && (staff.role === 'SUPER_ADMIN' || staff.role === 'MANAGER');
-    if (process.env.PHONE_OTP_ENABLED === 'true' && !canSkipOtp) {
+    if (phoneOtpEnabled() && !canSkipOtp) {
       const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       const { data: verified } = await supabaseAdmin
         .from('otp_verifications')
