@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getAdminSession } from '@/lib/auth';
 import { sendRealTelecomSms } from '@/lib/sms';
+import { minimothEnabled, minimothSendOtp, minimothMessage } from '@/lib/minimoth';
 
 const OTP_TTL_MS = 5 * 60 * 1000;
 const RESEND_GAP_MS = 30 * 1000;
@@ -54,6 +55,32 @@ export async function POST(req: Request) {
           { status: 429 }
         );
       }
+    }
+
+    // MiniMoth: they generate, send (SMS from their DLT sender) and later check the code
+    if (minimothEnabled()) {
+      const mm = await minimothSendOtp(phone);
+      if (!mm.ok) {
+        return NextResponse.json(
+          { error: { code: mm.code, message: minimothMessage(mm.code, mm.message) } },
+          { status: mm.status === 429 ? 429 : mm.status >= 500 ? 502 : 400 }
+        );
+      }
+      await supabaseAdmin.from('otp_verifications').insert({
+        phone,
+        otp_code: 'MINIMOTH',
+        expires_at: String(mm.data.expires_at || new Date(Date.now() + 10 * 60 * 1000).toISOString()),
+        is_verified: false,
+        attempts: 0,
+      });
+      return NextResponse.json({
+        success: true,
+        message: `Code sent to +91 ${phone}`,
+        realSmsDispatched: true,
+        provider: 'MINIMOTH',
+        expiresInSeconds: 600,
+        resendInSeconds: RESEND_GAP_MS / 1000,
+      });
     }
 
     const otpCode = String(Math.floor(100000 + Math.random() * 900000));

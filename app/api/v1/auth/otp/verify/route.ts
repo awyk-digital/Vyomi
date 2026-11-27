@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getAdminSession } from '@/lib/auth';
+import { minimothEnabled, minimothVerifyOtp, minimothMessage } from '@/lib/minimoth';
 
 const MAX_ATTEMPTS = 5;
 
@@ -51,6 +52,21 @@ export async function POST(req: Request) {
         { verified: false, error: { code: 'LOCKED', message: 'Too many wrong tries. Please send a new code.' } },
         { status: 429 }
       );
+    }
+
+    // MiniMoth codes are checked by MiniMoth
+    if (row.otp_code === 'MINIMOTH' && minimothEnabled()) {
+      const mm = await minimothVerifyOtp(phone, code);
+      if (!mm.ok) {
+        const attempts = (row.attempts ?? 0) + 1;
+        await supabaseAdmin.from('otp_verifications').update({ attempts }).eq('id', row.id);
+        return NextResponse.json(
+          { verified: false, error: { code: mm.code, message: minimothMessage(mm.code, mm.message) } },
+          { status: mm.status === 429 ? 429 : 400 }
+        );
+      }
+      await supabaseAdmin.from('otp_verifications').update({ is_verified: true }).eq('id', row.id);
+      return NextResponse.json({ verified: true, message: 'Mobile number verified.', phone });
     }
 
     if (row.otp_code !== code) {
