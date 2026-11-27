@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { RECEIPT_LOGO_JPEG } from './receiptLogo';
 import { CLUB, GST_RATE } from './pdfReceipt';
+import { renderMemberCardPng } from './memberCardImage';
 
 /**
  * Official Email Dispatcher for Vyomi Fitness Club.
@@ -190,7 +191,7 @@ function niceDate(v?: string) {
  * Send the membership receipt email: logo, member card, details, total.
  * The PDF receipt is attached; the logo is embedded inline (cid) so Gmail shows it.
  */
-export function buildReceiptEmailHtml(params: SendReceiptEmailParams): string {
+export function buildReceiptEmailHtml(params: SendReceiptEmailParams, opts: { cardImageCid?: string } = {}): string {
   const paid = params.paymentStatus === 'PAID';
   const total = Math.round(params.amountInr);
   const list = params.planPriceInr && params.planPriceInr > total ? Math.round(params.planPriceInr) : total;
@@ -206,6 +207,28 @@ export function buildReceiptEmailHtml(params: SendReceiptEmailParams): string {
       <td style="padding:11px 0;border-bottom:1px solid #EEF1F6;font-size:13px;color:#64748B;">${label}</td>
       <td align="right" style="padding:11px 0;border-bottom:1px solid #EEF1F6;font-size:14px;color:#0F172A;${strong ? 'font-weight:600;' : ''}">${value}</td>
     </tr>`;
+
+  const htmlCardFallback = `        <tr><td style="padding:24px 32px 8px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#1A3690" style="background:#1A3690;background-image:linear-gradient(135deg,#2A4FC4 0%,#1A3690 50%,#0F2462 100%);border-radius:16px;">
+            <tr><td style="padding:20px 22px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="font-size:13px;letter-spacing:4px;color:#FFFFFF;font-weight:700;">VYOMI<div style="font-size:9px;letter-spacing:3px;color:#C7D4F5;font-weight:500;margin-top:3px;">FITNESS CLUB</div></td>
+                <td align="right"><span style="display:inline-block;background:#E8C25A;color:#1A1405;font-size:10px;font-weight:700;letter-spacing:2px;padding:6px 12px;border-radius:999px;">${tier}</span></td>
+              </tr></table>
+            </td></tr>
+            <tr><td style="padding:26px 22px 4px;">
+              <div style="font-size:9px;letter-spacing:3px;color:#C7D4F5;">MEMBER</div>
+              <div style="font-size:20px;letter-spacing:1px;color:#FFFFFF;font-weight:700;margin-top:4px;">${esc(String(params.clientName || '').trim().toUpperCase())}</div>
+            </td></tr>
+            <tr><td style="padding:12px 22px 0;"><div style="height:1px;line-height:1px;font-size:0;background:#C9A03E;">&nbsp;</div></td></tr>
+            <tr><td style="padding:12px 22px 20px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="font-size:9px;letter-spacing:2px;color:#C7D4F5;">MEMBER ID<div style="font-size:14px;letter-spacing:1px;color:#FFFFFF;margin-top:4px;font-family:Menlo,Consolas,monospace;">${esc(params.memberCode)}</div></td>
+                <td align="right" style="font-size:9px;letter-spacing:2px;color:#C7D4F5;">VALID THRU<div style="font-size:14px;letter-spacing:1px;color:#E8C25A;margin-top:4px;">${niceDate(params.endDate)}</div></td>
+              </tr></table>
+            </td></tr>
+          </table>
+        </td></tr>`;
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -239,27 +262,9 @@ export function buildReceiptEmailHtml(params: SendReceiptEmailParams): string {
         </td></tr>
 
         <!-- Member card -->
-        <tr><td style="padding:24px 32px 8px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#1A3690" style="background:#1A3690;background-image:linear-gradient(135deg,#2A4FC4 0%,#1A3690 50%,#0F2462 100%);border-radius:16px;">
-            <tr><td style="padding:20px 22px 0;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-                <td style="font-size:13px;letter-spacing:4px;color:#FFFFFF;font-weight:700;">VYOMI<div style="font-size:9px;letter-spacing:3px;color:#C7D4F5;font-weight:500;margin-top:3px;">FITNESS CLUB</div></td>
-                <td align="right"><span style="display:inline-block;background:#E8C25A;color:#1A1405;font-size:10px;font-weight:700;letter-spacing:2px;padding:6px 12px;border-radius:999px;">${tier}</span></td>
-              </tr></table>
-            </td></tr>
-            <tr><td style="padding:26px 22px 4px;">
-              <div style="font-size:9px;letter-spacing:3px;color:#C7D4F5;">MEMBER</div>
-              <div style="font-size:20px;letter-spacing:1px;color:#FFFFFF;font-weight:700;margin-top:4px;">${esc(String(params.clientName || '').trim().toUpperCase())}</div>
-            </td></tr>
-            <tr><td style="padding:12px 22px 0;"><div style="height:1px;line-height:1px;font-size:0;background:#C9A03E;">&nbsp;</div></td></tr>
-            <tr><td style="padding:12px 22px 20px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-                <td style="font-size:9px;letter-spacing:2px;color:#C7D4F5;">MEMBER ID<div style="font-size:14px;letter-spacing:1px;color:#FFFFFF;margin-top:4px;font-family:Menlo,Consolas,monospace;">${esc(params.memberCode)}</div></td>
-                <td align="right" style="font-size:9px;letter-spacing:2px;color:#C7D4F5;">VALID THRU<div style="font-size:14px;letter-spacing:1px;color:#E8C25A;margin-top:4px;">${niceDate(params.endDate)}</div></td>
-              </tr></table>
-            </td></tr>
-          </table>
-        </td></tr>
+        ${opts.cardImageCid
+          ? `<tr><td style="padding:24px 32px 8px;"><img src="cid:${opts.cardImageCid}" width="536" alt="Vyomi membership card" style="display:block;width:100%;max-width:536px;height:auto;border:0;border-radius:16px;"></td></tr>`
+          : htmlCardFallback}
 
         <!-- Details -->
         <tr><td style="padding:16px 32px 4px;">
@@ -312,7 +317,18 @@ export async function sendMembershipReceiptEmail(
 ): Promise<EmailSendResult> {
   const senderEmail = process.env.GMAIL_USER || '';
   const paid = params.paymentStatus === 'PAID';
-  const htmlContent = buildReceiptEmailHtml(params);
+  let cardPng: Buffer | null = null;
+  try {
+    cardPng = await renderMemberCardPng({
+      name: params.clientName,
+      memberCode: params.memberCode,
+      endDate: params.endDate,
+      packageName: params.packageName,
+    });
+  } catch (err) {
+    console.warn('[EMAIL] Card image render failed, using HTML card:', err);
+  }
+  const htmlContent = buildReceiptEmailHtml(params, cardPng ? { cardImageCid: 'vyomi-card' } : {});
 
   try {
     const transporter = getTransporter();
@@ -334,6 +350,14 @@ export async function sendMembershipReceiptEmail(
         contentDisposition: 'inline',
       },
     ];
+    if (cardPng) {
+      attachments.push({
+        filename: `Vyomi_Card_${params.memberCode}.png`,
+        content: cardPng,
+        cid: 'vyomi-card',
+        contentDisposition: 'inline',
+      });
+    }
     if (params.pdfBase64) {
       attachments.push({
         filename: `Vyomi_Receipt_${params.receiptNumber}.pdf`,
