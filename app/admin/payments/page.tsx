@@ -76,9 +76,15 @@ export default function AdminPaymentsPage() {
 
   useEffect(() => {
     fetch('/api/v1/admin/payments')
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = '/admin/login';
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
-        if (data.payments) setPayments(data.payments);
+        if (data?.payments) setPayments(data.payments);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -100,26 +106,26 @@ export default function AdminPaymentsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4 font-extrabold">Settlement Date</th>
-                <th className="py-3 px-4 font-extrabold">Reference ID</th>
-                <th className="py-3 px-4 font-extrabold">Enrolled Member</th>
-                <th className="py-3 px-4 font-extrabold">Membership Tier</th>
-                <th className="py-3 px-4 font-extrabold">Settlement Channel</th>
-                <th className="py-3 px-4 font-extrabold">Settlement Amount</th>
-                <th className="py-3 px-4 font-extrabold">Clearance Status</th>
+              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Settlement Date</th>
+                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Reference ID</th>
+                <th className="py-3 px-4 font-black min-w-[150px]">Enrolled Member</th>
+                <th className="py-3 px-4 font-black w-40 whitespace-nowrap">Membership Tier</th>
+                <th className="py-3 px-4 font-black min-w-[180px]">Settlement Channel</th>
+                <th className="py-3 px-4 font-black w-32 whitespace-nowrap">Settlement Amount</th>
+                <th className="py-3 px-4 font-black min-w-[160px]">Clearance Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-[#475569] font-medium">
+                  <td colSpan={7} className="py-12 text-center text-[#0F172A] font-bold">
                     Loading live financial records from Supabase...
                   </td>
                 </tr>
               ) : payments.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-[#475569] font-medium">
+                  <td colSpan={7} className="py-12 text-center text-[#0F172A] font-bold">
                     No financial settlement records recorded yet.
                   </td>
                 </tr>
@@ -128,42 +134,42 @@ export default function AdminPaymentsPage() {
                   const statusInfo = formatPaymentStatus(p.status);
                   return (
                     <tr key={p.id} className="hover:bg-[#F8FAFC] transition">
-                      <td className="py-3.5 px-4 font-semibold text-[#475569] whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-bold text-[#0F172A] w-36 whitespace-nowrap">
                         {new Date(p.createdAt).toLocaleDateString('en-GB', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',
                         })}
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A]">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A] w-36 whitespace-nowrap">
                         {p.registration?.reference ? (
-                          <Link href={`/admin/registrations/${p.registration.reference}`} className="hover:underline">
+                          <Link href={`/admin/registrations/${p.registration.reference}`} className="hover:underline text-[#0F172A]">
                             {p.registration.reference}
                           </Link>
                         ) : (
                           '—'
                         )}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className="font-bold text-[#0F172A] block">
+                      <td className="py-3.5 px-4 min-w-[150px]">
+                        <span className="font-extrabold text-[#0F172A] block">
                           {p.client?.fullName || 'Valued Member'}
                         </span>
                         {p.client?.memberCode && (
-                          <span className="font-mono text-[11px] font-black text-[#D97706]">
+                          <span className="font-mono text-xs font-black text-[#D97706]">
                             {p.client.memberCode}
                           </span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 font-bold text-[#0F172A]">{p.package?.name || '—'}</td>
-                      <td className="py-3.5 px-4 font-bold text-[#0F172A]">
+                      <td className="py-3.5 px-4 font-extrabold text-[#0F172A] w-40 whitespace-nowrap">{p.package?.name || '—'}</td>
+                      <td className="py-3.5 px-4 font-extrabold text-[#0F172A] min-w-[180px]">
                         {formatPaymentMethod(p.method)}
                       </td>
-                      <td className="py-3.5 px-4 font-black text-[#0F172A]">
+                      <td className="py-3.5 px-4 font-black text-[#0F172A] w-32 whitespace-nowrap">
                         {formatINR(p.amountPaise)}
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 min-w-[160px]">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${statusInfo.className}`}
+                          className={`px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider border ${statusInfo.className}`}
                         >
                           {statusInfo.label}
                         </span>

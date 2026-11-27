@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
       if (!res.ok) {
         setError(data.error?.message || 'Invalid credentials. Access denied.');
       } else {
-        router.push('/admin');
+        window.location.href = '/admin';
       }
     } catch {
       setError('Secure connection failure. Please retry.');
@@ -38,9 +38,15 @@ export default function AdminLoginPage() {
     }
   };
 
+  const handleSelectRole = (roleEmail: string, rolePass: string) => {
+    setEmail(roleEmail);
+    setPassword(rolePass);
+    setError('');
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white border-2 border-[#CBD5E1] rounded-2xl p-8 sm:p-10 shadow-sm space-y-6">
+      <div className="max-w-md w-full bg-white border-2 border-[#CBD5E1] rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
         <div className="text-center">
           <Link href="/admin" className="inline-block">
             <Image
@@ -52,15 +58,45 @@ export default function AdminLoginPage() {
               className="h-10 w-auto mx-auto brightness-90"
             />
           </Link>
-          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-widest block mt-3">
+          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-widest block mt-2.5">
             Concierge & Operations Portal
           </span>
-          <h1 className="text-xl font-black text-[#0F172A] mt-1 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-black text-[#0F172A] mt-1 tracking-tight">
             Staff Authentication Terminal
           </h1>
-          <p className="text-xs font-semibold text-[#64748B] mt-1.5 leading-relaxed">
+          <p className="text-xs font-bold text-[#334155] mt-1 leading-relaxed">
             Authorized personnel access for member registry management, front desk settlements, and operational telemetry.
           </p>
+        </div>
+
+        {/* 1-Click Role Credentials Selector */}
+        <div className="p-3 bg-[#F8FAFC] border-2 border-[#CBD5E1] rounded-xl space-y-2">
+          <span className="text-[10px] font-black uppercase tracking-wider text-[#0F172A] block text-center">
+            One-Click Staff Role Selector:
+          </span>
+          <div className="grid grid-cols-3 gap-1.5 text-[11px]">
+            <button
+              type="button"
+              onClick={() => handleSelectRole('admin@vyomi.com', 'Vyomi@Admin#2026')}
+              className="py-1.5 px-2 bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 text-purple-950 font-black rounded text-center transition active:scale-95 shadow-xs"
+            >
+              Super Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSelectRole('manager@vyomi.com', 'Vyomi@Manager#2026')}
+              className="py-1.5 px-2 bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 text-blue-950 font-black rounded text-center transition active:scale-95 shadow-xs"
+            >
+              Manager
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSelectRole('frontdesk@vyomi.com', 'Vyomi@FrontDesk#2026')}
+              className="py-1.5 px-2 bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 text-amber-950 font-black rounded text-center transition active:scale-95 shadow-xs"
+            >
+              Front Desk
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -69,7 +105,7 @@ export default function AdminLoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
             <label className="block text-xs font-extrabold text-[#0F172A] mb-1.5 uppercase tracking-wider">
               Staff Email Address

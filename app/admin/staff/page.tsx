@@ -113,40 +113,40 @@ export default function AdminStaffPage() {
       {/* Role Responsibilities Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
         <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1.5">
-          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-purple-300 text-purple-900 bg-purple-100">
+          <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded border border-purple-300 text-purple-900 bg-purple-100">
             Tier 1: Super Admin
           </span>
-          <h3 className="font-extrabold text-[#0F172A] text-sm mt-1">Executive Administration</h3>
-          <p className="text-[#475569] font-medium leading-relaxed">
+          <h3 className="font-black text-[#0F172A] text-sm mt-1">Executive Administration</h3>
+          <p className="text-[#1E293B] font-semibold leading-relaxed">
             Full governance, security audit oversight, financial refund clearance, and staff account management.
           </p>
-          <span className="text-[11px] font-mono text-[#D97706] font-bold block pt-1">
+          <span className="text-xs font-mono text-[#D97706] font-black block pt-1">
             Account: admin@vyomi.com
           </span>
         </div>
 
         <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1.5">
-          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-blue-300 text-blue-900 bg-blue-100">
+          <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded border border-blue-300 text-blue-900 bg-blue-100">
             Tier 2: Operations Manager
           </span>
-          <h3 className="font-extrabold text-[#0F172A] text-sm mt-1">Club Management</h3>
-          <p className="text-[#475569] font-medium leading-relaxed">
+          <h3 className="font-black text-[#0F172A] text-sm mt-1">Club Management</h3>
+          <p className="text-[#1E293B] font-semibold leading-relaxed">
             Member registration reviews, package configuration, cash approvals, and daily executive telemetry.
           </p>
-          <span className="text-[11px] font-mono text-[#D97706] font-bold block pt-1">
+          <span className="text-xs font-mono text-[#D97706] font-black block pt-1">
             Account: manager@vyomi.com
           </span>
         </div>
 
         <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1.5">
-          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-amber-300 text-amber-900 bg-amber-100">
+          <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded border border-amber-300 text-amber-900 bg-amber-100">
             Tier 3: Front Desk
           </span>
-          <h3 className="font-extrabold text-[#0F172A] text-sm mt-1">Counter Concierge</h3>
-          <p className="text-[#475569] font-medium leading-relaxed">
+          <h3 className="font-black text-[#0F172A] text-sm mt-1">Counter Concierge</h3>
+          <p className="text-[#1E293B] font-semibold leading-relaxed">
             Walk-in member enrollment, counter cash settlements, badge assignment, and digital VIP card delivery.
           </p>
-          <span className="text-[11px] font-mono text-[#D97706] font-bold block pt-1">
+          <span className="text-xs font-mono text-[#D97706] font-black block pt-1">
             Account: frontdesk@vyomi.com
           </span>
         </div>
@@ -242,78 +242,80 @@ export default function AdminStaffPage() {
 
       {/* Staff Directory Table */}
       <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
-              <th className="py-3 px-4 font-extrabold">Staff Personnel</th>
-              <th className="py-3 px-4 font-extrabold">Authentication Email</th>
-              <th className="py-3 px-4 font-extrabold">Access Level</th>
-              <th className="py-3 px-4 font-extrabold">Station Terminal</th>
-              <th className="py-3 px-4 font-extrabold">Last Active Timestamp</th>
-              <th className="py-3 px-4 font-extrabold">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#E2E8F0]">
-            {loading ? (
-              <tr>
-                <td colSpan={6} className="py-12 text-center text-[#64748B] font-medium">
-                  Loading personnel directory...
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+                <th className="py-3 px-4 font-black min-w-[180px]">Staff Personnel</th>
+                <th className="py-3 px-4 font-black w-48 whitespace-nowrap">Authentication Email</th>
+                <th className="py-3 px-4 font-black w-44 whitespace-nowrap">Access Level</th>
+                <th className="py-3 px-4 font-black min-w-[180px]">Station Terminal</th>
+                <th className="py-3 px-4 font-black w-48 whitespace-nowrap">Last Active Timestamp</th>
+                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Status</th>
               </tr>
-            ) : staff.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-12 text-center text-[#64748B] font-medium">
-                  No staff accounts configured.
-                </td>
-              </tr>
-            ) : (
-              staff.map((u) => {
-                const meta = getRoleMeta(u.role);
-                return (
-                  <tr key={u.id} className="hover:bg-[#F8FAFC] transition">
-                    <td className="py-3.5 px-4">
-                      <span className="font-extrabold text-[#0F172A] block text-xs">
-                        {u.name}
-                      </span>
-                      <span className="text-[11px] text-[#64748B] font-medium block">
-                        {meta.duties}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-[#334155] font-mono font-semibold">
-                      {u.email}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${meta.badge}`}>
-                        {meta.label}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-[#475569] font-medium">
-                      Patamata Club Desk, Vijayawada
-                    </td>
-                    <td className="py-3.5 px-4 text-[#475569] font-mono text-[11px]">
-                      {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('en-IN', {
-                        timeZone: 'Asia/Kolkata',
-                        dateStyle: 'short',
-                        timeStyle: 'medium',
-                      }) : 'Awaiting First Login'}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${
-                          u.isActive
-                            ? 'border-emerald-300 text-emerald-900 bg-emerald-100'
-                            : 'border-red-300 text-red-900 bg-red-100'
-                        }`}
-                      >
-                        {u.isActive ? 'Active Clearance' : 'Suspended'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[#E2E8F0]">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-[#0F172A] font-bold">
+                    Loading personnel directory...
+                  </td>
+                </tr>
+              ) : staff.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-[#0F172A] font-bold">
+                    No staff accounts configured.
+                  </td>
+                </tr>
+              ) : (
+                staff.map((u) => {
+                  const meta = getRoleMeta(u.role);
+                  return (
+                    <tr key={u.id} className="hover:bg-[#F8FAFC] transition">
+                      <td className="py-3.5 px-4 min-w-[180px]">
+                        <span className="font-black text-[#0F172A] block text-xs">
+                          {u.name}
+                        </span>
+                        <span className="text-xs text-[#1E293B] font-semibold block mt-0.5">
+                          {meta.duties}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-[#0F172A] font-mono font-bold w-48 whitespace-nowrap">
+                        {u.email}
+                      </td>
+                      <td className="py-3.5 px-4 w-44 whitespace-nowrap">
+                        <span className={`px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider border ${meta.badge}`}>
+                          {meta.label}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-[#0F172A] font-bold min-w-[180px]">
+                        Patamata Club Desk, Vijayawada
+                      </td>
+                      <td className="py-3.5 px-4 text-[#0F172A] font-mono text-xs font-bold w-48 whitespace-nowrap">
+                        {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('en-IN', {
+                          timeZone: 'Asia/Kolkata',
+                          dateStyle: 'short',
+                          timeStyle: 'medium',
+                        }) : 'Awaiting First Login'}
+                      </td>
+                      <td className="py-3.5 px-4 w-36 whitespace-nowrap">
+                        <span
+                          className={`px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider border ${
+                            u.isActive
+                              ? 'border-emerald-300 text-emerald-900 bg-emerald-100'
+                              : 'border-red-300 text-red-900 bg-red-100'
+                          }`}
+                        >
+                          {u.isActive ? 'Active Clearance' : 'Suspended'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

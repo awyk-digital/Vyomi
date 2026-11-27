@@ -185,13 +185,13 @@ export default function AdminCouponsPage() {
           <tbody className="divide-y divide-[#E2E8F0]">
             {loading ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-[#64748B] font-medium">
+                <td colSpan={5} className="py-12 text-center text-[#0F172A] font-bold">
                   Loading vouchers...
                 </td>
               </tr>
             ) : coupons.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-[#64748B] font-medium">
+                <td colSpan={5} className="py-12 text-center text-[#0F172A] font-bold">
                   No vouchers created yet.
                 </td>
               </tr>
@@ -201,21 +201,21 @@ export default function AdminCouponsPage() {
                   <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A] tracking-wider">
                     {c.code}
                   </td>
-                  <td className="py-3.5 px-4 font-bold text-[#D97706]">
+                  <td className="py-3.5 px-4 font-black text-[#D97706]">
                     {c.discountType === 'PERCENT' ? `${c.discountValue}% Off` : `₹${(c.discountValue / 100).toLocaleString('en-IN')} Flat Off`}
                   </td>
-                  <td className="py-3.5 px-4 text-[#0F172A] font-semibold">
+                  <td className="py-3.5 px-4 text-[#0F172A] font-bold">
                     {c.usedCount} times
                   </td>
-                  <td className="py-3.5 px-4 text-[#475569]">
+                  <td className="py-3.5 px-4 text-[#0F172A] font-bold">
                     {c.maxUses ? `${c.maxUses} max` : 'Unlimited'}
                   </td>
                   <td className="py-3.5 px-4">
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${
+                      className={`px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider border ${
                         c.isActive
                           ? 'border-emerald-300 text-emerald-900 bg-emerald-100'
-                          : 'border-slate-300 text-slate-700 bg-slate-100'
+                          : 'border-slate-300 text-slate-800 bg-slate-100'
                       }`}
                     >
                       {c.isActive ? 'Active' : 'Expired'}

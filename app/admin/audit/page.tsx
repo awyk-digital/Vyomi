@@ -56,55 +56,55 @@ export default function AdminAuditPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4 font-extrabold">Timestamp (IST)</th>
-                <th className="py-3 px-4 font-extrabold">Authorized Personnel</th>
-                <th className="py-3 px-4 font-extrabold">Security Event</th>
-                <th className="py-3 px-4 font-extrabold">Scope / Entity</th>
-                <th className="py-3 px-4 font-extrabold">Operational Event Details</th>
+              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+                <th className="py-3 px-4 font-black w-48 whitespace-nowrap">Timestamp (IST)</th>
+                <th className="py-3 px-4 font-black w-44 whitespace-nowrap">Authorized Personnel</th>
+                <th className="py-3 px-4 font-black w-44 whitespace-nowrap">Security Event</th>
+                <th className="py-3 px-4 font-black w-40 whitespace-nowrap">Scope / Entity</th>
+                <th className="py-3 px-4 font-black min-w-[200px]">Operational Event Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-[#64748B] font-medium">
+                  <td colSpan={5} className="py-12 text-center text-[#0F172A] font-bold">
                     Loading security event trail...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-[#64748B] font-medium">
+                  <td colSpan={5} className="py-12 text-center text-[#0F172A] font-bold">
                     No activity recorded in security ledger.
                   </td>
                 </tr>
               ) : (
                 logs.map((l) => (
                   <tr key={l.id} className="hover:bg-[#F8FAFC] transition">
-                    <td className="py-3.5 px-4 text-[#475569] whitespace-nowrap font-mono text-[11px]">
+                    <td className="py-3.5 px-4 text-[#0F172A] whitespace-nowrap font-mono text-xs font-bold w-48">
                       {new Date(l.createdAt).toLocaleString('en-IN', {
                         timeZone: 'Asia/Kolkata',
                         dateStyle: 'medium',
                         timeStyle: 'medium',
                       })}
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-[#0F172A]">
+                    <td className="py-3.5 px-4 font-extrabold text-[#0F172A] w-44 whitespace-nowrap">
                       {l.adminName}
                     </td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#D97706] text-[11px]">
+                    <td className="py-3.5 px-4 font-mono font-black text-[#D97706] text-xs w-44 whitespace-nowrap">
                       {l.action}
                     </td>
-                    <td className="py-3.5 px-4 uppercase text-[10px] font-bold text-[#475569]">
+                    <td className="py-3.5 px-4 uppercase text-xs font-black text-[#0F172A] w-40 whitespace-nowrap">
                       <span className="px-2 py-0.5 rounded bg-[#F1F5F9] border border-[#CBD5E1]">
                         {l.entityType}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-[#1E293B]">
+                    <td className="py-3.5 px-4 font-mono text-xs text-[#0F172A] font-bold min-w-[200px]">
                       {l.details ? (
                         <div className="space-y-0.5">
                           {Object.entries(l.details).map(([key, value]) => (
                             <span key={key} className="inline-block mr-3">
-                              <span className="text-[#64748B] font-semibold">{key}:</span>{' '}
-                              <span className="text-[#0F172A] font-bold">{String(value)}</span>
+                              <span className="text-[#334155] font-extrabold">{key}:</span>{' '}
+                              <span className="text-[#0F172A] font-black">{String(value)}</span>
                             </span>
                           ))}
                         </div>

@@ -46,9 +46,15 @@ export default function AdminDashboardPage() {
 
   const fetchStats = () => {
     fetch('/api/v1/admin/dashboard/stats')
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = '/admin/login';
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
-        if (data.stats) setStats(data.stats);
+        if (data?.stats) setStats(data.stats);
       })
       .catch((err) => console.error('Dashboard error:', err))
       .finally(() => setLoading(false));
@@ -242,58 +248,58 @@ export default function AdminDashboardPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4 font-extrabold">Reference ID</th>
-                <th className="py-3 px-4 font-extrabold">Member Code</th>
-                <th className="py-3 px-4 font-extrabold">Member Name</th>
-                <th className="py-3 px-4 font-extrabold">Contact</th>
-                <th className="py-3 px-4 font-extrabold">Membership Tier</th>
-                <th className="py-3 px-4 font-extrabold">Amount</th>
-                <th className="py-3 px-4 font-extrabold">Settlement Channel</th>
-                <th className="py-3 px-4 font-extrabold">Clearance Status</th>
-                <th className="py-3 px-4 font-extrabold text-right">Actions</th>
+              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+                <th className="py-3 px-4 font-black w-32 whitespace-nowrap">Reference ID</th>
+                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Member Code</th>
+                <th className="py-3 px-4 font-black min-w-[140px]">Member Name</th>
+                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Contact</th>
+                <th className="py-3 px-4 font-black w-40 whitespace-nowrap">Membership Tier</th>
+                <th className="py-3 px-4 font-black w-32 whitespace-nowrap">Amount</th>
+                <th className="py-3 px-4 font-black min-w-[180px]">Settlement Channel</th>
+                <th className="py-3 px-4 font-black min-w-[160px]">Clearance Status</th>
+                <th className="py-3 px-4 font-black w-44 text-center whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
               {stats.recent.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-[#475569] font-medium">
+                  <td colSpan={9} className="py-8 text-center text-[#0F172A] font-bold">
                     No client records yet.
                   </td>
                 </tr>
               ) : (
                 stats.recent.map((r) => (
                   <tr key={r.id} className="hover:bg-[#F8FAFC] transition">
-                    <td className="py-3 px-4 font-mono font-bold text-[#0F172A]">
-                      <Link href={`/admin/registrations/${r.reference}`} className="hover:underline">
+                    <td className="py-3 px-4 font-mono font-bold text-[#0F172A] w-32 whitespace-nowrap">
+                      <Link href={`/admin/registrations/${r.reference}`} className="hover:underline text-[#0F172A]">
                         {r.reference}
                       </Link>
                     </td>
-                    <td className="py-3 px-4 font-mono font-black text-[#D97706]">
+                    <td className="py-3 px-4 font-mono font-black text-[#D97706] w-36 whitespace-nowrap">
                       {r.client?.memberCode || (
-                        <span className="text-[#64748B] italic font-sans font-normal">Pending</span>
+                        <span className="text-[#334155] font-semibold">Pending</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 font-bold text-[#0F172A]">
+                    <td className="py-3 px-4 font-extrabold text-[#0F172A] min-w-[140px]">
                       {r.client?.fullName || 'Valued Member'}
                     </td>
-                    <td className="py-3 px-4 text-[#334155] font-semibold">
+                    <td className="py-3 px-4 text-[#0F172A] font-bold w-36 whitespace-nowrap">
                       +91 {r.client?.phone}
                     </td>
-                    <td className="py-3 px-4 font-bold text-[#0F172A]">
+                    <td className="py-3 px-4 font-extrabold text-[#0F172A] w-40 whitespace-nowrap">
                       {r.package?.name || 'Membership'}
                     </td>
-                    <td className="py-3 px-4 font-black text-[#0F172A]">
+                    <td className="py-3 px-4 font-black text-[#0F172A] w-32 whitespace-nowrap">
                       {formatINR(r.totalPaise)}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="font-bold text-[#0F172A]">
+                    <td className="py-3 px-4 min-w-[180px]">
+                      <span className="font-extrabold text-[#0F172A] block">
                         {formatPaymentMethod(r.payment?.method)}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 min-w-[160px]">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${
+                        className={`px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider border ${
                           r.status === 'CONFIRMED'
                             ? 'border-emerald-300 bg-emerald-100 text-emerald-900'
                             : 'border-amber-300 bg-amber-100 text-amber-900'
@@ -302,11 +308,11 @@ export default function AdminDashboardPage() {
                         {r.status === 'CONFIRMED' ? 'SETTLED & ACTIVE' : 'AWAITING CASH'}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="py-3 px-4 text-center w-44 whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
                         <Link
                           href={`/admin/registrations/${r.reference}`}
-                          className="px-2.5 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-[11px] font-bold text-[#0F172A] shadow-sm"
+                          className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-extrabold text-[#0F172A] shadow-sm transition"
                         >
                           Dossier
                         </Link>
@@ -314,7 +320,7 @@ export default function AdminDashboardPage() {
                           <button
                             type="button"
                             onClick={() => handleMarkPaid(r.reference)}
-                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow-sm whitespace-nowrap"
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-extrabold shadow-sm whitespace-nowrap transition"
                           >
                             Clear Cash ✓
                           </button>

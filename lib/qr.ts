@@ -34,12 +34,12 @@ export function generateUpiString(params: {
  */
 export async function generateQrDataUrl(text: string): Promise<string> {
   return QRCode.toDataURL(text, {
-    width: 360,
+    width: 520,
     margin: 2,
     color: {
       dark: '#18181B', // Deep obsidian
       light: '#FFFFFF', // Pure white
     },
-    errorCorrectionLevel: 'M',
+    errorCorrectionLevel: 'Q',
   });
 }
