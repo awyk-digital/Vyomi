@@ -8,7 +8,7 @@
       "salt": "vyomi_luxury_salt_2026",
       "role": "SUPER_ADMIN",
       "isActive": true,
-      "lastLoginAt": "2026-11-26T10:52:24.965Z",
+      "lastLoginAt": "2026-11-27T04:48:06.688Z",
       "createdAt": "2026-11-24T07:33:30.009Z"
     },
     {
@@ -171,10 +171,10 @@
       "createdAt": "2026-11-26T09:34:23.838Z"
     },
     {
-      "fullName": "yaswanth kumar",
+      "fullName": "sri hari",
       "phone": "9121726977",
       "email": "sriharicherukumalli1@gmail.com",
-      "dateOfBirth": "2026-11-26",
+      "dateOfBirth": "2026-11-27",
       "gender": "Male",
       "address": "Vijayawada",
       "photoUrl": null,
@@ -234,6 +234,28 @@
       "notes": null,
       "createdAt": "2026-11-26T12:52:50.932Z",
       "updatedAt": "2026-11-26T12:52:50.932Z"
+    },
+    {
+      "id": "reg-8370516c",
+      "reference": "REG-20261127-5D33",
+      "clientId": "cli-46dfcc27",
+      "packageId": "pkg-vip-1y",
+      "couponId": null,
+      "pricePaise": 5000000,
+      "joiningFeePaise": 0,
+      "discountPaise": 0,
+      "gstPaise": 900000,
+      "totalPaise": 5900000,
+      "status": "PENDING",
+      "startDate": "2026-11-27",
+      "endDate": null,
+      "preferredSlot": "06:00 AM – 09:00 AM (Morning Prime)",
+      "referralSource": null,
+      "acceptedTermsAt": "2026-11-27T04:43:57.466Z",
+      "acceptedIp": "127.0.0.1",
+      "notes": null,
+      "createdAt": "2026-11-27T04:43:57.466Z",
+      "updatedAt": "2026-11-27T04:43:57.466Z"
     }
   ],
   "payments": [
@@ -266,9 +288,56 @@
       "refundedPaise": 0,
       "paidAt": null,
       "createdAt": "2026-11-26T12:52:50.932Z"
+    },
+    {
+      "id": "pay-0eeaa69f",
+      "registrationId": "reg-8370516c",
+      "method": "RAZORPAY",
+      "razorpayOrderId": "order_vyo_REG-20261127-5D33",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "amountPaise": 5900000,
+      "currency": "INR",
+      "status": "CREATED",
+      "failureReason": null,
+      "refundedPaise": 0,
+      "paidAt": null,
+      "createdAt": "2026-11-27T04:43:57.466Z"
     }
   ],
   "auditLogs": [
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-super-01",
+      "details": {
+        "staffEmail": "admin@vyomi.com",
+        "assignedRole": "SUPER_ADMIN",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "27 Nov 2026, 10:18:06 am",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-800ec738",
+      "createdAt": "2026-11-27T04:48:06.689Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-super-01",
+      "details": {
+        "staffEmail": "admin@vyomi.com",
+        "assignedRole": "SUPER_ADMIN",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "27 Nov 2026, 10:16:57 am",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-c0019a9d",
+      "createdAt": "2026-11-27T04:46:57.589Z"
+    },
     {
       "adminId": "admin-super-01",
       "adminName": "Vyomi Super Admin",

@@ -46,9 +46,15 @@ export default function AdminDashboardPage() {
 
   const fetchStats = () => {
     fetch('/api/v1/admin/dashboard/stats')
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = '/admin/login';
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
-        if (data.stats) setStats(data.stats);
+        if (data?.stats) setStats(data.stats);
       })
       .catch((err) => console.error('Dashboard error:', err))
       .finally(() => setLoading(false));

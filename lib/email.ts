@@ -95,7 +95,7 @@ export async function sendGmailOtp({
                 Verify Your Email Address
               </h2>
               <p style="margin: 0 0 24px 0; font-size: 13px; line-height: 1.6; color: #334155;">
-                Hello <strong>${clientName}</strong>, thank you for enrolling at Vyomi Fitness Club. Use the 6-digit verification code below to verify your email and complete your membership registration:
+                Hello <strong>${clientName}</strong>, thank you for enrolling at Vyomi Fitness Club. Use the 6-digit verification code below to verify your email address (<strong>${toEmail}</strong>) and complete your membership registration:
               </p>
 
               <!-- OTP Code Display -->

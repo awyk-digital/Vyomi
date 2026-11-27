@@ -651,8 +651,12 @@ function RegisterContent() {
                     <label className="block text-xs font-bold text-[#0F172A] mb-1">
                       Mobile Number <span className="text-red-600">*</span>
                     </label>
-                    <div className="relative flex items-center">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-[#334155] font-bold pointer-events-none select-none">
+                    <div
+                      className={`flex items-center bg-white border-2 border-solid rounded-lg overflow-hidden transition focus-within:border-[#D97706] ${
+                        formErrors.phone ? 'border-red-500 bg-red-50/20' : 'border-[#94A3B8]'
+                      }`}
+                    >
+                      <span className="flex items-center pl-3.5 pr-1.5 text-xs text-[#334155] font-bold select-none whitespace-nowrap">
                         +91
                       </span>
                       <input
@@ -664,9 +668,7 @@ function RegisterContent() {
                           setPhone(e.target.value.replace(/\D/g, ''));
                           if (formErrors.phone) setFormErrors((prev) => ({ ...prev, phone: '' }));
                         }}
-                        className={`w-full pl-12 bg-white border-2 border-solid rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#D97706] ${
-                          formErrors.phone ? 'border-red-500 bg-red-50/20' : 'border-[#94A3B8]'
-                        }`}
+                        className="w-full py-2 pr-3 pl-1 text-xs font-semibold text-[#0F172A] placeholder-[#64748B] bg-transparent focus:outline-none"
                       />
                     </div>
                     {formErrors.phone && (
@@ -674,16 +676,16 @@ function RegisterContent() {
                     )}
                   </div>
 
-                  {/* Gmail Address & OTP Verification */}
+                  {/* Email Address & Dynamic OTP Verification */}
                   <div>
                     <label className="block text-xs font-bold text-[#0F172A] mb-1">
-                      Gmail Address <span className="text-red-600">*</span>
+                      Email Address (Any Email / Gmail) <span className="text-red-600">*</span>
                     </label>
                     <div className="flex gap-1.5">
                       <input
                         type="email"
                         disabled={emailVerified}
-                        placeholder="e.g. rajesh.kumar@gmail.com"
+                        placeholder="e.g. member.name@gmail.com"
                         value={email}
                         onChange={(e) => {
                           setEmail(e.target.value);
@@ -722,7 +724,7 @@ function RegisterContent() {
                     <div className="sm:col-span-2 p-2.5 bg-[#FFFBEB] border-2 border-[#D97706]/40 rounded-xl flex items-center justify-between gap-3">
                       <div>
                         <span className="text-xs font-extrabold text-[#92400E] block">
-                          Enter 6-digit code sent to Gmail:
+                          Enter 6-digit code sent to {email}:
                         </span>
                         {otpError && <span className="text-[10px] text-red-600 font-bold">{otpError}</span>}
                       </div>

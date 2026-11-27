@@ -76,9 +76,15 @@ export default function AdminPaymentsPage() {
 
   useEffect(() => {
     fetch('/api/v1/admin/payments')
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = '/admin/login';
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
-        if (data.payments) setPayments(data.payments);
+        if (data?.payments) setPayments(data.payments);
       })
       .finally(() => setLoading(false));
   }, []);

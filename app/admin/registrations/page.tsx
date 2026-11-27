@@ -101,6 +101,10 @@ export default function AdminRegistrationsPage() {
         ...(statusFilter !== 'ALL' && { status: statusFilter }),
       });
       const res = await fetch(`/api/v1/admin/registrations?${q}`);
+      if (res.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
       const data = await res.json();
       if (data.items) {
         setItems(data.items);

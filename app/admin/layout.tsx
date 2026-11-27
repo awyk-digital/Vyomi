@@ -48,17 +48,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     fetch('/api/v1/admin/auth/me')
       .then((res) => {
         if (!res.ok) {
-          router.push('/admin/login');
+          window.location.replace('/admin/login');
           return null;
         }
         return res.json();
       })
       .then((data) => {
-        if (data?.admin) setAdmin(data.admin);
+        if (data?.admin) {
+          setAdmin(data.admin);
+        } else {
+          window.location.replace('/admin/login');
+        }
       })
-      .catch(() => router.push('/admin/login'))
+      .catch(() => window.location.replace('/admin/login'))
       .finally(() => setLoading(false));
-  }, [pathname, isLoginPage, router]);
+  }, [pathname, isLoginPage]);
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -67,9 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     await fetch('/api/v1/admin/auth/logout', { method: 'POST' });
-    startTransition(() => {
-      router.push('/admin/login');
-    });
+    window.location.href = '/admin/login';
   };
 
   if (isLoginPage) {
@@ -79,7 +81,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (loading) {
     return (
       <div data-theme="light" className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-xs text-[#64748B] font-bold">
+        <div className="flex items-center gap-3 text-xs text-[#0F172A] font-bold">
           <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] animate-ping" />
           <span>Authenticating Vyomi Admin Portal...</span>
         </div>
@@ -89,10 +91,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!admin) {
     return (
-      <div data-theme="light" className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-xs text-[#64748B] font-bold">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] animate-ping" />
-          <span>Access Restricted. Redirecting to Staff Login...</span>
+      <div data-theme="light" className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4">
+        <div className="max-w-sm w-full bg-white border-2 border-[#CBD5E1] rounded-2xl p-6 text-center shadow-sm space-y-4">
+          <div className="w-10 h-10 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center mx-auto text-amber-900 text-lg">
+            🔒
+          </div>
+          <div>
+            <h2 className="text-base font-black text-[#0F172A]">Staff Authentication Required</h2>
+            <p className="text-xs font-semibold text-[#334155] mt-1">
+              Please sign in with your staff credentials to access the admin operations portal.
+            </p>
+          </div>
+          <Link
+            href="/admin/login"
+            className="w-full inline-block py-2.5 px-4 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-lg text-xs font-bold transition shadow-sm text-center"
+          >
+            Go to Staff Login →
+          </Link>
         </div>
       </div>
     );
