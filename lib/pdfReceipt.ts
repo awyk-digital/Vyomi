@@ -1,5 +1,23 @@
 import { jsPDF } from 'jspdf';
 
+/** Club details printed on every receipt and email. */
+export const CLUB = {
+  name: 'VYOMI FITNESS CLUB',
+  tagline: 'ELEVATE YOUR FITNESS',
+  address: '4th Floor, Durga Plaza, Patamata, Vijayawada',
+  phone: '+91 99481 80333',
+  email: 'vyomifitness@gmail.com',
+  web: 'www.vyomifitness.in',
+};
+
+/** GST on memberships: 5%, included in the price. */
+export const GST_RATE = 0.05;
+
+/** One receipt number format everywhere: REG-20261127-0DLB -> REC-20261127-0DLB */
+export function receiptNumberFor(reference: string): string {
+  return `REC-${String(reference || '').replace(/^REG-/i, '')}`;
+}
+
 export interface ReceiptData {
   receiptNumber: string;
   reference: string;
@@ -13,259 +31,248 @@ export interface ReceiptData {
   fitnessGoal?: string;
   startDate: string;
   endDate: string;
+  /** Amount actually charged (GST included). */
   amountInr: number;
+  /** List price of the plan, when a special price was given. */
+  planPriceInr?: number;
   paymentMethod: 'UPI' | 'CASH';
   paymentStatus: 'PAID' | 'PENDING_CASH_COLLECTION';
   utrNumber?: string;
   paymentDate: string;
+  /** JPEG/PNG data URL of the logo on white. */
+  logoDataUrl?: string;
+}
+
+// Brand colours (RGB)
+const BLUE: [number, number, number] = [17, 39, 104]; // deep sapphire
+const BLUE_2: [number, number, number] = [30, 58, 138];
+const GOLD: [number, number, number] = [201, 160, 62];
+const GOLD_SOFT: [number, number, number] = [248, 242, 226];
+const INK: [number, number, number] = [15, 23, 42];
+const MUTED: [number, number, number] = [100, 116, 139];
+const LINE: [number, number, number] = [226, 232, 240];
+
+const rs = (n: number) => `Rs. ${Math.round(n).toLocaleString('en-IN')}`;
+
+function niceDate(v: string): string {
+  if (!v) return '—';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v);
+  if (!m) return v;
+  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
 }
 
 export function generatePdfReceipt(data: ReceiptData): jsPDF {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4',
-  });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth(); // 210
+  const H = doc.internal.pageSize.getHeight(); // 297
 
-  const pageWidth = doc.internal.pageSize.getWidth();
+  const fill = (c: [number, number, number]) => doc.setFillColor(c[0], c[1], c[2]);
+  const draw = (c: [number, number, number]) => doc.setDrawColor(c[0], c[1], c[2]);
+  const color = (c: [number, number, number]) => doc.setTextColor(c[0], c[1], c[2]);
+  const font = (style: 'normal' | 'bold', size: number) => {
+    doc.setFont('helvetica', style);
+    doc.setFontSize(size);
+  };
 
-  // Background tint: ultra-soft luxury ivory
-  doc.setFillColor(252, 251, 248);
-  doc.rect(0, 0, pageWidth, 297, 'F');
+  // ---------- Page: sapphire with gold sweeps ----------
+  fill(BLUE);
+  doc.rect(0, 0, W, H, 'F');
+  fill(BLUE_2);
+  doc.triangle(W, 0, W, 120, W - 120, 0, 'F');
+  doc.triangle(0, H, 0, H - 120, 120, H, 'F');
+  fill(GOLD);
+  doc.triangle(W, 0, W, 34, W - 34, 0, 'F');
+  doc.triangle(0, H, 0, H - 34, 34, H, 'F');
 
-  // Top Accent Bar (Champagne Gold)
-  doc.setFillColor(197, 160, 89);
-  doc.rect(0, 0, pageWidth, 6, 'F');
+  // ---------- White bill sheet with gold frame ----------
+  const X = 12;
+  const Y = 12;
+  const SW = W - 24;
+  const SH = H - 24;
+  fill([255, 255, 255]);
+  doc.roundedRect(X, Y, SW, SH, 4, 4, 'F');
+  draw(GOLD);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(X + 3, Y + 3, SW - 6, SH - 6, 3, 3, 'S');
 
-  // Header Box
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(14, 16, pageWidth - 28, 42, 3, 3, 'F');
-  doc.setDrawColor(230, 226, 218);
-  doc.roundedRect(14, 16, pageWidth - 28, 42, 3, 3, 'S');
+  const L = X + 11; // left content edge
+  const R = X + SW - 11; // right content edge
 
-  // Club Name
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.setTextColor(24, 24, 27);
-  doc.text('VYOMI FITNESS CLUB', 22, 28);
-
-  // Subtitle & Contact
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 105);
-  doc.text('Elevate Your Fitness · Luxury Wellness, HYROX & Panatta Equipment', 22, 34);
-  doc.text('4th Floor, Sonovision Durga Plaza, Benz Circle, Patamata, Vijayawada, AP 520010', 22, 39);
-  doc.text('Phone: +91 99481 80333  |  Email: vyomifitness@gmail.com', 22, 44);
-
-  // Badge on the right
-  doc.setFillColor(245, 242, 235);
-  doc.roundedRect(pageWidth - 75, 22, 58, 28, 2, 2, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(179, 142, 54);
-  doc.text('OFFICIAL MEMBERSHIP RECEIPT', pageWidth - 72, 28);
-  doc.setFontSize(10);
-  doc.setTextColor(24, 24, 27);
-  doc.text(data.receiptNumber, pageWidth - 72, 35);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(120, 120, 125);
-  doc.text(`Date: ${data.paymentDate}`, pageWidth - 72, 41);
-
-  // Member & Membership Info Section
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(14, 64, pageWidth - 28, 54, 3, 3, 'F');
-  doc.setDrawColor(230, 226, 218);
-  doc.roundedRect(14, 64, pageWidth - 28, 54, 3, 3, 'S');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(24, 24, 27);
-  doc.text('Member Information', 22, 74);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text('Enrollment Particulars', pageWidth / 2 + 5, 74);
-
-  doc.setDrawColor(240, 237, 230);
-  doc.line(22, 77, pageWidth - 22, 77);
-
-  // Left Column (Member Details)
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 105);
-
-  doc.text('Full Name:', 22, 85);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(24, 24, 27);
-  doc.text(data.clientName, 52, 85);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 105);
-  doc.text('Member ID:', 22, 92);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(179, 142, 54);
-  doc.text(data.memberCode, 52, 92);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 105);
-  doc.text('Mobile No:', 22, 99);
-  doc.setTextColor(24, 24, 27);
-  doc.text(`+91 ${data.phone}`, 52, 99);
-
-  doc.setTextColor(100, 100, 105);
-  doc.text('Email:', 22, 106);
-  doc.setTextColor(24, 24, 27);
-  doc.text(data.email, 52, 106);
-
-  if (data.fitnessGoal) {
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 105);
-    doc.text('Training Focus:', 22, 113);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(179, 142, 54);
-    doc.text(data.fitnessGoal, 52, 113);
+  // ---------- Header ----------
+  const logoW = 30;
+  if (data.logoDataUrl) {
+    try {
+      doc.addImage(data.logoDataUrl, 'JPEG', L, Y + 10, logoW, logoW * 1.096);
+    } catch {
+      /* draw without logo */
+    }
   }
+  const tx = L + logoW + 6;
+  font('bold', 15);
+  color(BLUE);
+  doc.text(CLUB.name, tx, Y + 19);
+  font('bold', 7.5);
+  color(GOLD);
+  doc.text(CLUB.tagline, tx, Y + 24.5, { charSpace: 0.8 });
+  font('normal', 8.5);
+  color(MUTED);
+  doc.text(CLUB.address, tx, Y + 31);
+  doc.text(`${CLUB.phone}   ·   ${CLUB.email}`, tx, Y + 36);
+  doc.text(CLUB.web, tx, Y + 41);
 
-  // Right Column (Membership Particulars)
-  doc.setTextColor(100, 100, 105);
-  doc.text('Plan Name:', pageWidth / 2 + 5, 85);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(24, 24, 27);
-  doc.text(data.packageName, pageWidth / 2 + 40, 85);
+  // Receipt title block (right)
+  font('bold', 20);
+  color(BLUE);
+  doc.text('RECEIPT', R, Y + 19, { align: 'right' });
+  font('bold', 9);
+  color(INK);
+  doc.text(data.receiptNumber, R, Y + 27, { align: 'right' });
+  font('normal', 8.5);
+  color(MUTED);
+  doc.text(`Date: ${niceDate(data.paymentDate)}`, R, Y + 32.5, { align: 'right' });
 
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 105);
-  doc.text('Duration:', pageWidth / 2 + 5, 92);
-  doc.setTextColor(24, 24, 27);
-  doc.text(`${data.durationDays} Days (1 Year Access)`, pageWidth / 2 + 40, 92);
+  // Status pill
+  const paid = data.paymentStatus === 'PAID';
+  const pill = paid ? 'PAID' : 'CASH DUE';
+  font('bold', 8);
+  const pw = doc.getTextWidth(pill) + 8;
+  fill(paid ? BLUE_2 : GOLD);
+  doc.roundedRect(R - pw, Y + 36, pw, 6.5, 3.2, 3.2, 'F');
+  color(paid ? [255, 255, 255] : INK);
+  doc.text(pill, R - pw / 2, Y + 40.5, { align: 'center' });
 
-  doc.setTextColor(100, 100, 105);
-  doc.text('Time Slot:', pageWidth / 2 + 5, 99);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(179, 142, 54);
-  doc.text(data.timeSlot, pageWidth / 2 + 40, 99);
+  // Gold rule
+  let y = Y + 50;
+  draw(GOLD);
+  doc.setLineWidth(0.6);
+  doc.line(L, y, R, y);
 
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 105);
-  doc.text('Valid Period:', pageWidth / 2 + 5, 106);
-  doc.setTextColor(24, 24, 27);
-  doc.text(`${data.startDate} to ${data.endDate}`, pageWidth / 2 + 40, 106);
+  // ---------- Billed to / Membership ----------
+  y += 10;
+  const colR = X + SW / 2 + 4;
+  font('bold', 7.5);
+  color(GOLD);
+  doc.text('BILLED TO', L, y, { charSpace: 0.6 });
+  doc.text('MEMBERSHIP', colR, y, { charSpace: 0.6 });
 
-  // Billing & Charges Table
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(14, 124, pageWidth - 28, 70, 3, 3, 'F');
-  doc.setDrawColor(230, 226, 218);
-  doc.roundedRect(14, 124, pageWidth - 28, 70, 3, 3, 'S');
+  const row = (x: number, yy: number, label: string, value: string, opts?: { strong?: boolean; blue?: boolean; maxW?: number }) => {
+    font('normal', 8.5);
+    color(MUTED);
+    doc.text(label, x, yy);
+    font(opts?.strong ? 'bold' : 'normal', 9.5);
+    color(opts?.blue ? BLUE_2 : INK);
+    const lines = doc.splitTextToSize(value || '—', opts?.maxW ?? 56) as string[];
+    doc.text(lines[0] + (lines.length > 1 ? '…' : ''), x + 26, yy);
+  };
 
-  // Table Header
-  doc.setFillColor(245, 242, 235);
-  doc.rect(14, 124, pageWidth - 28, 10, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(24, 24, 27);
-  doc.text('DESCRIPTION', 22, 130.5);
-  doc.text('SAC CODE', pageWidth - 80, 130.5);
-  doc.text('AMOUNT (INR)', pageWidth - 45, 130.5);
+  y += 8;
+  row(L, y, 'Name', data.clientName, { strong: true });
+  row(colR, y, 'Plan', data.packageName, { strong: true });
+  y += 7;
+  row(L, y, 'Member ID', data.memberCode, { strong: true, blue: true });
+  row(colR, y, 'Duration', `${data.durationDays} days`);
+  y += 7;
+  row(L, y, 'Mobile', `+91 ${data.phone}`);
+  row(colR, y, 'Time slot', (data.timeSlot || '').replace(/\s*\(.*\)\s*$/, ''));
+  y += 7;
+  row(L, y, 'Email', data.email);
+  row(colR, y, 'Valid', `${niceDate(data.startDate)} – ${niceDate(data.endDate)}`);
 
-  // Table Row 1: Plan
-  const taxableAmount = Math.round(data.amountInr / 1.18);
-  const gstAmount = data.amountInr - taxableAmount;
+  // ---------- Charges table ----------
+  y += 14;
+  fill(BLUE);
+  doc.roundedRect(L, y, R - L, 10, 2, 2, 'F');
+  font('bold', 8.5);
+  color([255, 255, 255]);
+  doc.text('DESCRIPTION', L + 5, y + 6.5, { charSpace: 0.4 });
+  doc.text('AMOUNT', R - 5, y + 6.5, { align: 'right', charSpace: 0.4 });
+  y += 10;
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(24, 24, 27);
-  doc.text(`${data.packageName} — Annual Admission Fee`, 22, 142);
-  doc.text('999723', pageWidth - 80, 142);
-  doc.text(`INR ${taxableAmount.toLocaleString('en-IN')}`, pageWidth - 45, 142);
+  const total = Math.round(data.amountInr);
+  const list = data.planPriceInr && data.planPriceInr > 0 ? Math.round(data.planPriceInr) : total;
+  const discount = list > total ? list - total : 0;
+  const taxable = Math.round(total / (1 + GST_RATE));
+  const gst = total - taxable;
 
-  // Table Row 2: Locker & Facilities
-  doc.text('Club Locker, Hydro Suite & Equipment Access', 22, 150);
-  doc.text('999723', pageWidth - 80, 150);
-  doc.setTextColor(16, 185, 129);
-  doc.text('Included', pageWidth - 45, 150);
+  const line = (label: string, value: string, opts?: { sub?: string; color?: [number, number, number]; bold?: boolean }) => {
+    y += 9;
+    font(opts?.bold ? 'bold' : 'normal', 9.5);
+    color(INK);
+    doc.text(label, L + 5, y);
+    color(opts?.color || INK);
+    doc.text(value, R - 5, y, { align: 'right' });
+    if (opts?.sub) {
+      font('normal', 7.5);
+      color(MUTED);
+      doc.text(opts.sub, L + 5, y + 4.2);
+      y += 3;
+    }
+    y += 2.5;
+    draw(LINE);
+    doc.setLineWidth(0.25);
+    doc.line(L + 3, y, R - 3, y);
+  };
 
-  // Table Row 3: GST
-  doc.setTextColor(100, 100, 105);
-  doc.text('Integrated GST (18%)', 22, 158);
-  doc.text('18.00%', pageWidth - 80, 158);
-  doc.setTextColor(24, 24, 27);
-  doc.text(`INR ${gstAmount.toLocaleString('en-IN')}`, pageWidth - 45, 158);
+  const term = data.durationDays === 365 ? '1 year' : `${data.durationDays} days`;
+  line(`${data.packageName} — ${term}`, rs(list), { sub: `${data.durationDays} days · ${niceDate(data.startDate)} to ${niceDate(data.endDate)}` });
+  if (discount > 0) line('Special price discount', `– ${rs(discount)}`, { color: BLUE_2 });
 
-  // Divider
-  doc.setDrawColor(230, 226, 218);
-  doc.line(22, 166, pageWidth - 22, 166);
+  // Tax summary (right aligned)
+  y += 8;
+  const sx = R - 70;
+  font('normal', 9);
+  color(MUTED);
+  doc.text('Taxable value', sx, y);
+  color(INK);
+  doc.text(rs(taxable), R - 5, y, { align: 'right' });
+  y += 6.5;
+  color(MUTED);
+  doc.text('GST @ 5% (included)', sx, y);
+  color(INK);
+  doc.text(rs(gst), R - 5, y, { align: 'right' });
 
-  // Total
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text('Total Amount Payable / Received:', 22, 176);
-  doc.setFontSize(14);
-  doc.setTextColor(179, 142, 54);
-  doc.text(`INR ${data.amountInr.toLocaleString('en-IN')}`, pageWidth - 55, 176);
+  // Total band
+  y += 7;
+  fill(GOLD_SOFT);
+  doc.roundedRect(L, y, R - L, 15, 2, 2, 'F');
+  fill(GOLD);
+  doc.rect(L, y, 1.6, 15, 'F');
+  font('bold', 10);
+  color(INK);
+  doc.text(paid ? 'TOTAL PAID' : 'AMOUNT DUE AT FRONT DESK', L + 6, y + 9.5, { charSpace: 0.4 });
+  font('bold', 16);
+  color(BLUE);
+  doc.text(rs(total), R - 5, y + 10, { align: 'right' });
+  y += 15;
 
-  // Payment Settlement Info Box
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(14, 200, pageWidth - 28, 40, 3, 3, 'F');
-  doc.setDrawColor(230, 226, 218);
-  doc.roundedRect(14, 200, pageWidth - 28, 40, 3, 3, 'S');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(24, 24, 27);
-  doc.text('Payment Settlement Details', 22, 210);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 105);
-  doc.text('Payment Method:', 22, 219);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(24, 24, 27);
-  doc.text(
-    data.paymentMethod === 'UPI' ? 'UPI QR Payment (Direct Settlement)' : 'Cash Payment (At Club Front Desk)',
-    65,
-    219
-  );
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 105);
-  doc.text('Payment Status:', 22, 226);
-  doc.setFont('helvetica', 'bold');
-  if (data.paymentStatus === 'PAID') {
-    doc.setTextColor(16, 185, 129);
-    doc.text('CONFIRMED / COMPLETED', 65, 226);
-  } else {
-    doc.setTextColor(179, 142, 54);
-    doc.text('PENDING CASH COLLECTION AT RECEPTION', 65, 226);
-  }
-
+  // ---------- Payment ----------
+  y += 12;
+  font('bold', 7.5);
+  color(GOLD);
+  doc.text('PAYMENT', L, y, { charSpace: 0.6 });
+  y += 8;
+  row(L, y, 'Method', data.paymentMethod === 'UPI' ? 'UPI' : 'Cash at front desk');
+  row(colR, y, 'Status', paid ? 'Paid' : 'Due at front desk', { strong: true, blue: paid });
   if (data.utrNumber) {
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 105);
-    doc.text('UPI / UTR Reference:', 22, 233);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(24, 24, 27);
-    doc.text(data.utrNumber, 65, 233);
+    y += 7;
+    row(L, y, 'UTR / Ref.', data.utrNumber);
   }
+  y += 7;
+  row(L, y, 'Booking ref.', data.reference);
 
-  // Footer / Club Verification Stamp
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(130, 130, 135);
-  doc.text(
-    'This is a computer-generated official receipt issued by Vyomi Fitness Club, Vijayawada.',
-    22,
-    254
-  );
-  doc.text(
-    'Please present this digital receipt or your Member ID at the front desk to collect your biometric access card.',
-    22,
-    259
-  );
-
-  // Bottom Gold Accent Bar
-  doc.setFillColor(197, 160, 89);
-  doc.rect(0, 292, pageWidth, 5, 'F');
+  // ---------- Footer ----------
+  const fy = Y + SH - 30;
+  draw(GOLD);
+  doc.setLineWidth(0.4);
+  doc.line(L, fy, R, fy);
+  font('bold', 11);
+  color(BLUE);
+  doc.text('Thank you for choosing Vyomi.', W / 2, fy + 8, { align: 'center' });
+  font('normal', 8);
+  color(MUTED);
+  doc.text('Show this receipt or your Member ID at the front desk to collect your access card.', W / 2, fy + 13.5, { align: 'center' });
+  doc.text(`${CLUB.email}   ·   ${CLUB.phone}   ·   This is a computer-generated receipt.`, W / 2, fy + 18.5, { align: 'center' });
 
   return doc;
 }

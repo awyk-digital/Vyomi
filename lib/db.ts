@@ -178,7 +178,7 @@ function getInitialData(): DatabaseSchema {
         '1 Year Full Gym Access',
         'Limited Recovery & Wellness Suite',
         'Finnish Cedar Sauna & Steam Access',
-        'Bi-monthly Body Composition Telemetry',
+        'Bi-monthly BMI & Body Composition Check',
         'Priority Trainer Consultation',
       ],
       isActive: true,

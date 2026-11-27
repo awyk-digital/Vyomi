@@ -4,7 +4,8 @@ import { logActivity } from '@/lib/activity';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
 import { sendMembershipReceiptEmail } from '@/lib/email';
-import { generatePdfReceipt } from '@/lib/pdfReceipt';
+import { generatePdfReceipt, receiptNumberFor } from '@/lib/pdfReceipt';
+import { RECEIPT_LOGO_JPEG } from '@/lib/receiptLogo';
 
 export async function POST(req: Request) {
   const staff = await getAdminSession();
@@ -103,17 +104,38 @@ export async function POST(req: Request) {
       };
     }
 
+    // 2b. Price: the plan price, or a custom amount the front desk typed
+    //     (family / special discount). Staff-only route, so this is trusted
+    //     to signed-in staff and recorded in notes + the activity log.
+    const planPriceInr = pkg.price_inr;
+    let amountInr = planPriceInr;
+    const rawCustom = body.customAmountInr;
+    if (rawCustom !== undefined && rawCustom !== null && rawCustom !== '') {
+      const c = Math.round(Number(rawCustom));
+      if (!Number.isFinite(c) || c < 1 || c > 1000000) {
+        return NextResponse.json(
+          { error: { code: 'INVALID_AMOUNT', message: 'Custom amount must be between ₹1 and ₹10,00,000.' } },
+          { status: 400 }
+        );
+      }
+      amountInr = c;
+    }
+    const priceNote =
+      amountInr !== planPriceInr
+        ? `Custom price ₹${amountInr.toLocaleString('en-IN')} (plan ₹${planPriceInr.toLocaleString('en-IN')}) set by ${staff.name}`
+        : '';
+
     // 3. Generate Codes
     const randomSeq = Math.floor(100000 + Math.random() * 900000);
     const memberCode = `VYO-2026-${randomSeq}`;
     const refSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     const reference = `REG-${new Date().toISOString().replace(/\D/g, '').slice(0, 8)}-${refSuffix}`;
-    const receiptNumber = `REC-2026-${randomSeq.toString().slice(-5)}`;
+    const receiptNumber = receiptNumberFor(reference);
 
     // End Date (365 days from startDate)
     const startObj = new Date(startDate);
     const endObj = new Date(startObj);
-    endObj.setDate(endObj.getDate() + 365);
+    endObj.setDate(endObj.getDate() + (pkg.duration_days || 365));
     const endDate = endObj.toISOString().split('T')[0];
 
     const isCash = paymentMethod.toUpperCase() === 'CASH';
@@ -164,12 +186,12 @@ export async function POST(req: Request) {
             client_id: clientId,
             package_id: pkg.id,
             package_name: pkg.name,
-            amount_inr: pkg.price_inr,
+            amount_inr: amountInr,
             status: regStatus,
             preferred_slot: slot,
             start_date: startDate,
             end_date: endDate,
-            notes: `Goal: ${fitnessGoal}`,
+            notes: priceNote || null,
           })
           .select('id')
           .single();
@@ -188,7 +210,7 @@ export async function POST(req: Request) {
         await supabaseAdmin.from('payments').insert({
           registration_id: registrationId,
           method: isCash ? 'CASH' : 'UPI_QR',
-          amount_inr: pkg.price_inr,
+          amount_inr: amountInr,
           status: payStatus,
           utr_number: utr || null,
           upi_handle: isCash ? null : '9666636563@axisbank',
@@ -210,7 +232,7 @@ export async function POST(req: Request) {
             memberCode,
             clientName: fullName,
             packageName: pkg.name,
-            amountInr: pkg.price_inr,
+            amountInr: amountInr,
             timeSlot: slot,
             fitnessGoal,
             startDate,
@@ -225,6 +247,8 @@ export async function POST(req: Request) {
         // Asynchronously dispatch PDF receipt via Resend
         try {
           const pdfDoc = generatePdfReceipt({
+            logoDataUrl: RECEIPT_LOGO_JPEG,
+            planPriceInr: planPriceInr,
             receiptNumber,
             reference,
             memberCode,
@@ -237,7 +261,7 @@ export async function POST(req: Request) {
             fitnessGoal,
             startDate,
             endDate,
-            amountInr: pkg.price_inr,
+            amountInr: amountInr,
             paymentMethod: isCash ? 'CASH' : 'UPI',
             paymentStatus: regStatus === 'CONFIRMED' ? 'PAID' : 'PENDING_CASH_COLLECTION',
             utrNumber: utr || undefined,
@@ -247,12 +271,13 @@ export async function POST(req: Request) {
 
           sendMembershipReceiptEmail({
             toEmail: email,
+            planPriceInr,
             clientName: fullName,
             memberCode,
             receiptNumber,
             reference,
             packageName: pkg.name,
-            amountInr: pkg.price_inr,
+            amountInr: amountInr,
             timeSlot: slot,
             fitnessGoal,
             startDate,
@@ -321,7 +346,7 @@ export async function POST(req: Request) {
       action: 'MEMBER_REGISTERED',
       entityType: 'REGISTRATION',
       entityId: reference,
-      details: { member: fullName, plan: pkg.name, amountInr: pkg.price_inr, payment: isCash ? 'CASH' : 'UPI' },
+      details: { member: fullName, plan: pkg.name, amountInr, planPriceInr, payment: isCash ? 'CASH' : 'UPI' },
     });
 
     return NextResponse.json({
@@ -340,7 +365,7 @@ export async function POST(req: Request) {
       package: {
         id: pkg.id,
         name: pkg.name,
-        priceInr: pkg.price_inr,
+        priceInr: planPriceInr,
         durationDays: pkg.duration_days,
       },
       preferredSlot: slot,
@@ -348,7 +373,7 @@ export async function POST(req: Request) {
       startDate,
       endDate,
       paymentMethod: isCash ? 'CASH' : 'UPI',
-      amountInr: pkg.price_inr,
+      amountInr: amountInr,
       utrNumber: utr || null,
       message: isCash
         ? 'Membership registered! Please complete cash payment at the front desk.'

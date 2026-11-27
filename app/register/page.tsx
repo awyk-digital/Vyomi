@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { SUPPLIED } from '@/config/assets';
 import { generateUpiString, generateQrDataUrl } from '@/lib/qr';
-import { generatePdfReceipt } from '@/lib/pdfReceipt';
+import { generatePdfReceipt, receiptNumberFor } from '@/lib/pdfReceipt';
 import { useBackGuard } from '@/lib/useBackGuard';
 import {
   SilverTierBadge,
@@ -57,7 +57,7 @@ const OFFICIAL_PACKAGES: PackageItem[] = [
       '1 Year Full Gym Access',
       'Limited Recovery & Wellness Suite',
       'Finnish Cedar Sauna & Steam Access',
-      'Bi-monthly Body Composition Telemetry',
+      'Bi-monthly BMI & Body Composition Check',
       'Priority Trainer Consultation',
     ],
   },
@@ -200,6 +200,7 @@ function RegisterContent() {
     startDate: string;
     endDate: string;
     totalAmount: number;
+    planPrice?: number;
     paymentMethod: 'UPI' | 'CASH';
     paymentStatus: string;
     utrNumber?: string;
@@ -242,6 +243,19 @@ function RegisterContent() {
     return packages.find((p) => p.id === selectedPkgId) || packages[1] || packages[0];
   }, [packages, selectedPkgId]);
 
+  // Front desk can bill a special amount (family / discount). Empty = plan price.
+  const [customAmount, setCustomAmount] = useState('');
+  const [editingAmount, setEditingAmount] = useState(false);
+  const [amountDraft, setAmountDraft] = useState('');
+  const customRupees = customAmount ? Math.round(Number(customAmount)) : 0;
+  const chargePaise = customRupees > 0 ? customRupees * 100 : selectedPackage.pricePaise;
+  const isCustomPrice = customRupees > 0 && customRupees * 100 !== selectedPackage.pricePaise;
+  // A different plan resets any special price
+  useEffect(() => {
+    setCustomAmount('');
+    setEditingAmount(false);
+  }, [selectedPkgId]);
+
   // Timer countdown for OTP resend
   useEffect(() => {
     if (otpTimer <= 0) return;
@@ -252,7 +266,7 @@ function RegisterContent() {
   // Generate dynamic QR code whenever selected package or step changes
   useEffect(() => {
     if (currentStep === 3 && paymentOption === 'UPI' && selectedPackage) {
-      const amountInr = selectedPackage.pricePaise / 100;
+      const amountInr = chargePaise / 100;
       const upiUri = generateUpiString({
         vpa: '9666636563@axisbank',
         payeeName: 'VALLABHANENI',
@@ -262,7 +276,7 @@ function RegisterContent() {
       setUpiIntentUri(upiUri);
       generateQrDataUrl(upiUri).then(setQrDataUrl);
     }
-  }, [currentStep, paymentOption, selectedPackage]);
+  }, [currentStep, paymentOption, selectedPackage, chargePaise]);
 
   // Handle Real-Time Gmail OTP Send
   const handleSendEmailOtp = async () => {
@@ -351,9 +365,7 @@ function RegisterContent() {
 
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      errors.email = 'Valid email address is required for receipts and records.';
-    } else if (!emailVerified) {
-      errors.otp = 'Please verify your Gmail address with the 6-digit verification code.';
+      errors.email = 'Please enter a valid email address. The receipt is sent there.';
     }
 
     if (!acceptedTerms) {
@@ -362,7 +374,7 @@ function RegisterContent() {
 
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
-      setGeneralError('Please correct the highlighted fields and verify your email address.');
+      setGeneralError('Please fix the highlighted fields.');
       return;
     }
 
@@ -393,6 +405,7 @@ function RegisterContent() {
           gender,
           paymentMethod: paymentOption,
           utrNumber: paymentOption === 'UPI' ? utrNumber.trim() : undefined,
+          customAmountInr: isCustomPrice ? customRupees : undefined,
           acceptedTerms: true,
         }),
       });
@@ -415,7 +428,8 @@ function RegisterContent() {
         preferredSlot,
         startDate,
         endDate: data.endDate || new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
-        totalAmount: selectedPackage.pricePaise / 100,
+        totalAmount: chargePaise / 100,
+        planPrice: selectedPackage.pricePaise / 100,
         paymentMethod: paymentOption,
         paymentStatus: paymentOption === 'UPI' ? 'PAID' : 'PENDING_CASH_COLLECTION',
         utrNumber: paymentOption === 'UPI' ? utrNumber.trim() : undefined,
@@ -431,10 +445,25 @@ function RegisterContent() {
   };
 
   // Download PDF
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!confirmationData) return;
+    // Logo for the receipt (served from /public, loaded only when needed)
+    let logoDataUrl: string | undefined;
+    try {
+      const blob = await (await fetch('/img/receipt-logo.jpg')).blob();
+      logoDataUrl = await new Promise<string>((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(String(fr.result));
+        fr.onerror = reject;
+        fr.readAsDataURL(blob);
+      });
+    } catch {
+      logoDataUrl = undefined;
+    }
     const doc = generatePdfReceipt({
-      receiptNumber: `REC-2026-${confirmationData.reference.slice(-5)}`,
+      logoDataUrl,
+      planPriceInr: confirmationData.planPrice,
+      receiptNumber: receiptNumberFor(confirmationData.reference),
       reference: confirmationData.reference,
       memberCode: confirmationData.memberCode,
       clientName: confirmationData.fullName,
@@ -443,18 +472,13 @@ function RegisterContent() {
       packageName: confirmationData.packageName,
       durationDays: confirmationData.durationDays,
       timeSlot: confirmationData.preferredSlot,
-      fitnessGoal: 'Vyomi Membership',
       startDate: confirmationData.startDate,
       endDate: confirmationData.endDate,
       amountInr: confirmationData.totalAmount,
       paymentMethod: confirmationData.paymentMethod,
       paymentStatus: confirmationData.paymentStatus as 'PAID' | 'PENDING_CASH_COLLECTION',
       utrNumber: confirmationData.utrNumber,
-      paymentDate: new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }),
+      paymentDate: new Date().toISOString().slice(0, 10),
     });
     doc.save(`Vyomi_Receipt_${confirmationData.memberCode}.pdf`);
   };
@@ -599,7 +623,7 @@ function RegisterContent() {
                 Choose your membership
               </h1>
               <p className="text-xs sm:text-sm text-[#64748B] mt-1 mx-auto">
-                One year, all-inclusive · Sonovision Plaza, Patamata
+                One year, all-inclusive · Durga Plaza, Patamata
               </p>
             </div>
 
@@ -694,7 +718,85 @@ function RegisterContent() {
               })}
             </div>
 
-            <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 sm:pt-3 bg-white/95 backdrop-blur sm:bg-transparent sm:static flex justify-end">
+            <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 sm:pt-3 bg-white/95 backdrop-blur sm:bg-transparent sm:static flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+              {/* Amount to charge, with a pencil to set a special price */}
+              <div className="flex items-center gap-2 sm:mr-auto min-h-[44px]">
+                {editingAmount ? (
+                  <form
+                    className="flex items-center gap-2 w-full"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const v = Math.round(Number(amountDraft));
+                      if (!v || v < 1) {
+                        setGeneralError('Enter an amount of at least ₹1.');
+                        return;
+                      }
+                      if (v > 1000000) {
+                        setGeneralError('Amount cannot be more than ₹10,00,000.');
+                        return;
+                      }
+                      setGeneralError('');
+                      setCustomAmount(String(v));
+                      setEditingAmount(false);
+                    }}
+                  >
+                    <div className="flex items-center h-11 rounded-xl border border-[#1E3A8A] bg-white px-3 focus-within:ring-2 focus-within:ring-[#1E3A8A]/20">
+                      <span className="text-sm text-[#64748B] mr-1">₹</span>
+                      <input
+                        autoFocus
+                        inputMode="numeric"
+                        value={amountDraft}
+                        onChange={(e) => setAmountDraft(e.target.value.replace(/\D/g, '').slice(0, 7))}
+                        placeholder={String(selectedPackage.pricePaise / 100)}
+                        aria-label="Amount to charge in rupees"
+                        className="w-28 text-base font-medium text-[#0F172A] bg-transparent outline-none"
+                      />
+                    </div>
+                    <button type="submit" className="h-11 px-4 rounded-xl text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#172F73] transition">
+                      Apply
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingAmount(false)}
+                      className="h-11 px-3 rounded-xl text-sm text-[#64748B] hover:text-[#0F172A] transition"
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                ) : (
+                  <>
+                    <div className="leading-tight">
+                      <span className="block text-xs text-[#64748B]">Amount to charge</span>
+                      <span className="text-lg font-semibold text-[#0F172A]">{formatINR(chargePaise)}</span>
+                      {isCustomPrice && (
+                        <span className="ml-2 text-xs text-[#64748B] line-through">{formatINR(selectedPackage.pricePaise)}</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAmountDraft(String(chargePaise / 100));
+                        setEditingAmount(true);
+                      }}
+                      aria-label="Edit amount"
+                      title="Set a special price"
+                      className="ml-1 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm text-[#1E3A8A] border border-[#C7D4F5] bg-white hover:border-[#1E3A8A] transition"
+                    >
+                      <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5z" /></svg>
+                      Edit
+                    </button>
+                    {isCustomPrice && (
+                      <button
+                        type="button"
+                        onClick={() => setCustomAmount('')}
+                        className="h-9 px-2 text-sm text-[#64748B] hover:text-red-700 transition"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => setCurrentStep(2)}
@@ -718,7 +820,7 @@ function RegisterContent() {
                     Your details
                   </h2>
                   <p className="text-[11px] font-bold text-[#475569]">
-                    Plan: <strong className="text-[#0F172A]">{selectedPackage.name}</strong> ({formatINR(selectedPackage.pricePaise)})
+                    Plan: <strong className="text-[#0F172A]">{selectedPackage.name}</strong> ({formatINR(chargePaise)}{isCustomPrice ? ' · special price' : ''})
                   </p>
                 </div>
                 <button
@@ -788,87 +890,28 @@ function RegisterContent() {
                 )}
               </div>
 
-              {/* Email Address with Real-Time Gmail OTP Verification */}
+              {/* Email (for the receipt) */}
               <div>
                 <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
                   Email address <span className="text-red-600">*</span>
+                  <span className="font-normal text-[#94A3B8]"> · receipt is sent here</span>
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    disabled={emailVerified}
-                    placeholder="e.g. aditya@gmail.com"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (formErrors.email) {
-                        setFormErrors((prev) => ({ ...prev, email: '' }));
-                      }
-                    }}
-                    className={`flex-1 bg-white border border-solid rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 transition ${
-                      emailVerified
-                        ? 'border-[#1E3A8A] bg-[#F5F8FF] text-[#0F172A]'
-                        : formErrors.email
-                        ? 'border-red-500 bg-red-50/20'
-                        : 'border-[#CBD5E1]'
-                    }`}
-                  />
-                  {!emailVerified ? (
-                    <button
-                      type="button"
-                      disabled={otpSending || otpTimer > 0}
-                      onClick={handleSendEmailOtp}
-                      className="text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px text-xs font-medium px-3.5 py-2 rounded-xl disabled:opacity-50 transition whitespace-nowrap"
-                    >
-                      {otpSending ? 'Sending...' : otpTimer > 0 ? `Resend (${otpTimer}s)` : otpSent ? 'Resend' : 'Send OTP'}
-                    </button>
-                  ) : (
-                    <span className="bg-[#EEF2FF] text-[#1E3A8A] border border-[#C7D4F5] text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 whitespace-nowrap">
-                      <span>✓</span> Gmail Verified
-                    </span>
-                  )}
-                </div>
-
+                <input
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="e.g. aditya@gmail.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (formErrors.email) setFormErrors((prev) => ({ ...prev, email: '' }));
+                  }}
+                  className={`w-full bg-white border border-solid rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 transition ${
+                    formErrors.email ? 'border-red-500 bg-red-50/20' : 'border-[#CBD5E1]'
+                  }`}
+                />
                 {formErrors.email && (
-                  <span className="text-[11px] text-red-600 mt-0.5 block font-bold">{formErrors.email}</span>
-                )}
-
-                {/* OTP Input Block */}
-                {otpSent && !emailVerified && (
-                  <div className="mt-2 p-2.5 bg-[#F5F8FF] border border-[#1E3A8A]/40 rounded-lg">
-                    <div className="flex items-center justify-between text-[11px] mb-1.5">
-                      <span className="font-semibold text-[#1E3A8A]">
-                        Enter the 6-digit code sent to {email}
-                      </span>
-                      {otpMessage && (
-                        <span className="text-[#172F73] font-bold">{otpMessage}</span>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        maxLength={6}
-                        placeholder="123456"
-                        value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                        className="w-32 tracking-widest text-center font-mono font-semibold bg-white border border-solid border-[#CBD5E1] rounded-lg px-2 py-1.5 text-sm text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
-                      />
-                      <button
-                        type="button"
-                        disabled={otpVerifying || otpCode.length !== 6}
-                        onClick={handleVerifyEmailOtp}
-                        className="text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px text-xs font-medium px-3.5 py-1.5 rounded-xl disabled:opacity-50 transition"
-                      >
-                        {otpVerifying ? 'Verifying...' : 'Verify Gmail'}
-                      </button>
-                    </div>
-                    {otpError && (
-                      <span className="text-[11px] text-red-600 mt-1 block font-bold">{otpError}</span>
-                    )}
-                  </div>
-                )}
-                {formErrors.otp && (
-                  <span className="text-[11px] text-red-600 mt-0.5 block font-bold">{formErrors.otp}</span>
+                  <span className="text-[11px] text-red-600 mt-0.5 block font-medium">{formErrors.email}</span>
                 )}
               </div>
 
@@ -881,7 +924,7 @@ function RegisterContent() {
                   <select
                     value={preferredSlot}
                     onChange={(e) => setPreferredSlot(e.target.value)}
-                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-2.5 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
+                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
                   >
                     {TIME_SLOTS.map((s) => (
                       <option key={s} value={s}>
@@ -900,7 +943,7 @@ function RegisterContent() {
                     value={startDate}
                     min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-2.5 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
+                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
                   />
                 </div>
               </div>
@@ -911,19 +954,33 @@ function RegisterContent() {
                   <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
                     Gender Preference
                   </label>
-                  <div className="flex gap-3 text-sm text-[#334155]">
-                    {['Male', 'Female', 'Prefer not to say'].map((g) => (
-                      <label key={g} className="flex items-center gap-1 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="gender"
-                          checked={gender === g}
-                          onChange={() => setGender(g)}
-                          className="accent-[#1E3A8A] w-3.5 h-3.5"
-                        />
-                        <span className="text-sm">{g}</span>
-                      </label>
-                    ))}
+                  <div role="radiogroup" aria-label="Gender" className="flex flex-wrap gap-2">
+                    {['Male', 'Female', 'Prefer not to say'].map((g) => {
+                      const on = gender === g;
+                      return (
+                        <button
+                          key={g}
+                          type="button"
+                          role="radio"
+                          aria-checked={on}
+                          onClick={() => setGender(g)}
+                          className={`inline-flex items-center gap-2 h-9 px-3 rounded-full border text-sm transition ${
+                            on
+                              ? 'border-[#1E3A8A] bg-[#EEF2FF] text-[#1E3A8A]'
+                              : 'border-[#E2E8F0] bg-white text-[#475569] hover:border-[#94A3B8]'
+                          }`}
+                        >
+                          <span
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                              on ? 'border-[#1E3A8A]' : 'border-[#CBD5E1] bg-white'
+                            }`}
+                          >
+                            {on && <span className="w-2 h-2 rounded-full bg-[#1E3A8A]" />}
+                          </span>
+                          {g}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -934,7 +991,7 @@ function RegisterContent() {
                     type="checkbox"
                     checked={acceptedTerms}
                     onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 accent-[#1E3A8A] w-3.5 h-3.5 rounded flex-shrink-0"
+                    className="peer mt-0.5 w-[18px] h-[18px] flex-shrink-0 appearance-none rounded-[5px] border border-[#CBD5E1] bg-white checked:bg-[#1E3A8A] checked:border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/25 cursor-pointer bg-center bg-no-repeat checked:bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path d=%22M3.5 8.5l3 3 6-6.5%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>')]"
                   />
                   <span>
                     I agree to the Vyomi Fitness Club membership code of conduct, health waiver, and biometric entry rules.
@@ -978,16 +1035,16 @@ function RegisterContent() {
                   clientName={fullName || 'VALUED MEMBER'}
                   packageName={selectedPackage.name}
                   durationDays={selectedPackage.durationDays}
-                  memberCode="VYO · 2026 · VIP"
+                  memberCode={`VYO · 2026 · ${selectedPackage.name.replace(/\s*membership\s*/i, '').trim().toUpperCase()}`}
                   endDate={projectedEndDate}
                 />
                 <div className="mt-3 p-3 bg-white border border-[#E3E8F2] rounded-xl text-[11px] text-[#64748B] space-y-1">
                   <div className="flex justify-between font-semibold text-sm text-[#0F172A]">
                     <span>{selectedPackage.name}</span>
-                    <span className="text-[#0F172A]">{formatINR(selectedPackage.pricePaise)}</span>
+                    <span className="text-[#0F172A]">{formatINR(chargePaise)}</span>
                   </div>
                   <p className="text-xs text-[#64748B]">
-                    Biometric access at Sonovision Plaza, Patamata. 365 Days validity from start date.
+                    Biometric access at Durga Plaza, Patamata. Valid for 365 days from the start date.
                   </p>
                 </div>
               </div>
@@ -1006,7 +1063,7 @@ function RegisterContent() {
                 <p className="text-[11px] font-bold text-[#475569]">
                   Payable for {selectedPackage.name}:{' '}
                   <strong className="text-sm font-semibold text-[#0F172A]">
-                    {formatINR(selectedPackage.pricePaise)}
+                    {formatINR(chargePaise)}
                   </strong>
                 </p>
               </div>
@@ -1064,7 +1121,7 @@ function RegisterContent() {
                   </span>
                 </div>
                 <p className="text-[11px] font-medium text-[#475569]">
-                  Reserve slot now and pay cash at Sonovision Plaza club desk.
+                  Reserve now and pay cash at the front desk.
                 </p>
               </button>
             </div>
@@ -1096,7 +1153,7 @@ function RegisterContent() {
                       </div>
                     )}
                     <span className="text-[11px] font-semibold text-[#0F172A] block mt-1.5 bg-[#F5F8FF] py-0.5 px-2 rounded border border-[#C7D4F5]">
-                      Amount Locked: {formatINR(selectedPackage.pricePaise)}
+                      Amount Locked: {formatINR(chargePaise)}
                     </span>
                   </div>
 
@@ -1107,7 +1164,7 @@ function RegisterContent() {
                       <p className="text-[11px]">1. Open PhonePe, Google Pay, or Paytm.</p>
                       <p className="text-[11px]">2. Scan this QR code.</p>
                       <p className="text-[#1E3A8A] font-bold text-[11px]">
-                        3. The amount of {formatINR(selectedPackage.pricePaise)} locks automatically in your UPI app.
+                        3. The amount of {formatINR(chargePaise)} locks automatically in your UPI app.
                       </p>
                       <p className="text-[11px]">4. Complete payment and enter the 12-digit UTR reference below.</p>
                     </div>
@@ -1154,7 +1211,7 @@ function RegisterContent() {
                 <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 space-y-1">
                   <p className="font-semibold text-xs">Desk Payment Note:</p>
                   <p className="font-medium text-[11px]">
-                    Amount of <strong className="font-semibold">{formatINR(selectedPackage.pricePaise)}</strong> will be collected in cash at the Vyomi Fitness Club front desk (Sonovision Plaza, Patamata) prior to collecting your biometric wristband.
+                    Amount of <strong className="font-semibold">{formatINR(chargePaise)}</strong> will be collected in cash at the Vyomi Fitness Club front desk (4th Floor, Durga Plaza, Patamata) prior to collecting your biometric wristband.
                   </p>
                 </div>
               </div>

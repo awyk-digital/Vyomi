@@ -3,7 +3,8 @@ import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db, PayMethod } from '@/lib/db';
 import { sendMembershipReceiptEmail } from '@/lib/email';
-import { generatePdfReceipt } from '@/lib/pdfReceipt';
+import { generatePdfReceipt, receiptNumberFor } from '@/lib/pdfReceipt';
+import { RECEIPT_LOGO_JPEG } from '@/lib/receiptLogo';
 import { logActivity } from '@/lib/activity';
 
 export async function POST(
@@ -96,12 +97,14 @@ export async function POST(
         const clientName = client?.full_name || 'Valued Member';
         const memberCode = client?.member_code || reg.member_code || `VYO-2026-${reg.reference.slice(-5)}`;
         const packageName = pkg?.name || reg.package_name || 'VIP Membership';
-        const receiptNumber = `REC-2026-${reg.reference.replace(/\D/g, '').slice(-5) || Math.floor(10000 + Math.random() * 90000)}`;
+        const receiptNumber = receiptNumberFor(reg.reference);
 
         // Dispatch Digital VIP Card & PDF Receipt to user's Gmail
         if (clientEmail) {
           try {
             const pdfDoc = generatePdfReceipt({
+            logoDataUrl: RECEIPT_LOGO_JPEG,
+            planPriceInr: Number(pkg?.price_inr || 0) || undefined,
               receiptNumber,
               reference: reg.reference,
               memberCode,
@@ -122,6 +125,7 @@ export async function POST(
 
             sendMembershipReceiptEmail({
               toEmail: clientEmail,
+              planPriceInr: Number(pkg?.price_inr || 0) || undefined,
               clientName,
               memberCode,
               receiptNumber,

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-import { generatePdfReceipt } from '@/lib/pdfReceipt';
+import { generatePdfReceipt, receiptNumberFor } from '@/lib/pdfReceipt';
+import { RECEIPT_LOGO_JPEG } from '@/lib/receiptLogo';
 import { sendMembershipReceiptEmail } from '@/lib/email';
 import { db } from '@/lib/db';
 
@@ -62,7 +63,7 @@ export async function POST(
             phone: local.client.phone,
             fitness_goal: local.client.fitnessGoal,
           },
-          package: local.package && { name: local.package.name, duration_days: local.package.durationDays },
+          package: local.package && { name: local.package.name, duration_days: local.package.durationDays, price_inr: Math.round(local.package.pricePaise / 100) },
           payment: local.payment && { method: local.payment.method, status: local.payment.status },
         };
       }
@@ -82,12 +83,14 @@ export async function POST(
     const clientName = client?.full_name || 'Valued Member';
     const memberCode = client?.member_code || 'VYO-2026-MEMBER';
     const packageName = pkg?.name || reg.package_name || 'Vyomi Membership';
-    const receiptNum = `REC-2026-${reference.replace(/\D/g, '').slice(-5) || Math.floor(10000 + Math.random() * 90000)}`;
+    const receiptNum = receiptNumberFor(reference);
 
     // 2. Generate PDF Base64 Attachment
     let pdfBase64: string | undefined = undefined;
     try {
       const pdfDoc = generatePdfReceipt({
+            logoDataUrl: RECEIPT_LOGO_JPEG,
+            planPriceInr: Number(pkg?.price_inr || 0) || undefined,
         receiptNumber: receiptNum,
         reference: reg.reference,
         memberCode,
@@ -114,6 +117,7 @@ export async function POST(
     // 3. Dispatch Email via Resend
     const emailResult = await sendMembershipReceiptEmail({
       toEmail: clientEmail,
+      planPriceInr: Number(pkg?.price_inr || 0) || undefined,
       clientName,
       memberCode,
       receiptNumber: receiptNum,
