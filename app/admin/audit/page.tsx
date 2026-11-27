@@ -35,7 +35,7 @@ export default function AdminAuditPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
+          <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider block">
             Compliance & Access Security
           </span>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
@@ -46,17 +46,17 @@ export default function AdminAuditPage() {
         <button
           type="button"
           onClick={fetchLogs}
-          className="px-3.5 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition shadow-sm"
+          className="px-3.5 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded-lg text-xs font-bold text-[#0F172A] transition shadow-sm"
         >
           🔄 Refresh Activity
         </button>
       </div>
 
-      <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+              <tr className="bg-[#F1F5F9] border-b border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
                 <th className="py-3 px-4 font-black w-48 whitespace-nowrap">Timestamp (IST)</th>
                 <th className="py-3 px-4 font-black w-44 whitespace-nowrap">Authorized Personnel</th>
                 <th className="py-3 px-4 font-black w-44 whitespace-nowrap">Security Event</th>
@@ -90,7 +90,7 @@ export default function AdminAuditPage() {
                     <td className="py-3.5 px-4 font-extrabold text-[#0F172A] w-44 whitespace-nowrap">
                       {l.adminName}
                     </td>
-                    <td className="py-3.5 px-4 font-mono font-black text-[#D97706] text-xs w-44 whitespace-nowrap">
+                    <td className="py-3.5 px-4 font-mono font-black text-[#1E3A8A] text-xs w-44 whitespace-nowrap">
                       {l.action}
                     </td>
                     <td className="py-3.5 px-4 uppercase text-xs font-black text-[#0F172A] w-40 whitespace-nowrap">

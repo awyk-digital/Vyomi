@@ -70,7 +70,7 @@ export default function AdminCouponsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
+          <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider block">
             Promotional Engine
           </span>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
@@ -81,7 +81,7 @@ export default function AdminCouponsPage() {
         <button
           type="button"
           onClick={() => setShowAdd(!showAdd)}
-          className="px-3.5 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition shadow-sm"
+          className="px-3.5 py-1.5 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded-lg text-xs font-bold transition shadow-sm"
         >
           {showAdd ? 'Cancel' : '+ Create Voucher'}
         </button>
@@ -90,7 +90,7 @@ export default function AdminCouponsPage() {
       {showAdd && (
         <form
           onSubmit={handleCreateCoupon}
-          className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4 max-w-xl"
+          className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4 max-w-xl"
         >
           <h3 className="text-sm font-extrabold text-[#0F172A] border-b border-[#E2E8F0] pb-2">
             Create Promotional Coupon
@@ -109,7 +109,7 @@ export default function AdminCouponsPage() {
                 placeholder="e.g. FESTIVE20"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold uppercase text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                className="w-full bg-white border border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold uppercase text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
               />
             </div>
 
@@ -120,7 +120,7 @@ export default function AdminCouponsPage() {
               <select
                 value={discountType}
                 onChange={(e) => setDiscountType(e.target.value as 'PERCENT' | 'FLAT')}
-                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                className="w-full bg-white border border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
               >
                 <option value="PERCENT">Percentage (%)</option>
                 <option value="FLAT">Flat Rupee Amount (₹)</option>
@@ -136,7 +136,7 @@ export default function AdminCouponsPage() {
                 required
                 value={discountValue}
                 onChange={(e) => setDiscountValue(Number(e.target.value))}
-                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                className="w-full bg-white border border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
               />
             </div>
 
@@ -148,7 +148,7 @@ export default function AdminCouponsPage() {
                 type="number"
                 value={maxUses}
                 onChange={(e) => setMaxUses(Number(e.target.value))}
-                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                className="w-full bg-white border border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
               />
             </div>
           </div>
@@ -157,13 +157,13 @@ export default function AdminCouponsPage() {
             <button
               type="button"
               onClick={() => setShowAdd(false)}
-              className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A]"
+              className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded text-xs font-bold text-[#0F172A]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded text-xs font-bold"
+              className="px-4 py-1.5 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded text-xs font-bold"
             >
               Save Voucher Code
             </button>
@@ -171,10 +171,10 @@ export default function AdminCouponsPage() {
         </form>
       )}
 
-      <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="bg-[#F8FAFC] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
+            <tr className="bg-[#F8FAFC] border-b border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-[11px]">
               <th className="py-3 px-4 font-extrabold">Code</th>
               <th className="py-3 px-4 font-extrabold">Benefit</th>
               <th className="py-3 px-4 font-extrabold">Redemption Count</th>
@@ -201,7 +201,7 @@ export default function AdminCouponsPage() {
                   <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A] tracking-wider">
                     {c.code}
                   </td>
-                  <td className="py-3.5 px-4 font-black text-[#D97706]">
+                  <td className="py-3.5 px-4 font-black text-[#1E3A8A]">
                     {c.discountType === 'PERCENT' ? `${c.discountValue}% Off` : `₹${(c.discountValue / 100).toLocaleString('en-IN')} Flat Off`}
                   </td>
                   <td className="py-3.5 px-4 text-[#0F172A] font-bold">

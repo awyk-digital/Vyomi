@@ -216,7 +216,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
@@ -234,10 +234,10 @@ export default function RootLayout({
         */}
         <link
           rel="stylesheet"
-          href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500&f[]=boska@500&display=swap"
+          href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&f[]=boska@500&display=swap"
         />
       </head>
-      <body className="bg-ink text-muted antialiased">
+      <body className="bg-ink text-muted antialiased" suppressHydrationWarning>
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:border focus:border-hairline-2 focus:bg-ink focus:px-4 focus:py-2 focus:text-heading"

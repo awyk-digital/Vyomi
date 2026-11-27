@@ -169,7 +169,7 @@ export default function EditRegistrationPage({
               {reference}
             </Link>
             <span className="text-[#CBD5E1]">/</span>
-            <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider">
+            <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider">
               Correction & Update
             </span>
           </div>
@@ -180,7 +180,7 @@ export default function EditRegistrationPage({
 
         <div className="flex items-center gap-3">
           {memberCode && (
-            <span className="text-xs font-mono font-extrabold text-[#D97706] px-2.5 py-1 rounded-md border border-[#FDE68A] bg-[#FEF3C7]">
+            <span className="text-xs font-mono font-extrabold text-[#1E3A8A] px-2.5 py-1 rounded-md border border-[#C7D4F5] bg-[#E8EEFC]">
               {memberCode}
             </span>
           )}
@@ -210,7 +210,7 @@ export default function EditRegistrationPage({
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section 1: Personal Identification */}
         <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 space-y-5 shadow-sm">
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#D97706] border-b border-[#F1F5F9] pb-2.5">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#1E3A8A] border-b border-[#F1F5F9] pb-2.5">
             01. Personal Identity & Contact Information
           </h2>
 
@@ -224,7 +224,7 @@ export default function EditRegistrationPage({
                 required
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               />
             </div>
 
@@ -238,7 +238,7 @@ export default function EditRegistrationPage({
                 maxLength={10}
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               />
             </div>
 
@@ -251,7 +251,7 @@ export default function EditRegistrationPage({
                 required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               />
             </div>
 
@@ -263,7 +263,7 @@ export default function EditRegistrationPage({
                 type="date"
                 value={form.dateOfBirth}
                 onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               />
             </div>
 
@@ -274,7 +274,7 @@ export default function EditRegistrationPage({
               <select
                 value={form.gender}
                 onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -291,7 +291,7 @@ export default function EditRegistrationPage({
                 <select
                   value={form.idProofType}
                   onChange={(e) => setForm({ ...form, idProofType: e.target.value })}
-                  className="h-10 px-2 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                  className="h-10 px-2 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
                 >
                   <option value="Aadhaar">Aadhaar</option>
                   <option value="PAN">PAN</option>
@@ -303,7 +303,7 @@ export default function EditRegistrationPage({
                   placeholder="ID Number"
                   value={form.idProofNumber}
                   onChange={(e) => setForm({ ...form, idProofNumber: e.target.value })}
-                  className="h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                  className="h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
                 />
               </div>
             </div>
@@ -317,14 +317,14 @@ export default function EditRegistrationPage({
               rows={2}
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
-              className="w-full p-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF] resize-none"
+              className="w-full p-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF] resize-none"
             />
           </div>
         </div>
 
         {/* Section 2: Emergency & Health Protocol */}
         <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 space-y-5 shadow-sm">
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#D97706] border-b border-[#F1F5F9] pb-2.5">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#1E3A8A] border-b border-[#F1F5F9] pb-2.5">
             02. Emergency Contact & Medical Notes
           </h2>
 
@@ -338,7 +338,7 @@ export default function EditRegistrationPage({
                 required
                 value={form.emergencyContactName}
                 onChange={(e) => setForm({ ...form, emergencyContactName: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               />
             </div>
 
@@ -352,7 +352,7 @@ export default function EditRegistrationPage({
                 maxLength={10}
                 value={form.emergencyContactPhone}
                 onChange={(e) => setForm({ ...form, emergencyContactPhone: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               />
             </div>
 
@@ -364,7 +364,7 @@ export default function EditRegistrationPage({
                 type="text"
                 value={form.fitnessGoal}
                 onChange={(e) => setForm({ ...form, fitnessGoal: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               />
             </div>
 
@@ -375,7 +375,7 @@ export default function EditRegistrationPage({
               <select
                 value={form.preferredSlot}
                 onChange={(e) => setForm({ ...form, preferredSlot: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               >
                 <option value="morning">Morning (06:00 – 11:00)</option>
                 <option value="afternoon">Afternoon (11:00 – 16:00)</option>
@@ -392,14 +392,14 @@ export default function EditRegistrationPage({
               rows={2}
               value={form.medicalNotes}
               onChange={(e) => setForm({ ...form, medicalNotes: e.target.value })}
-              className="w-full p-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF] resize-none"
+              className="w-full p-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF] resize-none"
             />
           </div>
         </div>
 
         {/* Section 3: Membership Status & Concierge Operations */}
         <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 space-y-5 shadow-sm">
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#D97706] border-b border-[#F1F5F9] pb-2.5">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#1E3A8A] border-b border-[#F1F5F9] pb-2.5">
             03. Operational Status & Concierge Audit Notes
           </h2>
 
@@ -411,7 +411,7 @@ export default function EditRegistrationPage({
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               >
                 <option value="CONFIRMED">CONFIRMED (Active)</option>
                 <option value="PENDING">PENDING (Awaiting Payment)</option>
@@ -428,7 +428,7 @@ export default function EditRegistrationPage({
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               />
             </div>
 
@@ -440,7 +440,7 @@ export default function EditRegistrationPage({
                 type="date"
                 value={form.endDate}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF]"
+                className="w-full h-10 px-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF]"
               />
             </div>
           </div>
@@ -454,7 +454,7 @@ export default function EditRegistrationPage({
               placeholder="e.g. Corrected member phone number per WhatsApp verification on 24 Nov..."
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              className="w-full p-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706] focus:bg-[#FFFFFF] resize-none"
+              className="w-full p-3 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] focus:bg-[#FFFFFF] resize-none"
             />
           </div>
         </div>
@@ -471,7 +471,7 @@ export default function EditRegistrationPage({
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-extrabold tracking-wide uppercase shadow-sm transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-[#1E3A8A] hover:bg-[#172F73] text-white text-xs font-extrabold tracking-wide uppercase shadow-sm transition-colors disabled:opacity-50"
           >
             {submitting ? 'Saving Corrections...' : 'Save Member Corrections →'}
           </button>

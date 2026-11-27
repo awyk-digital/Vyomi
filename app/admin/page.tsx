@@ -84,7 +84,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="py-12 flex items-center justify-center">
-        <span className="text-xs text-[#64748B] font-semibold">Loading live operational telemetry from Supabase...</span>
+        <span className="text-xs text-[#64748B] font-semibold">Loading dashboard…</span>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function AdminDashboardPage() {
   if (!stats) {
     return (
       <div className="py-12 text-center text-xs text-red-600 font-bold">
-        Could not load dashboard telemetry.
+        Could not load the dashboard. Please refresh.
       </div>
     );
   }
@@ -102,8 +102,8 @@ export default function AdminDashboardPage() {
       {/* Top Header - Refined Font Size */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="text-[11px] font-extrabold tracking-widest text-[#D97706] uppercase block">
-            Executive Operations Telemetry
+          <span className="text-[11px] font-extrabold tracking-widest text-[#1E3A8A] uppercase block">
+            Overview
           </span>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
             Club Performance & Member Intake
@@ -114,14 +114,14 @@ export default function AdminDashboardPage() {
           <a
             href="/api/v1/admin/registrations/export"
             download
-            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition shadow-sm"
+            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded-lg text-xs font-bold text-[#0F172A] transition shadow-sm"
           >
             📥 Export Registry CSV
           </a>
           <Link
             href="/register"
             target="_blank"
-            className="px-3.5 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition shadow-sm"
+            className="px-3.5 py-1.5 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded-lg text-xs font-bold transition shadow-sm"
           >
             + New Member Enrollment
           </Link>
@@ -131,12 +131,12 @@ export default function AdminDashboardPage() {
       {/* 4 Essential KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Verified Monthly Revenue */}
-        <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
+        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
               Monthly Settled Revenue
             </span>
-            <span className="text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold px-1.5 py-0.5 rounded">
+            <span className="text-[11px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold px-1.5 py-0.5 rounded">
               Verified
             </span>
           </div>
@@ -149,12 +149,12 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Card 2: Active Memberships */}
-        <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
+        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
               Active Memberships
             </span>
-            <span className="text-[10px] bg-sky-100 text-sky-900 border border-sky-300 font-extrabold px-1.5 py-0.5 rounded">
+            <span className="text-[11px] bg-sky-100 text-sky-900 border border-sky-300 font-extrabold px-1.5 py-0.5 rounded">
               Valid
             </span>
           </div>
@@ -167,12 +167,12 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Card 3: New Enrollees */}
-        <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
+        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
               New Enrollees
             </span>
-            <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
+            <span className="text-[11px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
               MTD
             </span>
           </div>
@@ -185,16 +185,16 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Card 4: Action Required */}
-        <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
+        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
               Front Desk Settlements
             </span>
-            <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
+            <span className="text-[11px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
               Action
             </span>
           </div>
-          <div className="text-2xl font-black text-[#D97706]">
+          <div className="text-2xl font-black text-[#1E3A8A]">
             {stats.pendingCount}
           </div>
           <span className="text-xs font-medium text-[#475569] block">
@@ -204,7 +204,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Quick Action Bar for Staff */}
-      <div className="bg-white border-2 border-[#CBD5E1] p-3.5 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="bg-white border border-[#CBD5E1] p-3.5 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="font-bold text-[#0F172A]">Reception Terminal Active</span>
@@ -213,7 +213,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/admin/registrations?status=PENDING_CASH_COLLECTION"
-            className="px-3 py-1.5 bg-[#FFFBEB] border border-[#FDE68A] text-[#D97706] font-bold rounded-lg hover:bg-[#FEF3C7] transition"
+            className="px-3 py-1.5 bg-[#F5F8FF] border border-[#C7D4F5] text-[#1E3A8A] font-bold rounded-lg hover:bg-[#E8EEFC] transition"
           >
             Review Pending Cash ({stats.pendingCount}) →
           </Link>
@@ -227,19 +227,19 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Recent Registrations Table */}
-      <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
         <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between">
           <div>
             <h2 className="text-xs font-extrabold text-[#0F172A] uppercase tracking-wider">
               Recent Member Intakes
             </h2>
             <p className="text-xs text-[#475569] font-medium mt-0.5">
-              Live registration records synced from Supabase
+              Latest registrations
             </p>
           </div>
           <Link
             href="/admin/registrations"
-            className="text-xs font-bold text-[#D97706] hover:underline"
+            className="text-xs font-bold text-[#1E3A8A] hover:underline"
           >
             View Full Registry →
           </Link>
@@ -248,7 +248,7 @@ export default function AdminDashboardPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+              <tr className="bg-[#F1F5F9] border-b border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
                 <th className="py-3 px-4 font-black w-32 whitespace-nowrap">Reference ID</th>
                 <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Member Code</th>
                 <th className="py-3 px-4 font-black min-w-[140px]">Member Name</th>
@@ -275,7 +275,7 @@ export default function AdminDashboardPage() {
                         {r.reference}
                       </Link>
                     </td>
-                    <td className="py-3 px-4 font-mono font-black text-[#D97706] w-36 whitespace-nowrap">
+                    <td className="py-3 px-4 font-mono font-black text-[#1E3A8A] w-36 whitespace-nowrap">
                       {r.client?.memberCode || (
                         <span className="text-[#334155] font-semibold">Pending</span>
                       )}
@@ -312,7 +312,7 @@ export default function AdminDashboardPage() {
                       <div className="flex items-center justify-center gap-2">
                         <Link
                           href={`/admin/registrations/${r.reference}`}
-                          className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-extrabold text-[#0F172A] shadow-sm transition"
+                          className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded text-xs font-extrabold text-[#0F172A] shadow-sm transition"
                         >
                           Dossier
                         </Link>

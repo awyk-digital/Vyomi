@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     let isValid = false;
 
     // Master test bypass for local developer sandbox
-    if (code === '123456') {
+    if (process.env.NODE_ENV !== 'production' && code === '123456') {
       isValid = true;
     } else {
       const stored = memoryEmailOtpStore.get(email);

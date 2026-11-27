@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { SUPPLIED } from '@/config/assets';
+import { useBackGuard } from '@/lib/useBackGuard';
 
 interface AdminUser {
   id: string;
@@ -32,6 +33,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [, startTransition] = useTransition();
 
   const isLoginPage = pathname === '/admin/login';
+
+  // Browser Back never leaves the admin area. If it ever lands outside
+  // /admin, send staff straight back to the last admin page they were on.
+  const lastAdminPath = useRef(pathname);
+  useEffect(() => {
+    if (pathname?.startsWith('/admin')) lastAdminPath.current = pathname;
+  }, [pathname]);
+  useBackGuard({
+    allowPath: (path) => path.startsWith('/admin'),
+    onEscape: () => router.replace(lastAdminPath.current || '/admin'),
+  });
 
   useEffect(() => {
     setClock(istTime());
@@ -75,14 +87,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   if (isLoginPage) {
-    return <div data-theme="light">{children}</div>;
+    return <>{children}</>;
   }
 
   if (loading) {
     return (
-      <div data-theme="light" className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
         <div className="flex items-center gap-3 text-xs text-[#0F172A] font-bold">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] animate-ping" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A] animate-ping" />
           <span>Authenticating Vyomi Admin Portal...</span>
         </div>
       </div>
@@ -91,8 +103,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!admin) {
     return (
-      <div data-theme="light" className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4">
-        <div className="max-w-sm w-full bg-white border-2 border-[#CBD5E1] rounded-2xl p-6 text-center shadow-sm space-y-4">
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4">
+        <div className="max-w-sm w-full bg-white border border-[#CBD5E1] rounded-2xl p-6 text-center shadow-sm space-y-4">
           <div className="w-10 h-10 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center mx-auto text-amber-900 text-lg">
             🔒
           </div>
@@ -104,7 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <Link
             href="/admin/login"
-            className="w-full inline-block py-2.5 px-4 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-lg text-xs font-bold transition shadow-sm text-center"
+            className="w-full inline-block py-2.5 px-4 text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px rounded-xl text-xs font-medium transition text-center"
           >
             Go to Staff Login →
           </Link>
@@ -124,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div data-theme="light" className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans flex flex-col antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans flex flex-col antialiased">
       {/* Mobile Backdrop Overlay */}
       {mobileMenuOpen && (
         <div
@@ -176,7 +188,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   href={item.href}
                   className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs transition-all ${
                     active
-                      ? 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A] shadow-sm font-extrabold'
+                      ? 'bg-[#F5F8FF] text-[#1E3A8A] border border-[#C7D4F5] shadow-sm font-extrabold'
                       : 'text-[#334155] font-semibold hover:text-[#0F172A] hover:bg-[#F8FAFC]'
                   }`}
                 >
@@ -185,7 +197,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <span>{item.label}</span>
                   </div>
                   {active && (
-                    <span className="w-1.5 h-3.5 rounded-full bg-[#D97706]" />
+                    <span className="w-1.5 h-3.5 rounded-full bg-[#1E3A8A]" />
                   )}
                 </Link>
               );
@@ -200,7 +212,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="font-extrabold text-[#0F172A] block truncate">
                 {admin?.name || 'Administrator'}
               </span>
-              <span className="text-[0.625rem] uppercase tracking-wider text-[#D97706] font-extrabold">
+              <span className="text-[11px] uppercase tracking-wider text-[#1E3A8A] font-extrabold">
                 {admin?.role || 'SUPER_ADMIN'}
               </span>
             </div>
@@ -259,7 +271,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             <Link
               href="/admin/registrations/new"
-              className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-bold py-1.5 px-3 rounded-lg transition flex items-center gap-1.5 shadow-sm"
+              className="bg-[#1E3A8A] hover:bg-[#172F73] text-white text-xs font-bold py-1.5 px-3 rounded-lg transition flex items-center gap-1.5 shadow-sm"
             >
               <span>+</span>
               <span className="hidden xs:inline">Walk-in Reg</span>
@@ -278,8 +290,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#E2E8F0] h-14 z-30 flex items-center justify-around px-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
         <Link
           href="/admin"
-          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-bold transition ${
-            pathname === '/admin' ? 'text-[#D97706]' : 'text-[#475569] hover:text-[#0F172A]'
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[11px] font-bold transition ${
+            pathname === '/admin' ? 'text-[#1E3A8A]' : 'text-[#475569] hover:text-[#0F172A]'
           }`}
         >
           <span className="text-base">📊</span>
@@ -287,9 +299,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Link>
         <Link
           href="/admin/registrations"
-          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-bold transition ${
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[11px] font-bold transition ${
             pathname.startsWith('/admin/registrations') && pathname !== '/admin/registrations/new'
-              ? 'text-[#D97706]'
+              ? 'text-[#1E3A8A]'
               : 'text-[#475569] hover:text-[#0F172A]'
           }`}
         >
@@ -298,17 +310,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Link>
         <Link
           href="/admin/registrations/new"
-          className="flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-bold text-[#0F172A]"
+          className="flex flex-col items-center justify-center flex-1 h-full py-1 text-[11px] font-bold text-[#0F172A]"
         >
-          <div className="w-8 h-8 rounded-full bg-[#D97706] text-white flex items-center justify-center -mt-3 shadow-md">
+          <div className="w-8 h-8 rounded-full bg-[#1E3A8A] text-white flex items-center justify-center -mt-3 shadow-sm">
             +
           </div>
           <span>Walk-in</span>
         </Link>
         <Link
           href="/admin/payments"
-          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-bold transition ${
-            pathname === '/admin/payments' ? 'text-[#D97706]' : 'text-[#475569] hover:text-[#0F172A]'
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[11px] font-bold transition ${
+            pathname === '/admin/payments' ? 'text-[#1E3A8A]' : 'text-[#475569] hover:text-[#0F172A]'
           }`}
         >
           <span className="text-base">💳</span>

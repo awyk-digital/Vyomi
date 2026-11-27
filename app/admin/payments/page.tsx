@@ -93,7 +93,7 @@ export default function AdminPaymentsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
+          <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider block">
             Financial Ledger & Reconciliation
           </span>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
@@ -102,11 +102,11 @@ export default function AdminPaymentsPage() {
         </div>
       </div>
 
-      <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+              <tr className="bg-[#F1F5F9] border-b border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
                 <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Settlement Date</th>
                 <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Reference ID</th>
                 <th className="py-3 px-4 font-black min-w-[150px]">Enrolled Member</th>
@@ -155,7 +155,7 @@ export default function AdminPaymentsPage() {
                           {p.client?.fullName || 'Valued Member'}
                         </span>
                         {p.client?.memberCode && (
-                          <span className="font-mono text-xs font-black text-[#D97706]">
+                          <span className="font-mono text-xs font-black text-[#1E3A8A]">
                             {p.client.memberCode}
                           </span>
                         )}

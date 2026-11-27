@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     // Master test bypass or check memory / Supabase
     let isValid = false;
 
-    if (code === '123456') {
+    if (process.env.NODE_ENV !== 'production' && code === '123456') {
       isValid = true;
     } else {
       // 1. Check in memory

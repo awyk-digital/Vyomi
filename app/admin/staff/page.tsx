@@ -93,7 +93,7 @@ export default function AdminStaffPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
+          <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider block">
             Access Governance & RBAC
           </span>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
@@ -104,7 +104,7 @@ export default function AdminStaffPage() {
         <button
           type="button"
           onClick={() => setShowAdd(!showAdd)}
-          className="px-3.5 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition shadow-sm"
+          className="px-3.5 py-1.5 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded-lg text-xs font-bold transition shadow-sm"
         >
           {showAdd ? 'Cancel Provisioning' : '+ Provision Personnel Account'}
         </button>
@@ -112,7 +112,7 @@ export default function AdminStaffPage() {
 
       {/* Role Responsibilities Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-        <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1.5">
+        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1.5">
           <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded border border-purple-300 text-purple-900 bg-purple-100">
             Tier 1: Super Admin
           </span>
@@ -120,25 +120,25 @@ export default function AdminStaffPage() {
           <p className="text-[#1E293B] font-semibold leading-relaxed">
             Full governance, security audit oversight, financial refund clearance, and staff account management.
           </p>
-          <span className="text-xs font-mono text-[#D97706] font-black block pt-1">
+          <span className="text-xs font-mono text-[#1E3A8A] font-black block pt-1">
             Account: admin@vyomi.com
           </span>
         </div>
 
-        <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1.5">
+        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1.5">
           <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded border border-blue-300 text-blue-900 bg-blue-100">
             Tier 2: Operations Manager
           </span>
           <h3 className="font-black text-[#0F172A] text-sm mt-1">Club Management</h3>
           <p className="text-[#1E293B] font-semibold leading-relaxed">
-            Member registration reviews, package configuration, cash approvals, and daily executive telemetry.
+            Member registration reviews, package configuration, cash approvals, and daily reports.
           </p>
-          <span className="text-xs font-mono text-[#D97706] font-black block pt-1">
+          <span className="text-xs font-mono text-[#1E3A8A] font-black block pt-1">
             Account: manager@vyomi.com
           </span>
         </div>
 
-        <div className="bg-white border-2 border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1.5">
+        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1.5">
           <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded border border-amber-300 text-amber-900 bg-amber-100">
             Tier 3: Front Desk
           </span>
@@ -146,7 +146,7 @@ export default function AdminStaffPage() {
           <p className="text-[#1E293B] font-semibold leading-relaxed">
             Walk-in member enrollment, counter cash settlements, badge assignment, and digital VIP card delivery.
           </p>
-          <span className="text-xs font-mono text-[#D97706] font-black block pt-1">
+          <span className="text-xs font-mono text-[#1E3A8A] font-black block pt-1">
             Account: frontdesk@vyomi.com
           </span>
         </div>
@@ -155,7 +155,7 @@ export default function AdminStaffPage() {
       {showAdd && (
         <form
           onSubmit={handleCreateStaff}
-          className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4 max-w-xl"
+          className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4 max-w-xl"
         >
           <h3 className="text-sm font-extrabold text-[#0F172A] border-b border-[#E2E8F0] pb-2">
             Provision Personnel Account
@@ -174,7 +174,7 @@ export default function AdminStaffPage() {
                 placeholder="e.g. Vikramaditya Rao"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                className="w-full bg-white border border-[#CBD5E1] rounded px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
               />
             </div>
 
@@ -188,7 +188,7 @@ export default function AdminStaffPage() {
                 placeholder="e.g. staff.id@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                className="w-full bg-white border border-[#CBD5E1] rounded px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
               />
             </div>
 
@@ -199,7 +199,7 @@ export default function AdminStaffPage() {
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as 'SUPER_ADMIN' | 'MANAGER' | 'FRONT_DESK')}
-                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                className="w-full bg-white border border-[#CBD5E1] rounded px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
               >
                 <option value="FRONT_DESK">FRONT_DESK (Intake & Counter Cash)</option>
                 <option value="MANAGER">MANAGER (Operations & Approvals)</option>
@@ -217,7 +217,7 @@ export default function AdminStaffPage() {
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white border-2 border-[#CBD5E1] rounded px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                className="w-full bg-white border border-[#CBD5E1] rounded px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
               />
             </div>
           </div>
@@ -226,13 +226,13 @@ export default function AdminStaffPage() {
             <button
               type="button"
               onClick={() => setShowAdd(false)}
-              className="px-3.5 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A]"
+              className="px-3.5 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded text-xs font-bold text-[#0F172A]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded text-xs font-bold shadow-sm"
+              className="px-4 py-1.5 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded text-xs font-bold shadow-sm"
             >
               Provision Account ✓
             </button>
@@ -241,11 +241,11 @@ export default function AdminStaffPage() {
       )}
 
       {/* Staff Directory Table */}
-      <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+              <tr className="bg-[#F1F5F9] border-b border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
                 <th className="py-3 px-4 font-black min-w-[180px]">Staff Personnel</th>
                 <th className="py-3 px-4 font-black w-48 whitespace-nowrap">Authentication Email</th>
                 <th className="py-3 px-4 font-black w-44 whitespace-nowrap">Access Level</th>

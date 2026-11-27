@@ -93,7 +93,7 @@ export default function AdminPackagesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
+          <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider block">
             Product Configuration
           </span>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
@@ -113,7 +113,7 @@ export default function AdminPackagesPage() {
             return (
               <div
                 key={pkg.id}
-                className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm flex flex-col justify-between space-y-4"
+                className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm flex flex-col justify-between space-y-4"
               >
                 <div>
                   <div className="flex items-center justify-between">
@@ -143,7 +143,7 @@ export default function AdminPackagesPage() {
                           type="text"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          className="w-full bg-white border-2 border-[#CBD5E1] rounded px-2.5 py-1.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                          className="w-full bg-white border border-[#CBD5E1] rounded px-2.5 py-1.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -155,7 +155,7 @@ export default function AdminPackagesPage() {
                             type="number"
                             value={editPriceRupees}
                             onChange={(e) => setEditPriceRupees(Number(e.target.value))}
-                            className="w-full bg-white border-2 border-[#CBD5E1] rounded px-2.5 py-1.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                            className="w-full bg-white border border-[#CBD5E1] rounded px-2.5 py-1.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
                           />
                         </div>
                         <div>
@@ -166,7 +166,7 @@ export default function AdminPackagesPage() {
                             type="number"
                             value={editDays}
                             onChange={(e) => setEditDays(Number(e.target.value))}
-                            className="w-full bg-white border-2 border-[#CBD5E1] rounded px-2.5 py-1.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                            className="w-full bg-white border border-[#CBD5E1] rounded px-2.5 py-1.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
                           />
                         </div>
                       </div>
@@ -194,7 +194,7 @@ export default function AdminPackagesPage() {
                     <ul className="space-y-1.5 text-xs text-[#1E293B]">
                       {pkg.benefits.map((b, i) => (
                         <li key={i} className="flex items-start gap-1.5">
-                          <span className="text-[#D97706] font-bold">✓</span>
+                          <span className="text-[#1E3A8A] font-bold">✓</span>
                           <span className="font-medium">{b}</span>
                         </li>
                       ))}
@@ -208,14 +208,14 @@ export default function AdminPackagesPage() {
                       <button
                         type="button"
                         onClick={() => setEditingId(null)}
-                        className="px-3 py-1 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A]"
+                        className="px-3 py-1 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded text-xs font-bold text-[#0F172A]"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={() => handleSave(pkg.id)}
-                        className="px-3 py-1 bg-[#D97706] hover:bg-[#B45309] text-white rounded text-xs font-bold"
+                        className="px-3 py-1 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded text-xs font-bold"
                       >
                         Save Tier
                       </button>
@@ -224,7 +224,7 @@ export default function AdminPackagesPage() {
                     <button
                       type="button"
                       onClick={() => handleStartEdit(pkg)}
-                      className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-bold text-[#0F172A] shadow-sm transition"
+                      className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded text-xs font-bold text-[#0F172A] shadow-sm transition"
                     >
                       ✏️ Edit Pricing & Duration
                     </button>

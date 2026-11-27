@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generatePdfReceipt } from '@/lib/pdfReceipt';
 import { sendMembershipReceiptEmail } from '@/lib/email';
+import { db } from '@/lib/db';
 
 export async function POST(
   req: Request,
@@ -18,13 +19,47 @@ export async function POST(
     }
 
     // 1. Fetch registration from Supabase
-    const { data: reg, error: regError } = await supabaseAdmin
-      .from('registrations')
-      .select('*, client:clients(*), package:packages(*), payment:payments(*)')
-      .eq('reference', reference)
-      .single();
+    let reg: any = null;
+    try {
+      const { data } = await supabaseAdmin
+        .from('registrations')
+        .select('*, client:clients(*), package:packages(*), payment:payments(*)')
+        .eq('reference', reference)
+        .single();
+      reg = data;
+    } catch {
+      reg = null;
+    }
 
-    if (regError || !reg) {
+    // Fallback: local registration mirror (same reference) when Supabase has no row
+    if (!reg) {
+      const local = db.findRegistrationByRef(reference);
+      if (local) {
+        const end = new Date(local.startDate);
+        end.setDate(end.getDate() + (local.package?.durationDays || 365));
+        reg = {
+          reference: local.reference,
+          status: local.status,
+          amount_inr: Math.round((local.package?.pricePaise ?? local.pricePaise) / 100),
+          preferred_slot: local.preferredSlot,
+          start_date: local.startDate,
+          end_date: local.endDate || end.toISOString().split('T')[0],
+          created_at: local.createdAt,
+          notes: local.notes,
+          client: local.client && {
+            email: local.client.email,
+            full_name: local.client.fullName,
+            member_code: local.client.memberCode,
+            phone: local.client.phone,
+            fitness_goal: local.client.fitnessGoal,
+          },
+          package: local.package && { name: local.package.name, duration_days: local.package.durationDays },
+          payment: local.payment && { method: local.payment.method, status: local.payment.status },
+        };
+      }
+    }
+
+    if (!reg) {
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'Registration record not found.' } },
         { status: 404 }
@@ -87,7 +122,7 @@ export async function POST(
     });
 
     // 4. Record / Update receipts audit in Supabase
-    await supabaseAdmin
+    await Promise.resolve(supabaseAdmin
       .from('receipts')
       .upsert(
         {
@@ -108,7 +143,7 @@ export async function POST(
           emailed_at: emailResult.sent ? new Date().toISOString() : null,
         },
         { onConflict: 'receipt_number' }
-      );
+      )).catch(() => null);
 
     return NextResponse.json({
       success: true,

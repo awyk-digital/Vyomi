@@ -162,7 +162,7 @@ export default function RegistrationDetailPage({
               ← Registrations
             </Link>
             <span className="text-[#CBD5E1]">/</span>
-            <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider">
+            <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider">
               Client Dossier
             </span>
           </div>
@@ -175,7 +175,7 @@ export default function RegistrationDetailPage({
           <button
             type="button"
             onClick={() => window.print()}
-            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] text-[#0F172A] rounded-lg text-xs font-bold transition shadow-sm"
+            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] text-[#0F172A] rounded-lg text-xs font-bold transition shadow-sm"
           >
             🖨️ Print Invoice
           </button>
@@ -205,7 +205,7 @@ export default function RegistrationDetailPage({
         {/* Left Column: Client Identity & Health */}
         <div className="lg:col-span-7 space-y-6">
           {/* Card: Client Profile */}
-          <div className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
+          <div className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
               <div>
                 <h3 className="text-sm font-extrabold text-[#0F172A]">
@@ -216,10 +216,10 @@ export default function RegistrationDetailPage({
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-extrabold text-[#64748B] uppercase block tracking-wider">
+                <span className="text-[11px] font-extrabold text-[#64748B] uppercase block tracking-wider">
                   Member ID
                 </span>
-                <span className="font-mono text-base font-black text-[#D97706]">
+                <span className="font-mono text-base font-black text-[#1E3A8A]">
                   {reg.client?.memberCode || 'Unassigned'}
                 </span>
               </div>
@@ -227,30 +227,30 @@ export default function RegistrationDetailPage({
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-[#64748B] font-bold block uppercase text-[10px]">Full Legal Name</span>
+                <span className="text-[#64748B] font-bold block uppercase text-[11px]">Full Legal Name</span>
                 <span className="font-bold text-[#0F172A]">{reg.client?.fullName}</span>
               </div>
               <div>
-                <span className="text-[#64748B] font-bold block uppercase text-[10px]">Mobile Number</span>
+                <span className="text-[#64748B] font-bold block uppercase text-[11px]">Mobile Number</span>
                 <a href={`tel:${reg.client?.phone}`} className="font-bold text-[#0F172A] hover:underline">
                   +91 {reg.client?.phone}
                 </a>
               </div>
               <div>
-                <span className="text-[#64748B] font-bold block uppercase text-[10px]">Email Address</span>
+                <span className="text-[#64748B] font-bold block uppercase text-[11px]">Email Address</span>
                 <a href={`mailto:${reg.client?.email}`} className="font-bold text-[#0F172A] hover:underline">
                   {reg.client?.email}
                 </a>
               </div>
               <div>
-                <span className="text-[#64748B] font-bold block uppercase text-[10px]">Preferred Training Slot</span>
+                <span className="text-[#64748B] font-bold block uppercase text-[11px]">Preferred Training Slot</span>
                 <span className="font-bold text-[#0F172A]">{reg.preferredSlot || '06:00 – 09:00 AM'}</span>
               </div>
             </div>
           </div>
 
           {/* Internal Staff Notes */}
-          <div className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-3">
+          <div className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-extrabold text-[#0F172A]">Internal Concierge Notes</h3>
               {notesSaved && <span className="text-xs text-emerald-600 font-bold">✓ Notes Saved</span>}
@@ -260,14 +260,14 @@ export default function RegistrationDetailPage({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add concierge notes, locker allocation, trainer notes..."
-              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg p-2.5 text-xs font-medium text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg p-2.5 text-xs font-medium text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             />
             <div className="flex justify-end">
               <button
                 type="button"
                 disabled={savingNotes}
                 onClick={handleSaveNotes}
-                className="px-3.5 py-1.5 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-lg text-xs font-bold transition shadow-sm"
+                className="px-3.5 py-1.5 text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px rounded-xl text-xs font-medium transition"
               >
                 {savingNotes ? 'Saving...' : 'Save Notes'}
               </button>
@@ -278,11 +278,11 @@ export default function RegistrationDetailPage({
         {/* Right Column: Membership & Payment Timeline */}
         <div className="lg:col-span-5 space-y-6">
           {/* Membership Tier & Status */}
-          <div className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
+          <div className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
               <h3 className="text-sm font-extrabold text-[#0F172A]">Tier & Validity</h3>
               <span
-                className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${
+                className={`px-2 py-0.5 rounded text-[11px] font-extrabold uppercase tracking-wider border ${
                   reg.status === 'CONFIRMED'
                     ? 'border-emerald-300 text-emerald-900 bg-emerald-100'
                     : 'border-amber-300 text-amber-900 bg-amber-100'
@@ -307,13 +307,13 @@ export default function RegistrationDetailPage({
               </div>
               <div className="flex justify-between">
                 <span className="text-[#64748B] font-medium">Expiration Date</span>
-                <span className="font-mono font-bold text-[#D97706]">{reg.endDate || 'Pending Confirmation'}</span>
+                <span className="font-mono font-bold text-[#1E3A8A]">{reg.endDate || 'Pending Confirmation'}</span>
               </div>
             </div>
           </div>
 
           {/* Payment & Invoice Breakdown */}
-          <div className="bg-white border-2 border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
+          <div className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
             <h3 className="text-sm font-extrabold text-[#0F172A] border-b border-[#E2E8F0] pb-3">
               Billing Ledger
             </h3>

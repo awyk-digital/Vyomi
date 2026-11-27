@@ -31,8 +31,8 @@ export interface EmailSendResult {
 }
 
 function getTransporter() {
-  const user = process.env.GMAIL_USER || 'sriharicherukumalli1@gmail.com';
-  const pass = (process.env.GMAIL_APP_PASS || 'oapm mzzf iciw fwrb').replace(/\s+/g, '');
+  const user = process.env.GMAIL_USER || '';
+  const pass = (process.env.GMAIL_APP_PASS || '').replace(/\s+/g, '');
 
   if (!user || !pass) {
     return null;
@@ -61,7 +61,7 @@ export async function sendGmailOtp({
   otpCode: string;
   clientName?: string;
 }): Promise<EmailSendResult> {
-  const senderEmail = process.env.GMAIL_USER || 'sriharicherukumalli1@gmail.com';
+  const senderEmail = process.env.GMAIL_USER || '';
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -176,7 +176,7 @@ export async function sendGmailOtp({
 export async function sendMembershipReceiptEmail(
   params: SendReceiptEmailParams
 ): Promise<EmailSendResult> {
-  const senderEmail = process.env.GMAIL_USER || 'sriharicherukumalli1@gmail.com';
+  const senderEmail = process.env.GMAIL_USER || '';
 
   const htmlContent = `
 <!DOCTYPE html>

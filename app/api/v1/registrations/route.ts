@@ -297,8 +297,13 @@ export async function POST(req: Request) {
         startDate,
         preferredSlot: slot,
         acceptedIp: '127.0.0.1',
+        reference,
+        paid: !isCash,
+        method: isCash ? 'CASH' : 'BANK_TRANSFER',
       });
-    } catch { }
+    } catch (e) {
+      console.warn('Local registration mirror failed:', e);
+    }
 
     return NextResponse.json({
       success: true,

@@ -27,7 +27,7 @@ export default function NewWalkinRegistrationPage() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CASH'>('CASH');
-  const [markPaid, setMarkPaid] = useState(true);
+  const [markPaid, setMarkPaid] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -87,7 +87,7 @@ export default function NewWalkinRegistrationPage() {
               ← Registrations
             </Link>
             <span className="text-[#CBD5E1]">/</span>
-            <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider">Concierge Desk</span>
+            <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider">Concierge Desk</span>
           </div>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-1 tracking-tight">
             New Walk-in Registration
@@ -101,7 +101,7 @@ export default function NewWalkinRegistrationPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white border-2 border-[#CBD5E1] p-6 sm:p-8 rounded-xl shadow-sm space-y-5">
+      <form onSubmit={handleSubmit} className="bg-white border border-[#CBD5E1] p-6 sm:p-8 rounded-xl shadow-sm space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
@@ -113,7 +113,7 @@ export default function NewWalkinRegistrationPage() {
               placeholder="e.g. Ramesh Chandra"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             />
           </div>
 
@@ -127,7 +127,7 @@ export default function NewWalkinRegistrationPage() {
               placeholder="e.g. 9876543210"
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             />
           </div>
 
@@ -140,7 +140,7 @@ export default function NewWalkinRegistrationPage() {
               placeholder="e.g. ramesh.chandra@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             />
           </div>
 
@@ -151,7 +151,7 @@ export default function NewWalkinRegistrationPage() {
             <select
               value={selectedPkgId}
               onChange={(e) => setSelectedPkgId(e.target.value)}
-              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             >
               {packages.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -169,19 +169,19 @@ export default function NewWalkinRegistrationPage() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             />
           </div>
         </div>
 
         {/* Payment details */}
-        <div className="p-4 bg-[#F8FAFC] border-2 border-[#CBD5E1] rounded-xl space-y-3">
+        <div className="p-4 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl space-y-3">
           <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#0F172A]">
             <input
               type="checkbox"
               checked={markPaid}
               onChange={(e) => setMarkPaid(e.target.checked)}
-              className="w-4 h-4 rounded text-[#D97706]"
+              className="w-4 h-4 rounded text-[#1E3A8A]"
             />
             <span>Payment received now at front desk (Activate immediately)</span>
           </label>
@@ -228,7 +228,7 @@ export default function NewWalkinRegistrationPage() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Assigned Locker #14, trainer consultation booked..."
-            className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-medium text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+            className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-medium text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
           />
         </div>
 
@@ -244,14 +244,14 @@ export default function NewWalkinRegistrationPage() {
         <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
           <Link
             href="/admin/registrations"
-            className="px-4 py-2 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition"
+            className="px-4 py-2 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded-lg text-xs font-bold text-[#0F172A] transition"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition shadow-sm"
+            className="px-5 py-2 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded-lg text-xs font-bold transition shadow-sm"
           >
             {loading ? 'Creating...' : 'Enroll Walk-in Member →'}
           </button>

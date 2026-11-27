@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { SUPPLIED } from '@/config/assets';
 import { generateUpiString, generateQrDataUrl } from '@/lib/qr';
 import { generatePdfReceipt } from '@/lib/pdfReceipt';
+import { useBackGuard } from '@/lib/useBackGuard';
 import {
   SilverTierBadge,
   GoldTierBadge,
@@ -102,6 +103,12 @@ function RegisterContent() {
   // Step 1: Select Plan | Step 2: Member Details & Gmail OTP | Step 3: Payment | Step 4: Success
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
+  // Browser Back stays inside registration: steps 2–3 go back one step,
+  // steps 1 and 4 do nothing. Members cannot leave to the public site.
+  useBackGuard({
+    onBack: () => setCurrentStep((s) => (s === 2 || s === 3 ? ((s - 1) as 1 | 2) : s)),
+  });
+
   // Package state
   const [packages, setPackages] = useState<PackageItem[]>(OFFICIAL_PACKAGES);
   const [selectedPkgId, setSelectedPkgId] = useState<string>('pkg-vip-1y');
@@ -110,12 +117,12 @@ function RegisterContent() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [gender, setGender] = useState('Male');
+  const [gender, setGender] = useState('Prefer not to say');
   const [preferredSlot, setPreferredSlot] = useState(TIME_SLOTS[0]);
   const [startDate, setStartDate] = useState(
     () => new Date().toISOString().split('T')[0]
   );
-  const [acceptedTerms, setAcceptedTerms] = useState(true);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Real-Time Gmail OTP State
   const [otpSent, setOtpSent] = useState(false);
@@ -433,10 +440,10 @@ function RegisterContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] py-2 sm:py-3 px-3 sm:px-6 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#F4F6FB] text-[#0F172A] py-3 sm:py-4 px-3 sm:px-6 flex flex-col gap-3">
       {/* Top Brand Bar - Clean Standalone Portal */}
-      <div className="max-w-5xl mx-auto w-full mb-2 sm:mb-2.5 flex items-center justify-between border-b border-[#E2E8F0] pb-2">
-        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
+      <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
+        <div className="flex items-center gap-2.5 sm:gap-3 select-none">
           <div className="relative w-8 h-9 sm:w-9 sm:h-10 flex-shrink-0">
             <Image
               src={SUPPLIED.logo.src}
@@ -447,58 +454,58 @@ function RegisterContent() {
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm sm:text-base font-black tracking-[0.22em] text-[#0F172A] uppercase leading-none">
+            <span className="text-sm sm:text-[15px] font-semibold tracking-[0.28em] text-[#0F172A] uppercase leading-none">
               Vyomi
             </span>
-            <span className="text-[8px] sm:text-[9px] font-extrabold tracking-[0.3em] text-[#D97706] uppercase mt-1 leading-none">
+            <span className="text-[10px] font-medium tracking-[0.32em] text-[#1E3A8A] uppercase mt-1 leading-none">
               Fitness Club
             </span>
           </div>
-        </Link>
+        </div>
         <div className="text-right">
-          <span className="text-[10px] font-extrabold tracking-widest text-[#D97706] uppercase block">
+          <span className="text-[11px] font-medium tracking-[0.18em] text-[#1E3A8A] uppercase block">
             Patamata, Vijayawada
           </span>
-          <span className="text-[11px] sm:text-xs font-bold text-[#334155]">Official Membership Intake</span>
+          <span className="text-xs font-medium text-[#64748B]">Membership registration</span>
         </div>
       </div>
 
       {/* Main Container - High Contrast Luxury White Card on Slate Foundation */}
-      <div className="max-w-5xl mx-auto w-full bg-white border border-[#CBD5E1] rounded-2xl shadow-sm p-3.5 sm:p-5 flex-1 flex flex-col justify-between">
+      <div className="max-w-5xl mx-auto w-full mt-1 sm:mt-3 lg:my-auto bg-white border border-[#E3E8F2] rounded-2xl shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-16px_rgba(15,23,42,0.12)] p-4 sm:p-6">
         {/* Progress Step Header */}
         <div className="mb-3 sm:mb-4">
           {/* Mobile Step Badge */}
           <div className="flex sm:hidden items-center justify-between text-xs mb-1.5">
-            <span className="font-extrabold text-[#0F172A]">
-              Step {currentStep} of 4: {['Select Plan', 'Member Intake & Email OTP', 'Payment (2 Options)', 'Confirmation'][currentStep - 1]}
+            <span className="font-semibold text-[#0F172A]">
+              Step {currentStep} of 4: {['Choose plan', 'Your details', 'Payment', 'Confirmation'][currentStep - 1]}
             </span>
-            <span className="text-[#D97706] font-mono font-bold">
+            <span className="text-[#1E3A8A] font-mono font-bold">
               {Math.round((currentStep / 4) * 100)}%
             </span>
           </div>
 
           {/* Desktop step labels with SVGs */}
-          <div className="hidden sm:flex items-center justify-between text-xs font-bold text-[#475569] mb-2">
-            <span className={`flex items-center gap-1.5 ${currentStep >= 1 ? 'text-[#D97706]' : 'text-[#64748B]'}`}>
+          <div className="hidden sm:flex items-center justify-between text-xs font-medium text-[#475569] mb-2.5">
+            <span className={`flex items-center gap-1.5 ${currentStep >= 1 ? 'text-[#0F172A]' : 'text-[#94A3B8]'}`}>
               <StepTierIcon className="w-4 h-4" />
-              <span>1. Select Plan</span>
+              <span>1 · Choose plan</span>
             </span>
-            <span className={`flex items-center gap-1.5 ${currentStep >= 2 ? 'text-[#D97706]' : 'text-[#64748B]'}`}>
+            <span className={`flex items-center gap-1.5 ${currentStep >= 2 ? 'text-[#0F172A]' : 'text-[#94A3B8]'}`}>
               <StepIdIcon className="w-4 h-4" />
-              <span>2. Member Intake & Gmail OTP</span>
+              <span>2 · Your details</span>
             </span>
-            <span className={`flex items-center gap-1.5 ${currentStep >= 3 ? 'text-[#D97706]' : 'text-[#64748B]'}`}>
+            <span className={`flex items-center gap-1.5 ${currentStep >= 3 ? 'text-[#0F172A]' : 'text-[#94A3B8]'}`}>
               <StepPaymentIcon className="w-4 h-4" />
-              <span>3. Payment (2 Options)</span>
+              <span>3 · Payment</span>
             </span>
-            <span className={`flex items-center gap-1.5 ${currentStep === 4 ? 'text-[#D97706]' : 'text-[#64748B]'}`}>
+            <span className={`flex items-center gap-1.5 ${currentStep === 4 ? 'text-[#0F172A]' : 'text-[#94A3B8]'}`}>
               <SecurityLockBadge className="w-4 h-4" />
-              <span>4. Confirmation</span>
+              <span>4 · Confirmation</span>
             </span>
           </div>
-          <div className="w-full h-1.5 sm:h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
+          <div className="w-full h-1 bg-[#E6EBF5] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#D97706] to-[#FFB100] transition-all duration-300"
+              className="h-full bg-[#1E3A8A] rounded-full transition-all duration-500 ease-out"
               style={{ width: `${(currentStep / 4) * 100}%` }}
             />
           </div>
@@ -506,7 +513,7 @@ function RegisterContent() {
 
         {/* Global Error Banner */}
         {generalError && (
-          <div className="mb-3 p-2.5 bg-red-50 border-2 border-red-300 rounded-xl text-xs text-red-900 font-bold flex items-center gap-2">
+          <div className="mb-3 p-2.5 bg-red-50 border border-red-300 rounded-xl text-xs text-red-800 font-medium flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
             <span>{generalError}</span>
           </div>
@@ -516,29 +523,29 @@ function RegisterContent() {
         {currentStep === 1 && (
           <div className="space-y-3 sm:space-y-4">
             <div className="text-center">
-              <h1 className="text-base sm:text-xl font-black text-[#0F172A] tracking-tight">
-                Select Your Membership Plan
+              <h1 className="text-lg sm:text-2xl font-semibold text-[#0F172A] tracking-tight">
+                Choose your membership
               </h1>
-              <p className="text-[11px] sm:text-xs font-semibold text-[#475569] mt-0.5">
-                Authentic 1-year access privileges at Sonovision Plaza, Patamata, Vijayawada
+              <p className="text-xs sm:text-sm text-[#64748B] mt-1 mx-auto">
+                One year, all-inclusive · Sonovision Plaza, Patamata
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-3 pt-2 md:pt-1">
               {packages.map((pkg) => {
                 const isSelected = selectedPkgId === pkg.id;
                 return (
                   <div
                     key={pkg.id}
                     onClick={() => setSelectedPkgId(pkg.id)}
-                    className={`relative cursor-pointer rounded-xl p-3.5 sm:p-4 border-2 transition-all flex flex-col justify-between ${
+                    className={`relative cursor-pointer rounded-xl p-3.5 sm:p-5 border transition-all duration-200 flex flex-col justify-between ${
                       isSelected
-                        ? 'border-[#D97706] bg-[#FFFBEB] ring-2 ring-[#D97706]/40 shadow-sm'
-                        : 'border-[#CBD5E1] hover:border-[#D97706]/70 bg-white'
+                        ? 'border-[#1E3A8A] bg-[#F5F8FF] ring-1 ring-[#1E3A8A] shadow-[0_10px_28px_-14px_rgba(30,58,138,0.45)]'
+                        : 'border-[#E2E8F0] bg-white hover:border-[#93A8E0] hover:-translate-y-0.5'
                     }`}
                   >
                     {pkg.isFeatured && (
-                      <span className="absolute -top-2.5 right-3 bg-[#D97706] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider shadow">
+                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#0F172A] text-white text-[10px] font-medium px-2.5 py-0.5 rounded-full uppercase tracking-[0.14em] whitespace-nowrap">
                         Most Popular
                       </span>
                     )}
@@ -550,59 +557,64 @@ function RegisterContent() {
                           {pkg.slug === 'founding' && <SilverTierBadge className="w-5 h-5" />}
                           {pkg.slug === 'vip' && <GoldTierBadge className="w-5 h-5" />}
                           {pkg.slug === 'vvip' && <DiamondTierBadge className="w-5 h-5" />}
-                          <span className="text-[10px] font-extrabold text-[#475569] uppercase tracking-wider">
+                          <span className="text-[11px] font-medium text-[#64748B] uppercase tracking-[0.14em]">
                             1 Year
                           </span>
                         </div>
                         <div
-                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                             isSelected
-                              ? 'border-[#D97706] bg-[#D97706]'
-                              : 'border-[#94A3B8]'
+                              ? 'border-[#1E3A8A] bg-[#1E3A8A]'
+                              : 'border-[#CBD5E1]'
                           }`}
                         >
                           {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                         </div>
                       </div>
 
-                      <h3 className="text-sm sm:text-base font-extrabold text-[#0F172A] mt-2">
+                      <h3 className="text-base font-semibold text-[#0F172A] mt-2 md:mt-3">
                         {pkg.name}
                       </h3>
 
                       <div className="mt-1.5">
-                        <span className="text-xl sm:text-2xl font-black text-[#0F172A]">
+                        <span className="text-2xl sm:text-[28px] font-semibold tracking-tight text-[#0F172A]">
                           {formatINR(pkg.pricePaise)}
                         </span>
                         {pkg.originalPricePaise && (
-                          <span className="text-xs text-[#64748B] line-through ml-1.5 font-bold">
+                          <span className="text-sm text-[#94A3B8] line-through ml-2">
                             {formatINR(pkg.originalPricePaise)}
                           </span>
                         )}
-                        <span className="text-[10px] font-bold text-[#64748B] block mt-0.5">
-                          Annual All-Inclusive Fee
+                        {pkg.originalPricePaise && pkg.originalPricePaise > pkg.pricePaise && (
+                          <span className="block w-fit mt-1.5 text-[11px] font-medium text-[#1E3A8A] bg-[#EEF2FF] border border-[#C7D4F5] px-1.5 py-0.5 rounded">
+                            Save {formatINR(pkg.originalPricePaise - pkg.pricePaise)}
+                          </span>
+                        )}
+                        <span className="text-xs text-[#94A3B8] block mt-0.5">
+                          per year, all-inclusive
                         </span>
                       </div>
 
-                      <ul className="mt-2.5 space-y-1 text-xs text-[#1E293B]">
+                      <ul className={`mt-4 space-y-1.5 text-xs text-[#334155] ${isSelected ? '' : 'hidden md:block'}`}>
                         {pkg.benefits.map((b, i) => (
                           <li key={i} className="flex items-start gap-1.5">
-                            <span className="text-[#D97706] font-extrabold text-[11px] mt-0.5">✓</span>
-                            <span className="font-semibold text-[11px] sm:text-xs leading-tight">{b}</span>
+                            <span className="text-[#1E3A8A] text-[11px] mt-px">✓</span>
+                            <span className="text-xs leading-snug">{b}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-[#E2E8F0]">
+                    <div className="mt-5 hidden md:block">
                       <button
                         type="button"
-                        className={`w-full py-1.5 px-3 rounded-lg text-xs font-bold transition ${
+                        className={`w-full py-2 px-3 rounded-lg text-xs font-medium transition ${
                           isSelected
-                            ? 'bg-[#0F172A] text-white shadow-sm'
-                            : 'bg-[#F1F5F9] text-[#1E293B] hover:bg-[#E2E8F0]'
+                            ? 'bg-[#1E3A8A] text-white'
+                            : 'bg-white text-[#0F172A] border border-[#CBD5E1] hover:border-[#0F172A]'
                         }`}
                       >
-                        {isSelected ? 'Selected Plan' : 'Choose Plan'}
+                        {isSelected ? '✓ Selected' : 'Select plan'}
                       </button>
                     </div>
                   </div>
@@ -610,13 +622,13 @@ function RegisterContent() {
               })}
             </div>
 
-            <div className="flex justify-end pt-2 sm:pt-3">
+            <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 sm:pt-3 bg-white/95 backdrop-blur sm:bg-transparent sm:static flex justify-end">
               <button
                 type="button"
                 onClick={() => setCurrentStep(2)}
-                className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs sm:text-sm font-bold py-2 px-6 rounded-lg transition flex items-center gap-2 shadow-md"
+                className="text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px w-full sm:w-auto justify-center text-sm font-medium py-3 sm:py-2.5 px-6 rounded-xl transition flex items-center gap-2"
               >
-                <span>Continue to Member Intake</span>
+                <span>Continue</span>
                 <span>→</span>
               </button>
             </div>
@@ -630,8 +642,8 @@ function RegisterContent() {
             <div className="lg:col-span-7 space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-[#E2E8F0]">
                 <div>
-                  <h2 className="text-base sm:text-lg font-black text-[#0F172A] leading-tight">
-                    Personal & Membership Particulars
+                  <h2 className="text-base sm:text-lg font-semibold text-[#0F172A] leading-tight">
+                    Your details
                   </h2>
                   <p className="text-[11px] font-bold text-[#475569]">
                     Plan: <strong className="text-[#0F172A]">{selectedPackage.name}</strong> ({formatINR(selectedPackage.pricePaise)})
@@ -640,16 +652,16 @@ function RegisterContent() {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="text-xs text-[#D97706] font-bold hover:underline"
+                  className="text-xs text-[#1E3A8A] font-bold hover:underline"
                 >
                   Change Plan
                 </button>
               </div>
 
-              {/* Full Legal Name */}
+              {/* Full name */}
               <div>
                 <label className="block text-xs font-bold text-[#0F172A] mb-1">
-                  Full Legal Name <span className="text-red-600">*</span>
+                  Full name <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="text"
@@ -661,25 +673,25 @@ function RegisterContent() {
                       setFormErrors((prev) => ({ ...prev, fullName: '' }));
                     }
                   }}
-                  className={`w-full bg-white border-2 border-solid rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#D97706] focus:ring-2 focus:ring-[#D97706]/20 transition ${
-                    formErrors.fullName ? 'border-red-500 bg-red-50/20' : 'border-[#94A3B8]'
+                  className={`w-full bg-white border border-solid rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 transition ${
+                    formErrors.fullName ? 'border-red-500 bg-red-50/20' : 'border-[#CBD5E1]'
                   }`}
                 />
                 {formErrors.fullName && (
-                  <span className="text-[10px] text-red-600 mt-0.5 block font-bold">{formErrors.fullName}</span>
+                  <span className="text-[11px] text-red-600 mt-0.5 block font-bold">{formErrors.fullName}</span>
                 )}
               </div>
 
               {/* Mobile Number with Flexbox-Centered +91 (100% Centered Vertically) */}
               <div>
                 <label className="block text-xs font-bold text-[#0F172A] mb-1">
-                  Mobile Number (Contact & Biometrics) <span className="text-red-600">*</span>
+                  Mobile number <span className="text-red-600">*</span>
                 </label>
                 <div
-                  className={`flex items-center rounded-lg border-2 border-solid bg-white overflow-hidden transition ${
+                  className={`flex items-center rounded-lg border border-solid bg-white overflow-hidden transition ${
                     formErrors.phone
                       ? 'border-red-500 bg-red-50/20'
-                      : 'border-[#94A3B8] focus-within:border-[#D97706] focus-within:ring-2 focus-within:ring-[#D97706]/20'
+                      : 'border-[#CBD5E1] focus-within:border-[#1E3A8A] focus-within:ring-2 focus-within:ring-[#1E3A8A]/20'
                   }`}
                 >
                   <div className="flex items-center justify-center px-3.5 py-2 bg-[#F8FAFC] border-r border-[#CBD5E1] text-xs sm:text-sm font-bold text-[#1E293B] select-none flex-shrink-0">
@@ -700,14 +712,14 @@ function RegisterContent() {
                   />
                 </div>
                 {formErrors.phone && (
-                  <span className="text-[10px] text-red-600 mt-0.5 block font-bold">{formErrors.phone}</span>
+                  <span className="text-[11px] text-red-600 mt-0.5 block font-bold">{formErrors.phone}</span>
                 )}
               </div>
 
               {/* Email Address with Real-Time Gmail OTP Verification */}
               <div>
                 <label className="block text-xs font-bold text-[#0F172A] mb-1">
-                  Gmail / Email Address (Real-Time OTP Verification) <span className="text-red-600">*</span>
+                  Email address <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -721,12 +733,12 @@ function RegisterContent() {
                         setFormErrors((prev) => ({ ...prev, email: '' }));
                       }
                     }}
-                    className={`flex-1 bg-white border-2 border-solid rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#D97706] focus:ring-2 focus:ring-[#D97706]/20 transition ${
+                    className={`flex-1 bg-white border border-solid rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 transition ${
                       emailVerified
-                        ? 'border-emerald-500 bg-emerald-50/60 text-emerald-950 font-bold'
+                        ? 'border-[#1E3A8A] bg-[#F5F8FF] text-[#0F172A]'
                         : formErrors.email
                         ? 'border-red-500 bg-red-50/20'
-                        : 'border-[#94A3B8]'
+                        : 'border-[#CBD5E1]'
                     }`}
                   />
                   {!emailVerified ? (
@@ -734,30 +746,30 @@ function RegisterContent() {
                       type="button"
                       disabled={otpSending || otpTimer > 0}
                       onClick={handleSendEmailOtp}
-                      className="bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-bold px-3.5 py-2 rounded-lg disabled:opacity-50 transition whitespace-nowrap shadow-sm"
+                      className="text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px text-xs font-medium px-3.5 py-2 rounded-xl disabled:opacity-50 transition whitespace-nowrap"
                     >
-                      {otpSending ? 'Sending...' : otpTimer > 0 ? `Resend (${otpTimer}s)` : otpSent ? 'Resend' : 'Send Gmail OTP'}
+                      {otpSending ? 'Sending...' : otpTimer > 0 ? `Resend (${otpTimer}s)` : otpSent ? 'Resend' : 'Send OTP'}
                     </button>
                   ) : (
-                    <span className="bg-emerald-100 text-emerald-900 border border-emerald-400 text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 whitespace-nowrap">
+                    <span className="bg-[#EEF2FF] text-[#1E3A8A] border border-[#C7D4F5] text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1 whitespace-nowrap">
                       <span>✓</span> Gmail Verified
                     </span>
                   )}
                 </div>
 
                 {formErrors.email && (
-                  <span className="text-[10px] text-red-600 mt-0.5 block font-bold">{formErrors.email}</span>
+                  <span className="text-[11px] text-red-600 mt-0.5 block font-bold">{formErrors.email}</span>
                 )}
 
                 {/* OTP Input Block */}
                 {otpSent && !emailVerified && (
-                  <div className="mt-2 p-2.5 bg-[#FFFBEB] border border-[#D97706]/40 rounded-lg">
+                  <div className="mt-2 p-2.5 bg-[#F5F8FF] border border-[#1E3A8A]/40 rounded-lg">
                     <div className="flex items-center justify-between text-[11px] mb-1.5">
-                      <span className="font-extrabold text-[#92400E]">
-                        Enter 6-digit code sent to Gmail:
+                      <span className="font-semibold text-[#1E3A8A]">
+                        Enter the 6-digit code sent to {email}
                       </span>
                       {otpMessage && (
-                        <span className="text-[#B45309] font-bold">{otpMessage}</span>
+                        <span className="text-[#172F73] font-bold">{otpMessage}</span>
                       )}
                     </div>
                     <div className="flex gap-2">
@@ -767,24 +779,24 @@ function RegisterContent() {
                         placeholder="123456"
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                        className="w-32 tracking-widest text-center font-mono font-black bg-white border-2 border-solid border-[#94A3B8] rounded-lg px-2 py-1.5 text-sm text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+                        className="w-32 tracking-widest text-center font-mono font-semibold bg-white border border-solid border-[#CBD5E1] rounded-lg px-2 py-1.5 text-sm text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
                       />
                       <button
                         type="button"
                         disabled={otpVerifying || otpCode.length !== 6}
                         onClick={handleVerifyEmailOtp}
-                        className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg disabled:opacity-50 transition shadow-sm"
+                        className="text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px text-xs font-medium px-3.5 py-1.5 rounded-xl disabled:opacity-50 transition"
                       >
                         {otpVerifying ? 'Verifying...' : 'Verify Gmail'}
                       </button>
                     </div>
                     {otpError && (
-                      <span className="text-[10px] text-red-600 mt-1 block font-bold">{otpError}</span>
+                      <span className="text-[11px] text-red-600 mt-1 block font-bold">{otpError}</span>
                     )}
                   </div>
                 )}
                 {formErrors.otp && (
-                  <span className="text-[10px] text-red-600 mt-0.5 block font-bold">{formErrors.otp}</span>
+                  <span className="text-[11px] text-red-600 mt-0.5 block font-bold">{formErrors.otp}</span>
                 )}
               </div>
 
@@ -797,7 +809,7 @@ function RegisterContent() {
                   <select
                     value={preferredSlot}
                     onChange={(e) => setPreferredSlot(e.target.value)}
-                    className="w-full bg-white border-2 border-solid border-[#94A3B8] rounded-lg px-2.5 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706] transition"
+                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-2.5 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
                   >
                     {TIME_SLOTS.map((s) => (
                       <option key={s} value={s}>
@@ -816,7 +828,7 @@ function RegisterContent() {
                     value={startDate}
                     min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-white border-2 border-solid border-[#94A3B8] rounded-lg px-2.5 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706] transition"
+                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-2.5 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
                   />
                 </div>
               </div>
@@ -835,7 +847,7 @@ function RegisterContent() {
                           name="gender"
                           checked={gender === g}
                           onChange={() => setGender(g)}
-                          className="accent-[#D97706] w-3.5 h-3.5"
+                          className="accent-[#1E3A8A] w-3.5 h-3.5"
                         />
                         <span className="text-[11px]">{g}</span>
                       </label>
@@ -850,14 +862,14 @@ function RegisterContent() {
                     type="checkbox"
                     checked={acceptedTerms}
                     onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 accent-[#D97706] w-3.5 h-3.5 rounded flex-shrink-0"
+                    className="mt-0.5 accent-[#1E3A8A] w-3.5 h-3.5 rounded flex-shrink-0"
                   />
                   <span>
                     I agree to the Vyomi Fitness Club membership code of conduct, health waiver, and biometric entry rules.
                   </span>
                 </label>
                 {formErrors.terms && (
-                  <span className="text-[10px] text-red-600 mt-0.5 block font-bold">{formErrors.terms}</span>
+                  <span className="text-[11px] text-red-600 mt-0.5 block font-bold">{formErrors.terms}</span>
                 )}
               </div>
 
@@ -868,12 +880,12 @@ function RegisterContent() {
                   onClick={() => setCurrentStep(1)}
                   className="text-xs font-bold text-[#475569] hover:text-[#0F172A] py-1.5 px-2 transition"
                 >
-                  ← Back to Plans
+                  ← Back
                 </button>
                 <button
                   type="button"
                   onClick={handleContinueToPayment}
-                  className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs sm:text-sm font-bold py-2 px-5 rounded-lg transition flex items-center gap-1.5 shadow-md"
+                  className="text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px text-xs sm:text-sm font-medium py-2 px-5 rounded-xl transition flex items-center gap-1.5"
                 >
                   <span>Proceed to Payment</span>
                   <span>→</span>
@@ -883,13 +895,12 @@ function RegisterContent() {
 
             {/* Right 5 Columns: Live Interactive VIP Membership Card Preview */}
             <div className="lg:col-span-5 space-y-3">
-              <div className="bg-[#0F172A] rounded-2xl p-3 border border-[#CBD5E1] shadow-md">
+              <div className="bg-[#F4F6FB] rounded-2xl p-3 border border-[#E3E8F2]">
                 <div className="flex items-center justify-between mb-2 px-1">
-                  <span className="text-[10px] font-extrabold text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
-                    Live Membership Card
+                  <span className="text-[11px] font-medium text-[#64748B] uppercase tracking-[0.14em]">
+                    Card preview
                   </span>
-                  <span className="text-[9px] text-white/60 font-mono">Updates in Real-Time</span>
+                  
                 </div>
                 <VipMembershipCard
                   clientName={fullName || 'VALUED MEMBER'}
@@ -898,12 +909,12 @@ function RegisterContent() {
                   memberCode="VYO · 2026 · VIP"
                   endDate={projectedEndDate}
                 />
-                <div className="mt-3 p-2.5 bg-white/5 border border-white/10 rounded-xl text-[11px] text-white/80 space-y-1">
-                  <div className="flex justify-between font-bold text-white">
+                <div className="mt-3 p-3 bg-white border border-[#E3E8F2] rounded-xl text-[11px] text-[#64748B] space-y-1">
+                  <div className="flex justify-between font-semibold text-sm text-[#0F172A]">
                     <span>{selectedPackage.name}</span>
-                    <span className="text-[#F59E0B] font-mono">{formatINR(selectedPackage.pricePaise)}</span>
+                    <span className="text-[#0F172A]">{formatINR(selectedPackage.pricePaise)}</span>
                   </div>
-                  <p className="text-[10px] text-white/60">
+                  <p className="text-xs text-[#64748B]">
                     Biometric access at Sonovision Plaza, Patamata. 365 Days validity from start date.
                   </p>
                 </div>
@@ -917,12 +928,12 @@ function RegisterContent() {
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-[#E2E8F0]">
               <div>
-                <h2 className="text-base sm:text-lg font-black text-[#0F172A] leading-tight">
+                <h2 className="text-base sm:text-lg font-semibold text-[#0F172A] leading-tight">
                   Select Payment Option
                 </h2>
                 <p className="text-[11px] font-bold text-[#475569]">
                   Payable for {selectedPackage.name}:{' '}
-                  <strong className="text-sm font-black text-[#0F172A]">
+                  <strong className="text-sm font-semibold text-[#0F172A]">
                     {formatINR(selectedPackage.pricePaise)}
                   </strong>
                 </p>
@@ -930,7 +941,7 @@ function RegisterContent() {
               <button
                 type="button"
                 onClick={() => setCurrentStep(2)}
-                className="text-xs text-[#D97706] font-bold hover:underline"
+                className="text-xs text-[#1E3A8A] font-bold hover:underline"
               >
                 Edit Info
               </button>
@@ -941,20 +952,20 @@ function RegisterContent() {
               <button
                 type="button"
                 onClick={() => setPaymentOption('UPI')}
-                className={`p-3 rounded-xl border-2 border-solid text-left transition ${
+                className={`p-3 rounded-xl border border-solid text-left transition ${
                   paymentOption === 'UPI'
-                    ? 'border-[#D97706] bg-[#FFFBEB] ring-2 ring-[#D97706]/30 shadow-sm'
-                    : 'border-[#CBD5E1] bg-white hover:border-[#D97706]/60'
+                    ? 'border-[#1E3A8A] bg-[#F5F8FF] ring-2 ring-[#1E3A8A]/30 shadow-sm'
+                    : 'border-[#CBD5E1] bg-white hover:border-[#1E3A8A]/60'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
                     <UpiIconSvg className="w-6 h-3.5" />
-                    <span className="text-xs font-extrabold text-[#0F172A]">
+                    <span className="text-xs font-semibold text-[#0F172A]">
                       Online Payment (UPI QR)
                     </span>
                   </div>
-                  <span className="text-[9px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold px-1.5 py-0.5 rounded">
+                  <span className="text-[11px] bg-[#EEF2FF] text-[#1E3A8A] border border-[#C7D4F5] font-medium px-1.5 py-0.5 rounded">
                     Instant
                   </span>
                 </div>
@@ -966,17 +977,17 @@ function RegisterContent() {
               <button
                 type="button"
                 onClick={() => setPaymentOption('CASH')}
-                className={`p-3 rounded-xl border-2 border-solid text-left transition ${
+                className={`p-3 rounded-xl border border-solid text-left transition ${
                   paymentOption === 'CASH'
-                    ? 'border-[#D97706] bg-[#FFFBEB] ring-2 ring-[#D97706]/30 shadow-sm'
-                    : 'border-[#CBD5E1] bg-white hover:border-[#D97706]/60'
+                    ? 'border-[#1E3A8A] bg-[#F5F8FF] ring-2 ring-[#1E3A8A]/30 shadow-sm'
+                    : 'border-[#CBD5E1] bg-white hover:border-[#1E3A8A]/60'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-extrabold text-[#0F172A]">
+                  <span className="text-xs font-semibold text-[#0F172A]">
                     Offline Cash (Front Desk)
                   </span>
-                  <span className="text-[9px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
+                  <span className="text-[11px] bg-amber-100 text-amber-900 border border-amber-300 font-semibold px-1.5 py-0.5 rounded">
                     Front Desk
                   </span>
                 </div>
@@ -988,9 +999,9 @@ function RegisterContent() {
 
             {/* OPTION 1 CONTENT: Dynamic QR Code */}
             {paymentOption === 'UPI' && (
-              <div className="p-3.5 sm:p-4 bg-[#F8FAFC] border-2 border-solid border-[#CBD5E1] rounded-xl space-y-3">
+              <div className="p-3.5 sm:p-4 bg-[#F8FAFC] border border-solid border-[#CBD5E1] rounded-xl space-y-3">
                 <div className="text-center">
-                  <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
+                  <span className="text-[11px] font-semibold text-[#1E3A8A] uppercase tracking-wider block">
                     Official Merchant Dynamic QR Code
                   </span>
                   <p className="text-[11px] font-bold text-[#475569]">
@@ -1000,30 +1011,30 @@ function RegisterContent() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-1">
                   {/* Dynamic QR Display */}
-                  <div className="p-3 bg-white border-2 border-solid border-[#CBD5E1] rounded-xl shadow-sm text-center flex-shrink-0">
+                  <div className="p-3 bg-white border border-solid border-[#CBD5E1] rounded-xl shadow-sm text-center flex-shrink-0">
                     {qrDataUrl ? (
                       <img
                         src={qrDataUrl}
                         alt="Vyomi UPI QR Code"
-                        className="w-36 h-36 sm:w-40 sm:h-40 mx-auto rounded-lg"
+                        className="w-40 h-40 sm:w-44 sm:h-44 mx-auto rounded-lg"
                       />
                     ) : (
-                      <div className="w-36 h-36 flex items-center justify-center text-xs text-[#64748B] font-semibold">
+                      <div className="w-40 h-40 sm:w-44 sm:h-44 flex items-center justify-center text-xs text-[#64748B] font-semibold">
                         Generating Dynamic QR...
                       </div>
                     )}
-                    <span className="text-[11px] font-black text-[#0F172A] block mt-1.5 bg-[#FFFBEB] py-0.5 px-2 rounded border border-[#FDE68A]">
+                    <span className="text-[11px] font-semibold text-[#0F172A] block mt-1.5 bg-[#F5F8FF] py-0.5 px-2 rounded border border-[#C7D4F5]">
                       Amount Locked: {formatINR(selectedPackage.pricePaise)}
                     </span>
                   </div>
 
                   {/* Instructions */}
                   <div className="space-y-2 max-w-sm text-xs text-[#1E293B]">
-                    <div className="p-3 bg-white border-2 border-solid border-[#CBD5E1] rounded-xl space-y-1">
-                      <p className="font-extrabold text-[#0F172A] text-xs">How to pay:</p>
+                    <div className="p-3 bg-white border border-solid border-[#CBD5E1] rounded-xl space-y-1">
+                      <p className="font-semibold text-[#0F172A] text-xs">How to pay:</p>
                       <p className="text-[11px]">1. Open PhonePe, Google Pay, or Paytm.</p>
                       <p className="text-[11px]">2. Scan this QR code.</p>
-                      <p className="text-[#D97706] font-bold text-[11px]">
+                      <p className="text-[#1E3A8A] font-bold text-[11px]">
                         3. The amount of {formatINR(selectedPackage.pricePaise)} locks automatically in your UPI app.
                       </p>
                       <p className="text-[11px]">4. Complete payment and enter the 12-digit UTR reference below.</p>
@@ -1032,7 +1043,7 @@ function RegisterContent() {
                     {upiIntentUri && (
                       <a
                         href={upiIntentUri}
-                        className="sm:hidden block w-full py-2 bg-[#0F172A] text-white text-center rounded-lg font-bold text-xs shadow-md"
+                        className="sm:hidden block w-full py-2 bg-[#0F172A] text-white text-center rounded-lg font-bold text-xs shadow-sm"
                       >
                         Tap to Pay directly via UPI App
                       </a>
@@ -1050,9 +1061,9 @@ function RegisterContent() {
                     placeholder="e.g. 432109876543 (from PhonePe / GPay receipt)"
                     value={utrNumber}
                     onChange={(e) => setUtrNumber(e.target.value.trim())}
-                    className="w-full bg-white border-2 border-solid border-[#94A3B8] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#D97706]"
+                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A]"
                   />
-                  <span className="text-[10px] font-medium text-[#475569] mt-0.5 block">
+                  <span className="text-[11px] font-medium text-[#475569] mt-0.5 block">
                     Your enrollment will be verified against this transaction reference.
                   </span>
                 </div>
@@ -1061,17 +1072,17 @@ function RegisterContent() {
 
             {/* OPTION 2 CONTENT: Offline Cash */}
             {paymentOption === 'CASH' && (
-              <div className="p-4 bg-white border-2 border-solid border-[#CBD5E1] rounded-xl space-y-2.5 text-xs text-[#1E293B]">
-                <h4 className="font-extrabold text-sm text-[#0F172A]">
+              <div className="p-4 bg-white border border-solid border-[#CBD5E1] rounded-xl space-y-2.5 text-xs text-[#1E293B]">
+                <h4 className="font-semibold text-sm text-[#0F172A]">
                   Pay Cash at Club Front Desk
                 </h4>
                 <p className="font-medium text-[#475569]">
                   You can register now to reserve your membership slot and preferred training hours.
                 </p>
                 <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 space-y-1">
-                  <p className="font-extrabold text-xs">Desk Payment Note:</p>
+                  <p className="font-semibold text-xs">Desk Payment Note:</p>
                   <p className="font-medium text-[11px]">
-                    Amount of <strong className="font-extrabold">{formatINR(selectedPackage.pricePaise)}</strong> will be collected in cash at the Vyomi Fitness Club front desk (Sonovision Plaza, Patamata) prior to collecting your biometric wristband.
+                    Amount of <strong className="font-semibold">{formatINR(selectedPackage.pricePaise)}</strong> will be collected in cash at the Vyomi Fitness Club front desk (Sonovision Plaza, Patamata) prior to collecting your biometric wristband.
                   </p>
                 </div>
               </div>
@@ -1089,7 +1100,7 @@ function RegisterContent() {
                 type="button"
                 disabled={submittingPayment}
                 onClick={handleCompleteRegistration}
-                className="bg-[#D97706] hover:bg-[#B45309] text-white text-xs sm:text-sm font-bold py-2 px-6 rounded-lg transition flex items-center gap-1.5 disabled:opacity-50 shadow-md"
+                className="text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px text-xs sm:text-sm font-medium py-2 px-6 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
               >
                 {submittingPayment ? (
                   <span>Processing Enrollment...</span>
@@ -1108,25 +1119,9 @@ function RegisterContent() {
 
         {/* ================= STEP 4: CONFIRMATION & PDF RECEIPT ================= */}
         {currentStep === 4 && confirmationData && (
-          <div className="space-y-4 text-center py-2">
-            <div className="w-12 h-12 bg-emerald-100 border border-emerald-300 rounded-full flex items-center justify-center mx-auto text-emerald-800 text-xl font-black">
-              ✓
-            </div>
-
-            <div>
-              <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
-                {confirmationData.paymentMethod === 'UPI' ? 'Enrollment Confirmed & Activated' : 'Reserved · Pending Front Desk Cash'}
-              </span>
-              <h2 className="text-lg sm:text-xl font-black text-[#0F172A] mt-0.5">
-                Welcome to Vyomi Fitness Club
-              </h2>
-              <p className="text-[11px] font-bold text-[#475569] mt-0.5">
-                Your luxury club membership records have been committed to Supabase.
-              </p>
-            </div>
-
-            {/* Official VIP Card Display */}
-            <div className="my-2 max-w-sm mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center py-1">
+            {/* Card */}
+            <div className="order-2 lg:order-1 w-full max-w-md mx-auto">
               <VipMembershipCard
                 clientName={confirmationData.fullName}
                 packageName={confirmationData.packageName}
@@ -1136,75 +1131,67 @@ function RegisterContent() {
               />
             </div>
 
-            {/* Member Identification Card */}
-            <div className="max-w-md mx-auto p-4 bg-white border-2 border-solid border-[#CBD5E1] rounded-xl text-left space-y-2 shadow-sm">
-              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-1.5">
-                <span className="text-[10px] font-extrabold text-[#475569] uppercase">
-                  Official Member Code
+            {/* Details + actions */}
+            <div className="order-1 lg:order-2 space-y-5 text-center lg:text-left">
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[#1E3A8A] bg-[#EEF2FF] border border-[#C7D4F5] px-2.5 py-1 rounded-full">
+                  <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.2 3L13 4.5" /></svg>
+                  {confirmationData.paymentMethod === 'UPI' ? 'Membership active' : 'Reserved · pay at front desk'}
                 </span>
-                <span className="font-mono text-sm font-black text-[#0F172A]">
-                  {confirmationData.memberCode}
-                </span>
+                <h2 className="text-2xl sm:text-[28px] font-semibold text-[#0F172A] mt-3 tracking-tight">
+                  Welcome to Vyomi, {String(confirmationData.fullName || '').split(' ')[0]}.
+                </h2>
+                <p className="text-sm text-[#64748B] mt-1.5 max-w-md mx-auto lg:mx-0">
+                  {confirmationData.paymentMethod === 'UPI'
+                    ? 'Your membership is confirmed. Show your member ID at the front desk to collect your access band.'
+                    : `Your spot is reserved. Pay ${formatINR(confirmationData.totalAmount * 100)} in cash at the front desk to activate it.`}
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-1.5 text-xs">
-                <div>
-                  <span className="text-[#64748B] text-[10px] font-medium block">Member Name:</span>
-                  <span className="font-bold text-[#0F172A]">{confirmationData.fullName}</span>
-                </div>
-                <div>
-                  <span className="text-[#64748B] text-[10px] font-medium block">Phone:</span>
-                  <span className="font-bold text-[#0F172A]">+91 {confirmationData.phone}</span>
-                </div>
-                <div>
-                  <span className="text-[#64748B] text-[10px] font-medium block">Tier:</span>
-                  <span className="font-bold text-[#0F172A]">{confirmationData.packageName}</span>
-                </div>
-                <div>
-                  <span className="text-[#64748B] text-[10px] font-medium block">Total Amount:</span>
-                  <span className="font-black text-[#0F172A]">{formatINR(confirmationData.totalAmount * 100)}</span>
-                </div>
-                <div>
-                  <span className="text-[#64748B] text-[10px] font-medium block">Plan Validity:</span>
-                  <span className="font-bold text-[#D97706]">365 Days (1 Year)</span>
-                </div>
-                <div>
-                  <span className="text-[#64748B] text-[10px] font-medium block">Time Slot:</span>
-                  <span className="font-bold text-[#0F172A]">{confirmationData.preferredSlot}</span>
-                </div>
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-left rounded-2xl border border-[#E3E8F2] bg-[#F8FAFE] p-4 sm:p-5">
+                {[
+                  ['Member ID', confirmationData.memberCode, true],
+                  ['Plan', confirmationData.packageName, false],
+                  ['Amount', formatINR(confirmationData.totalAmount * 100), false],
+                  ['Valid until', confirmationData.endDate || '1 year from start', false],
+                  ['Phone', `+91 ${confirmationData.phone}`, false],
+                  ['Time slot', confirmationData.preferredSlot, false],
+                ].map(([label, value, mono]) => (
+                  <div key={String(label)} className="min-w-0">
+                    <dt className="text-[11px] text-[#64748B]">{label}</dt>
+                    <dd className={`text-sm text-[#0F172A] font-medium mt-0.5 truncate ${mono ? 'font-mono tracking-wide text-[#1E3A8A]' : ''}`}>
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="flex flex-col sm:flex-row gap-2.5 justify-center lg:justify-start">
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl text-sm font-medium transition text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px"
+                >
+                  <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3v10m0 0l-4-4m4 4l4-4M4 16h12" /></svg>
+                  Download receipt
+                </button>
+                <button
+                  type="button"
+                  disabled={emailSending}
+                  onClick={handleSendEmailReceipt}
+                  className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl text-sm font-medium text-[#1E3A8A] bg-white border border-[#C7D4F5] hover:border-[#1E3A8A] hover:bg-[#F5F8FF] transition disabled:opacity-60"
+                >
+                  <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="14" height="10" rx="2" /><path d="M3.5 6l6.5 5 6.5-5" /></svg>
+                  {emailSending ? 'Sending…' : 'Email receipt'}
+                </button>
               </div>
-            </div>
 
-            {/* PDF Receipt & Email Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1">
-              <button
-                type="button"
-                onClick={handleDownloadPdf}
-                className="w-full sm:w-auto bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-bold py-2 px-5 rounded-lg transition flex items-center justify-center gap-1.5 shadow-md"
-              >
-                <span>📥 Download PDF Payment Receipt</span>
-              </button>
+              {emailStatus && <p className="text-xs text-[#475569]">{emailStatus}</p>}
 
-              <button
-                type="button"
-                disabled={emailSending}
-                onClick={handleSendEmailReceipt}
-                className="w-full sm:w-auto bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-bold py-2 px-4 rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm"
-              >
-                <span>✉️ {emailSending ? 'Sending to Gmail...' : 'Email Receipt to Gmail'}</span>
-              </button>
-            </div>
-
-            {emailStatus && (
-              <p className="text-xs text-[#D97706] font-bold">{emailStatus}</p>
-            )}
-
-            <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-center">
               <button
                 type="button"
                 onClick={() => {
                   setConfirmationData(null);
-                  setCurrentStep(1);
                   setFullName('');
                   setPhone('');
                   setEmail('');
@@ -1212,12 +1199,14 @@ function RegisterContent() {
                   setOtpSent(false);
                   setOtpCode('');
                   setUtrNumber('');
+                  setAcceptedTerms(false);
                   setPaymentOption('UPI');
-                  router.push('/register');
+                  setEmailStatus('');
+                  setCurrentStep(1);
                 }}
-                className="w-full sm:w-auto px-6 py-2 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5"
+                className="text-sm text-[#64748B] hover:text-[#1E3A8A] transition"
               >
-                <span>← Back to Home</span>
+                Register another member
               </button>
             </div>
           </div>

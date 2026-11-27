@@ -168,7 +168,7 @@ export default function AdminRegistrationsPage() {
       {/* Page Title & Top Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
         <div>
-          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-wider block">
+          <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider block">
             Member Operations & Registry
           </span>
           <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
@@ -180,14 +180,14 @@ export default function AdminRegistrationsPage() {
           <a
             href={`/api/v1/admin/registrations/export?${statusFilter !== 'ALL' ? `status=${statusFilter}&` : ''}${search ? `q=${encodeURIComponent(search)}` : ''}`}
             download
-            className="px-3.5 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition text-center shadow-sm"
+            className="px-3.5 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded-lg text-xs font-bold text-[#0F172A] transition text-center shadow-sm"
           >
             📥 Export Registry CSV
           </a>
           <Link
             href="/register"
             target="_blank"
-            className="px-3.5 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-white rounded-lg text-xs font-bold transition text-center shadow-sm"
+            className="px-3.5 py-1.5 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded-lg text-xs font-bold transition text-center shadow-sm"
           >
             + New Member Enrollment
           </Link>
@@ -195,7 +195,7 @@ export default function AdminRegistrationsPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white border-2 border-[#CBD5E1] p-3 sm:p-4 rounded-xl shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
+      <div className="bg-white border border-[#CBD5E1] p-3 sm:p-4 rounded-xl shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-1">
           <input
             type="text"
@@ -205,7 +205,7 @@ export default function AdminRegistrationsPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706] flex-1 min-w-0"
+            className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] placeholder-[#64748B] focus:outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] flex-1 min-w-0"
           />
 
           <select
@@ -214,7 +214,7 @@ export default function AdminRegistrationsPage() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white border-2 border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706] w-full sm:w-auto"
+            className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] w-full sm:w-auto"
           >
             <option value="ALL">All Statuses</option>
             <option value="CONFIRMED">Active Members (Confirmed)</option>
@@ -228,14 +228,14 @@ export default function AdminRegistrationsPage() {
         <button
           type="button"
           onClick={() => fetchRegistrations()}
-          className="px-3.5 py-2 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded-lg text-xs font-bold text-[#0F172A] transition w-full sm:w-auto justify-center shadow-sm"
+          className="px-3.5 py-2 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded-lg text-xs font-bold text-[#0F172A] transition w-full sm:w-auto justify-center shadow-sm"
         >
           🔄 Synchronize Registry
         </button>
       </div>
 
       {/* Registrations Table */}
-      <div className="bg-white border-2 border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
         {/* Mobile Swipe Hint */}
         <div className="sm:hidden px-3 py-1.5 bg-[#F8FAFC] border-b border-[#E2E8F0] text-xs font-bold text-[#334155] flex items-center justify-between">
           <span>Swipe sideways to view full record</span>
@@ -244,7 +244,7 @@ export default function AdminRegistrationsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F1F5F9] border-b-2 border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
+              <tr className="bg-[#F1F5F9] border-b border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
                 <th className="py-3 px-4 font-black w-32 whitespace-nowrap">Reference ID</th>
                 <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Member Code</th>
                 <th className="py-3 px-4 font-black min-w-[140px]">Member Name</th>
@@ -280,7 +280,7 @@ export default function AdminRegistrationsPage() {
                           {r.reference}
                         </Link>
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-black text-[#D97706] w-36 whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-mono font-black text-[#1E3A8A] w-36 whitespace-nowrap">
                         {r.client?.memberCode ? (
                           <span className="nums tracking-wider">{r.client.memberCode}</span>
                         ) : (
@@ -320,7 +320,7 @@ export default function AdminRegistrationsPage() {
                         <div className="flex items-center justify-center gap-2">
                           <Link
                             href={`/admin/registrations/${r.reference}`}
-                            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#D97706] rounded text-xs font-extrabold text-[#0F172A] shadow-sm transition"
+                            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded text-xs font-extrabold text-[#0F172A] shadow-sm transition"
                           >
                             Dossier
                           </Link>

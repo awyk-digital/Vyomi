@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import palette from 'tailwindcss/colors';
 
 /**
  * The colour palette is REPLACED rather than extended, so stray greys
@@ -32,14 +33,31 @@ const config: Config = {
         DEFAULT: 'var(--burgundy)',
         dark: 'var(--burgundy-d)',
       },
+      /* Status colours for the light-theme register + admin screens only
+         (success / warning / error / info pills, banners, validation). */
+      red: palette.red,
+      emerald: palette.emerald,
+      amber: palette.amber,
+      sky: palette.sky,
+      blue: palette.blue,
+      purple: palette.purple,
+      slate: palette.slate,
+      neutral: palette.neutral,
     },
     fontFamily: {
       sans: ['var(--font-sans)'],
       quote: ['var(--font-quote)'],
     },
+    /* Three real weights only (400 / 500 / 600 are the cuts loaded).
+       bold / extrabold / black collapse onto 600 so every screen shares
+       one consistent heading weight instead of faux-bold browser synthesis. */
     fontWeight: {
       normal: '400',
       medium: '500',
+      semibold: '600',
+      bold: '600',
+      extrabold: '600',
+      black: '600',
     },
     borderRadius: {
       none: '0px',

@@ -38,15 +38,9 @@ export default function AdminLoginPage() {
     }
   };
 
-  const handleSelectRole = (roleEmail: string, rolePass: string) => {
-    setEmail(roleEmail);
-    setPassword(rolePass);
-    setError('');
-  };
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white border-2 border-[#CBD5E1] rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
+    <div className="min-h-screen bg-[#F4F6FB] flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white border border-[#E3E8F2] rounded-2xl p-7 sm:p-9 shadow-[0_12px_32px_-16px_rgba(15,23,42,0.14)] space-y-5">
         <div className="text-center">
           <Link href="/admin" className="inline-block">
             <Image
@@ -58,94 +52,67 @@ export default function AdminLoginPage() {
               className="h-10 w-auto mx-auto brightness-90"
             />
           </Link>
-          <span className="text-[11px] font-extrabold text-[#D97706] uppercase tracking-widest block mt-2.5">
-            Concierge & Operations Portal
+          <span className="text-[11px] font-medium text-[#1E3A8A] uppercase tracking-[0.18em] block mt-2.5">
+            Staff portal
           </span>
-          <h1 className="text-lg sm:text-xl font-black text-[#0F172A] mt-1 tracking-tight">
-            Staff Authentication Terminal
+          <h1 className="text-xl font-semibold text-[#0F172A] mt-1 tracking-tight">
+            Sign in to Vyomi Admin
           </h1>
-          <p className="text-xs font-bold text-[#334155] mt-1 leading-relaxed">
-            Authorized personnel access for member registry management, front desk settlements, and operational telemetry.
+          <p className="text-xs text-[#64748B] mt-1.5">
+            For authorised Vyomi staff only.
           </p>
         </div>
 
-        {/* 1-Click Role Credentials Selector */}
-        <div className="p-3 bg-[#F8FAFC] border-2 border-[#CBD5E1] rounded-xl space-y-2">
-          <span className="text-[10px] font-black uppercase tracking-wider text-[#0F172A] block text-center">
-            One-Click Staff Role Selector:
-          </span>
-          <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-            <button
-              type="button"
-              onClick={() => handleSelectRole('admin@vyomi.com', 'Vyomi@Admin#2026')}
-              className="py-1.5 px-2 bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 text-purple-950 font-black rounded text-center transition active:scale-95 shadow-xs"
-            >
-              Super Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectRole('manager@vyomi.com', 'Vyomi@Manager#2026')}
-              className="py-1.5 px-2 bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 text-blue-950 font-black rounded text-center transition active:scale-95 shadow-xs"
-            >
-              Manager
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectRole('frontdesk@vyomi.com', 'Vyomi@FrontDesk#2026')}
-              className="py-1.5 px-2 bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 text-amber-950 font-black rounded text-center transition active:scale-95 shadow-xs"
-            >
-              Front Desk
-            </button>
-          </div>
-        </div>
-
         {error && (
-          <div className="p-3 bg-red-50 border border-red-300 text-red-900 rounded-lg text-xs font-bold">
+          <div className="p-3 bg-red-50 border border-red-300 text-red-800 rounded-lg text-xs">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className="block text-xs font-extrabold text-[#0F172A] mb-1.5 uppercase tracking-wider">
-              Staff Email Address
+            <label className="block text-xs font-medium text-[#334155] mb-1.5 tracking-normal">
+              Email
             </label>
             <input
               type="email"
               required
-              placeholder="e.g. staff.id@company.com"
+              autoComplete="username"
+              autoFocus
+              placeholder="name@vyomi.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3.5 py-2.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3.5 py-2.5 text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/15 transition"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-extrabold text-[#0F172A] mb-1.5 uppercase tracking-wider">
-              Staff Security Password
+            <label className="block text-xs font-medium text-[#334155] mb-1.5 tracking-normal">
+              Password
             </label>
             <input
               type="password"
               required
-              placeholder="••••••••••••"
+              autoComplete="current-password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white border-2 border-[#CBD5E1] rounded-lg px-3.5 py-2.5 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#D97706]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3.5 py-2.5 text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/15 transition"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-lg text-xs font-extrabold uppercase tracking-wide transition shadow-sm disabled:opacity-50 mt-2"
+            className="w-full py-3 text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px rounded-xl text-sm font-medium transition disabled:opacity-50 mt-2"
           >
-            {loading ? 'Authenticating Secure Session...' : 'Authenticate & Enter Portal →'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
         <div className="pt-4 border-t border-[#E2E8F0] text-center">
-          <span className="text-[11px] text-[#94A3B8] font-bold block">
-            Vyomi Fitness Club · Patamata, Vijayawada · Secure Ops
+          <span className="text-[11px] text-[#94A3B8] block">
+            Vyomi Fitness Club · Patamata, Vijayawada
           </span>
         </div>
       </div>

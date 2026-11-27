@@ -625,6 +625,9 @@ class Database {
     preferredSlot?: string;
     referralSource?: string;
     acceptedIp: string;
+    reference?: string;
+    paid?: boolean;
+    method?: PayMethod;
   }): { registration: Registration; client: Client; pkg: Package; payment: Payment } {
     const pkg = this.findPackageById(params.packageId);
     if (!pkg) throw new Error('Selected package not found');
@@ -650,7 +653,7 @@ class Database {
 
     const refDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randSuffix = crypto.randomBytes(2).toString('hex').toUpperCase();
-    const reference = `REG-${refDate}-${randSuffix}`;
+    const reference = params.reference || `REG-${refDate}-${randSuffix}`;
 
     const regId = 'reg-' + crypto.randomUUID().substring(0, 8);
     const registration: Registration = {
@@ -664,7 +667,7 @@ class Database {
       discountPaise,
       gstPaise,
       totalPaise,
-      status: 'PENDING',
+      status: params.paid ? 'CONFIRMED' : 'PENDING',
       startDate: params.startDate,
       endDate: null,
       preferredSlot: params.preferredSlot || null,
@@ -679,16 +682,16 @@ class Database {
     const payment: Payment = {
       id: 'pay-' + crypto.randomUUID().substring(0, 8),
       registrationId: regId,
-      method: 'RAZORPAY',
+      method: params.method || 'RAZORPAY',
       razorpayOrderId: `order_vyo_${reference}`,
       razorpayPaymentId: null,
       razorpaySignature: null,
       amountPaise: totalPaise,
       currency: 'INR',
-      status: 'CREATED',
+      status: params.paid ? 'PAID' : 'CREATED',
       failureReason: null,
       refundedPaise: 0,
-      paidAt: null,
+      paidAt: params.paid ? new Date().toISOString() : null,
       createdAt: new Date().toISOString(),
     };
 
