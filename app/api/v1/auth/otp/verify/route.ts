@@ -1,78 +1,76 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { memoryOtpStore } from '@/lib/otpStore';
+import { getAdminSession } from '@/lib/auth';
 
+const MAX_ATTEMPTS = 5;
+
+function cleanPhone(raw: unknown): string {
+  let phone = String(raw || '').replace(/\D/g, '');
+  if (phone.length > 10 && phone.startsWith('91')) phone = phone.slice(2);
+  else if (phone.length === 11 && phone.startsWith('0')) phone = phone.slice(1);
+  return phone;
+}
+
+/** Check the 6-digit code for a mobile number. Staff only, max 5 tries per code. */
 export async function POST(req: Request) {
+  const staff = await getAdminSession();
+  if (!staff) {
+    return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: 'Front desk sign-in required.' } }, { status: 401 });
+  }
+
   try {
-    const body = await req.json();
-    let phone = String(body.phone || '').replace(/\D/g, '');
-    if (phone.length > 10 && phone.startsWith('91')) {
-      phone = phone.slice(2);
-    } else if (phone.length === 11 && phone.startsWith('0')) {
-      phone = phone.slice(1);
-    }
-    const code = String(body.code || body.otp || '').trim();
-
-    if (!phone || !code) {
+    const body = await req.json().catch(() => ({}));
+    const phone = cleanPhone(body.phone);
+    const code = String(body.code || body.otp || '').replace(/\D/g, '');
+    if (!/^[6-9]\d{9}$/.test(phone) || code.length !== 6) {
       return NextResponse.json(
-        { error: { code: 'MISSING_DATA', message: 'Phone number and verification code are required.' } },
+        { error: { code: 'MISSING_DATA', message: 'Enter the 6-digit code.' } },
         { status: 400 }
       );
     }
 
-    // Master test bypass or check memory / Supabase
-    let isValid = false;
+    // Latest unused, unexpired code for this number
+    const { data: rows } = await supabaseAdmin
+      .from('otp_verifications')
+      .select('id, otp_code, attempts')
+      .eq('phone', phone)
+      .eq('is_verified', false)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const row = rows?.[0];
 
-    if (process.env.NODE_ENV !== 'production' && code === '123456') {
-      isValid = true;
-    } else {
-      // 1. Check in memory
-      const mem = memoryOtpStore.get(phone);
-      if (mem && mem.code === code && mem.expiresAt > Date.now()) {
-        isValid = true;
-      }
-
-      // 2. Check in Supabase
-      if (!isValid) {
-        const { data } = await supabaseAdmin
-          .from('otp_verifications')
-          .select('*')
-          .eq('phone', phone)
-          .eq('otp_code', code)
-          .gt('expires_at', new Date().toISOString())
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (data && data.length > 0) {
-          isValid = true;
-        }
-      }
+    if (!row) {
+      return NextResponse.json(
+        { verified: false, error: { code: 'EXPIRED', message: 'Code expired. Please send a new one.' } },
+        { status: 400 }
+      );
+    }
+    if ((row.attempts ?? 0) >= MAX_ATTEMPTS) {
+      return NextResponse.json(
+        { verified: false, error: { code: 'LOCKED', message: 'Too many wrong tries. Please send a new code.' } },
+        { status: 429 }
+      );
     }
 
-    if (!isValid) {
+    if (row.otp_code !== code) {
+      const attempts = (row.attempts ?? 0) + 1;
+      await supabaseAdmin.from('otp_verifications').update({ attempts }).eq('id', row.id);
+      const left = MAX_ATTEMPTS - attempts;
       return NextResponse.json(
-        { verified: false, error: { code: 'INVALID_OTP', message: 'Invalid or expired verification code. Please request a new OTP.' } },
+        {
+          verified: false,
+          error: {
+            code: 'INVALID_OTP',
+            message: left > 0 ? `Wrong code. ${left} ${left === 1 ? 'try' : 'tries'} left.` : 'Too many wrong tries. Please send a new code.',
+          },
+        },
         { status: 400 }
       );
     }
 
-    // Mark as verified in Supabase
-    try {
-      await supabaseAdmin
-        .from('otp_verifications')
-        .update({ is_verified: true })
-        .eq('phone', phone)
-        .eq('otp_code', code);
-    } catch {}
-
-    // Clear from memory
-    memoryOtpStore.delete(phone);
-
-    return NextResponse.json({
-      verified: true,
-      message: 'Mobile number successfully verified.',
-      phone,
-    });
+    await supabaseAdmin.from('otp_verifications').update({ is_verified: true }).eq('id', row.id);
+    return NextResponse.json({ verified: true, message: 'Mobile number verified.', phone });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Verification failed';
     return NextResponse.json({ error: { code: 'SERVER_ERROR', message } }, { status: 500 });

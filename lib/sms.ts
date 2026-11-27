@@ -20,6 +20,7 @@ export async function sendRealTelecomSms(params: {
   const cleanPhone = params.phone.replace(/\D/g, '').slice(-10);
   const otp = params.otp;
   const messageText = `Your Vyomi Fitness Club verification code is: ${otp}. Valid for 5 minutes. Please do not share this code.`;
+  let lastError = '';
 
   // 1. Try Fast2SMS (Indian SMS Gateway)
   const fast2SmsKey = process.env.FAST2SMS_API_KEY;
@@ -43,9 +44,11 @@ export async function sendRealTelecomSms(params: {
         console.log(`[SMS:Fast2SMS] Successfully dispatched OTP to +91 ${cleanPhone}`);
         return { sent: true, provider: 'FAST2SMS', messageId: resData.request_id };
       } else {
+        lastError = String(resData.message || 'Fast2SMS rejected the request');
         console.warn(`[SMS:Fast2SMS Error] ${resData.message || JSON.stringify(resData)}`);
       }
     } catch (e: any) {
+      lastError = 'Could not reach Fast2SMS';
       console.warn(`[SMS:Fast2SMS Exception]`, e.message);
     }
   }
@@ -109,6 +112,6 @@ export async function sendRealTelecomSms(params: {
   return {
     sent: false,
     provider: 'DEV_FALLBACK',
-    error: 'TELECOM_KEY_REQUIRED',
+    error: lastError || 'TELECOM_KEY_REQUIRED',
   };
 }

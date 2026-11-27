@@ -65,6 +65,26 @@ export async function POST(req: Request) {
       );
     }
 
+    // Mobile must be OTP-verified (last 30 min) once an SMS provider is set up.
+    // Managers/admins may skip it for admin walk-ins.
+    const canSkipOtp = body.skipPhoneOtp === true && (staff.role === 'SUPER_ADMIN' || staff.role === 'MANAGER');
+    if (process.env.PHONE_OTP_ENABLED === 'true' && !canSkipOtp) {
+      const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { data: verified } = await supabaseAdmin
+        .from('otp_verifications')
+        .select('id')
+        .eq('phone', phone)
+        .eq('is_verified', true)
+        .gt('created_at', since)
+        .limit(1);
+      if (!verified || verified.length === 0) {
+        return NextResponse.json(
+          { error: { code: 'PHONE_NOT_VERIFIED', message: 'Please verify the mobile number with the OTP first.' } },
+          { status: 400 }
+        );
+      }
+    }
+
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
         { error: { code: 'INVALID_EMAIL', message: 'Please provide a valid, active email address.' } },

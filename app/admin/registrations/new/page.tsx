@@ -62,6 +62,7 @@ export default function NewWalkinRegistrationPage() {
           paymentMethod,
           startDate,
           acceptedTerms: true,
+          skipPhoneOtp: true,
         }),
       });
       const data = await res.json();

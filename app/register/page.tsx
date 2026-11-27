@@ -111,7 +111,10 @@ function RegisterContent() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (cancelled) return;
-        if (d?.admin) setStaff({ name: d.admin.name, role: d.admin.role });
+        if (d?.admin) {
+          setStaff({ name: d.admin.name, role: d.admin.role });
+          setPhoneOtpEnabled(!!d.phoneOtp);
+        }
         else window.location.replace('/admin/login?next=/register');
       })
       .catch(() => {
@@ -175,6 +178,8 @@ function RegisterContent() {
   const [otpMessage, setOtpMessage] = useState('');
   const [otpError, setOtpError] = useState('');
   const [otpTimer, setOtpTimer] = useState(0);
+  const [phoneOtpEnabled, setPhoneOtpEnabled] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
 
   // Payment Options (Strictly 2 options: Dynamic UPI QR or Offline Cash)
   const [paymentOption, setPaymentOption] = useState<'UPI' | 'CASH'>('UPI');
@@ -278,69 +283,68 @@ function RegisterContent() {
     }
   }, [currentStep, paymentOption, selectedPackage, chargePaise]);
 
-  // Handle Real-Time Gmail OTP Send
-  const handleSendEmailOtp = async () => {
+  // Phone OTP: send a 6-digit code to the member's mobile (only when switched on)
+  const handleSendPhoneOtp = async () => {
     setOtpError('');
     setOtpMessage('');
-    const cleanEmail = email.trim().toLowerCase();
-
-    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setFormErrors((prev) => ({ ...prev, email: 'Enter a valid email address first.' }));
-      setOtpError('Please provide a valid Gmail/Email address to receive the verification code.');
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setFormErrors((prev) => ({ ...prev, phone: 'Enter a valid 10-digit mobile number first.' }));
       return;
     }
-
     setOtpSending(true);
     try {
-      const res = await fetch('/api/v1/auth/email-otp/send', {
+      const res = await fetch('/api/v1/auth/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, fullName: fullName.trim() }),
+        body: JSON.stringify({ phone: cleanPhone }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        window.location.replace('/admin/login?next=/register');
+        return;
+      }
       if (!res.ok) {
-        setOtpError(data.error?.message || 'Failed to dispatch verification code to Gmail.');
+        setOtpError(data.error?.message || 'Could not send the code. Please retry.');
+        if (data.retryAfter) setOtpTimer(Number(data.retryAfter));
       } else {
         setOtpSent(true);
-        setOtpTimer(60);
-        setOtpMessage(`6-digit verification code sent to ${cleanEmail}. Please check your inbox.`);
-        setFormErrors((prev) => ({ ...prev, email: '', otp: '' }));
+        setOtpCode('');
+        setOtpTimer(Number(data.resendInSeconds) || 30);
+        setOtpMessage(data.devOtp ? `Test code: ${data.devOtp}` : `Code sent to +91 ${cleanPhone}`);
+        setFormErrors((prev) => ({ ...prev, phone: '' }));
       }
     } catch {
-      setOtpError('Network error while requesting verification code.');
+      setOtpError('Network error. Please retry.');
     } finally {
       setOtpSending(false);
     }
   };
 
-  // Handle Real-Time Gmail OTP Verify
-  const handleVerifyEmailOtp = async () => {
+  const handleVerifyPhoneOtp = async () => {
     setOtpError('');
-    setOtpMessage('');
-    const cleanEmail = email.trim().toLowerCase();
-
-    if (!otpCode || otpCode.trim().length !== 6) {
-      setOtpError('Please enter the 6-digit verification code sent to your Gmail.');
+    if (otpCode.length !== 6) {
+      setOtpError('Enter the 6-digit code.');
       return;
     }
-
     setOtpVerifying(true);
     try {
-      const res = await fetch('/api/v1/auth/email-otp/verify', {
+      const res = await fetch('/api/v1/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, otp: otpCode.trim() }),
+        body: JSON.stringify({ phone: phone.replace(/\D/g, ''), code: otpCode }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setOtpError(data.error?.message || 'Invalid or expired verification code.');
+        setOtpError(data.error?.message || 'Wrong code. Please retry.');
       } else {
-        setEmailVerified(true);
-        setOtpMessage('Email verified successfully! You can now proceed.');
-        setFormErrors((prev) => ({ ...prev, otp: '', email: '' }));
+        setPhoneVerified(true);
+        setOtpSent(false);
+        setOtpMessage('');
+        setFormErrors((prev) => ({ ...prev, phone: '' }));
       }
     } catch {
-      setOtpError('Verification failed. Please retry.');
+      setOtpError('Network error. Please retry.');
     } finally {
       setOtpVerifying(false);
     }
@@ -361,6 +365,8 @@ function RegisterContent() {
     const cleanPhone = phone.replace(/\D/g, '');
     if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
       errors.phone = 'Valid 10-digit mobile number required starting with 6, 7, 8, or 9.';
+    } else if (phoneOtpEnabled && !phoneVerified) {
+      errors.phone = 'Please verify the mobile number with the OTP.';
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -873,18 +879,70 @@ function RegisterContent() {
                   </div>
                   <input
                     type="tel"
+                    inputMode="numeric"
                     maxLength={10}
                     placeholder="9876543210"
                     value={phone}
                     onChange={(e) => {
                       setPhone(e.target.value.replace(/\D/g, ''));
+                      // A changed number must be verified again
+                      if (phoneVerified) setPhoneVerified(false);
+                      if (otpSent) setOtpSent(false);
                       if (formErrors.phone) {
                         setFormErrors((prev) => ({ ...prev, phone: '' }));
                       }
                     }}
                     className="w-full bg-transparent px-3 py-2 text-sm font-normal text-[#0F172A] placeholder-[#94A3B8] focus:outline-none"
                   />
+                  {phoneOtpEnabled &&
+                    (phoneVerified ? (
+                      <span className="flex items-center gap-1 px-3 text-sm text-[#1E3A8A] whitespace-nowrap">
+                        <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.2 3L13 4.5" /></svg>
+                        Verified
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSendPhoneOtp}
+                        disabled={otpSending || otpTimer > 0}
+                        className="h-full px-3.5 py-2 text-sm font-medium text-[#1E3A8A] border-l border-[#CBD5E1] hover:bg-[#F5F8FF] disabled:text-[#94A3B8] whitespace-nowrap transition"
+                      >
+                        {otpSending ? 'Sending…' : otpTimer > 0 ? `Resend ${otpTimer}s` : otpSent ? 'Resend' : 'Send OTP'}
+                      </button>
+                    ))}
                 </div>
+                {phoneOtpEnabled && otpSent && !phoneVerified && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <input
+                      autoFocus
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      placeholder="6-digit code"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleVerifyPhoneOtp();
+                        }
+                      }}
+                      className="w-36 h-10 rounded-lg border border-[#CBD5E1] bg-white px-3 text-base tracking-[0.3em] text-[#0F172A] placeholder:tracking-normal placeholder:text-sm placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyPhoneOtp}
+                      disabled={otpVerifying || otpCode.length !== 6}
+                      className="h-10 px-4 rounded-lg text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#172F73] disabled:opacity-50 transition"
+                    >
+                      {otpVerifying ? 'Checking…' : 'Verify'}
+                    </button>
+                    {otpMessage && <span className="text-xs text-[#64748B]">{otpMessage}</span>}
+                  </div>
+                )}
+                {phoneOtpEnabled && otpError && (
+                  <span className="text-[11px] text-red-600 mt-1 block font-medium">{otpError}</span>
+                )}
                 {formErrors.phone && (
                   <span className="text-[11px] text-red-600 mt-0.5 block font-bold">{formErrors.phone}</span>
                 )}
@@ -1325,6 +1383,7 @@ function RegisterContent() {
                   setPhone('');
                   setEmail('');
                   setEmailVerified(false);
+                  setPhoneVerified(false);
                   setOtpSent(false);
                   setOtpCode('');
                   setUtrNumber('');

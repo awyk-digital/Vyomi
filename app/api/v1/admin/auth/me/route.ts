@@ -14,5 +14,7 @@ export async function GET() {
       email: session.email,
       role: session.role,
     },
+    // Phone OTP on /register is switched on only after SMS sending is confirmed
+    phoneOtp: process.env.PHONE_OTP_ENABLED === 'true',
   });
 }
