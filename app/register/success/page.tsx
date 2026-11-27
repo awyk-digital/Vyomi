@@ -50,7 +50,7 @@ function SuccessContent() {
     <div className="mx-auto max-w-2xl bg-[var(--surface)] border border-[var(--line)] rounded-[2px] p-8 sm:p-12 shadow-[var(--shadow-card)]">
       {/* Header Branding */}
       <div className="flex items-center justify-between border-b border-[var(--line)] pb-6 mb-8">
-        <Link href="/">
+        <Link href="/register">
           <Image
             src={SUPPLIED.logo.src}
             alt="Vyomi Fitness Club"
@@ -152,10 +152,10 @@ function SuccessContent() {
           Download / Print Receipt
         </button>
         <Link
-          href="/"
+          href="/register"
           className="btn-line-light w-full sm:w-1/2 text-center"
         >
-          Back to Vyomi Home ↗
+          Back to Membership Registration
         </Link>
       </div>
     </div>

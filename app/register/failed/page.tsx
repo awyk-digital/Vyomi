@@ -35,10 +35,10 @@ function FailedContent() {
           Retry Payment & Registration →
         </Link>
         <Link
-          href="/"
+          href="/register"
           className="btn-line-light w-full block text-center"
         >
-          Cancel and Return Home
+          Back to Membership Registration
         </Link>
       </div>
     </div>

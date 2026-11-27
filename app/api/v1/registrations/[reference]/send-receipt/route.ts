@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getAdminSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generatePdfReceipt } from '@/lib/pdfReceipt';
 import { sendMembershipReceiptEmail } from '@/lib/email';
@@ -8,6 +9,14 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ reference: string }> }
 ) {
+
+  const staff = await getAdminSession();
+  if (!staff) {
+    return NextResponse.json(
+      { error: { code: 'UNAUTHORIZED', message: 'Front desk sign-in required.' } },
+      { status: 401 }
+    );
+  }
   try {
     const { reference } = await params;
 

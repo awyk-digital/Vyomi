@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server';
+import { getAdminSession } from '@/lib/auth';
 import { memoryEmailOtpStore } from '@/lib/otpStore';
 
 export async function POST(req: Request) {
+  const staff = await getAdminSession();
+  if (!staff) {
+    return NextResponse.json(
+      { error: { code: 'UNAUTHORIZED', message: 'Front desk sign-in required.' } },
+      { status: 401 }
+    );
+  }
   try {
     const body = await req.json();
     const email = String(body.email || '').trim().toLowerCase();

@@ -103,6 +103,30 @@ function RegisterContent() {
   // Step 1: Select Plan | Step 2: Member Details & Gmail OTP | Step 3: Payment | Step 4: Success
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
+  // Front desk gate: registration is staff-operated. No session -> staff login.
+  const [staff, setStaff] = useState<{ name: string; role: string } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/v1/admin/auth/me', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        if (d?.admin) setStaff({ name: d.admin.name, role: d.admin.role });
+        else window.location.replace('/admin/login?next=/register');
+      })
+      .catch(() => {
+        if (!cancelled) window.location.replace('/admin/login?next=/register');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const lockSession = async () => {
+    await fetch('/api/v1/admin/auth/logout', { method: 'POST' }).catch(() => null);
+    window.location.replace('/admin/login?next=/register');
+  };
+
   // Browser Back stays inside registration: steps 2–3 go back one step,
   // steps 1 and 4 do nothing. Members cannot leave to the public site.
   useBackGuard({
@@ -439,6 +463,14 @@ function RegisterContent() {
     }
   };
 
+  if (!staff) {
+    return (
+      <div className="min-h-screen bg-[#F4F6FB] flex items-center justify-center text-sm text-[#64748B]">
+        Checking front desk sign-in…
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F4F6FB] text-[#0F172A] py-3 sm:py-4 px-3 sm:px-6 flex flex-col gap-3">
       {/* Top Brand Bar - Clean Standalone Portal */}
@@ -462,11 +494,25 @@ function RegisterContent() {
             </span>
           </div>
         </div>
-        <div className="text-right">
-          <span className="text-[11px] font-medium tracking-[0.18em] text-[#1E3A8A] uppercase block">
-            Patamata, Vijayawada
-          </span>
-          <span className="text-xs font-medium text-[#64748B]">Membership registration</span>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="text-right hidden sm:block">
+            <span className="text-[11px] font-medium tracking-[0.18em] text-[#1E3A8A] uppercase block">
+              Patamata, Vijayawada
+            </span>
+            <span className="text-xs text-[#64748B]">
+              {staff ? `Front desk · ${staff.name}` : 'Membership registration'}
+            </span>
+          </div>
+          {staff && (
+            <button
+              type="button"
+              onClick={lockSession}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium text-[#1E3A8A] bg-white border border-[#C7D4F5] hover:border-[#1E3A8A] transition"
+            >
+              <svg viewBox="0 0 20 20" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="9" width="12" height="8" rx="2" /><path d="M7 9V6.5a3 3 0 016 0V9" /></svg>
+              Lock
+            </button>
+          )}
         </div>
       </div>
 
@@ -1206,7 +1252,7 @@ function RegisterContent() {
                 }}
                 className="text-sm text-[#64748B] hover:text-[#1E3A8A] transition"
               >
-                Register another member
+                ← Back to Membership Registration
               </button>
             </div>
           </div>

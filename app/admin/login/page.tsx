@@ -29,7 +29,9 @@ export default function AdminLoginPage() {
       if (!res.ok) {
         setError(data.error?.message || 'Invalid credentials. Access denied.');
       } else {
-        window.location.href = '/admin';
+        const next = new URLSearchParams(window.location.search).get('next') || '';
+        // Only same-site paths, never protocol-relative or absolute URLs
+        window.location.href = next.startsWith('/') && !next.startsWith('//') ? next : '/admin';
       }
     } catch {
       setError('Secure connection failure. Please retry.');

@@ -64,10 +64,10 @@ function PendingContent() {
 
       <div className="pt-2">
         <Link
-          href="/"
+          href="/register"
           className="text-xs text-[var(--text-faint)] hover:text-[var(--text-strong)] underline"
         >
-          Leave in background and return home
+          Back to Membership Registration
         </Link>
       </div>
     </div>
