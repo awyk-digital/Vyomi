@@ -122,65 +122,65 @@ export const EQUIPMENT_IMAGES: Record<string, ImageSlot[]> = {
   'plate-loaded': [
     slot({
       id: 'eq-plate-main',
-      need: 'Plate-loaded machine, full silhouette, burgundy Panatta frame, three-quarter view',
+      need: 'Plate-loaded machine, full silhouette, Panatta FreeWeight Super High Row in architectural bay',
       master: '3200 × 2400',
       ratio: '4 / 3',
-      fit: 'contain',
+      fit: 'cover',
       focal: '50% 50%',
-      src: '/img/eq-plate-main.png',
-      alt: 'Plate-loaded Panatta machine',
+      src: '/img/eq-plate-main-v3.jpg',
+      alt: 'Red Panatta FreeWeight plate-loaded machine in luxury gym bay',
     }),
     slot({
       id: 'eq-plate-detail-1',
-      need: 'Detail — loaded plate stack and sleeve, shallow depth of field',
+      need: 'Detail — loaded red Panatta Olympic plates and knurled collar, shallow depth of field',
       master: '2048 × 2048',
       ratio: '1 / 1',
       fit: 'cover',
       focal: '50% 50%',
-      src: '/img/eq-plate-detail-1.png',
-      alt: 'Weight plates on a loading sleeve',
+      src: '/img/eq-plate-detail-1-v3.jpg',
+      alt: 'Red Panatta Olympic plate stack and loading sleeve detail',
     }),
     slot({
       id: 'eq-plate-detail-2',
-      need: 'Detail — handle, knurling or adjustment pin on the same machine',
+      need: 'Detail — red Panatta articulated lever arm, industrial pivot bearing, and knurled grip',
       master: '2048 × 2560',
       ratio: '4 / 5',
       fit: 'cover',
       focal: '50% 50%',
-      src: '/img/eq-plate-detail-2.png',
-      alt: 'Machine handle detail',
+      src: '/img/eq-plate-detail-2-v3.jpg',
+      alt: 'Red Panatta articulated lever arm and knurled grip detail',
     }),
   ],
   'pin-loaded': [
     slot({
       id: 'eq-pin-main',
-      need: 'Pin-loaded selectorised machine, FULL machine visible including weight stack',
+      need: 'Red Panatta selectorized machine, FULL machine visible including weight stack',
       master: '3200 × 2400',
       ratio: '4 / 3',
-      fit: 'contain',
+      fit: 'cover',
       focal: '50% 50%',
-      src: '/img/eq-pin-main.jpg',
-      alt: 'Pin-loaded selectorised machine',
+      src: '/img/eq-pin-main-v2.jpg',
+      alt: 'Red Panatta selectorized pin-loaded machine',
     }),
     slot({
       id: 'eq-pin-detail-1',
-      need: 'Detail — selector pin inserted in the weight stack (must be a pin-loaded stack)',
+      need: 'Detail — selector pin inserted in the weight stack with red Panatta accent',
       master: '2048 × 2048',
       ratio: '1 / 1',
       fit: 'cover',
       focal: '50% 50%',
-      src: '/img/eq-pin-detail-1.jpg',
-      alt: 'Selector pin in a weight stack',
+      src: '/img/eq-pin-detail-1-v2.jpg',
+      alt: 'Selector pin in weight stack with red Panatta detail',
     }),
     slot({
       id: 'eq-pin-detail-2',
-      need: 'Detail — seat adjustment or pulley on the same machine',
+      need: 'Detail — red Panatta lever arm, chrome guide rods and pulley mechanism',
       master: '2048 × 2560',
       ratio: '4 / 5',
       fit: 'cover',
       focal: '50% 50%',
-      src: '/img/eq-pin-detail-2.png',
-      alt: 'Seat adjustment detail',
+      src: '/img/eq-pin-detail-2-v2.jpg',
+      alt: 'Red Panatta lever arm and pulley detail',
     }),
   ],
   conditioning: [
@@ -231,8 +231,8 @@ export const TRAINER_PORTRAITS: ImageSlot[] = [
     ratio: '3 / 4',
     fit: 'cover',
     focal: '50% 25%',
-    src: '/img/trainer-l1.jpg',
-    alt: '',
+    src: '/img/trainer-l1-v5.jpg',
+    alt: 'Vyomi Level 1 Trainer',
   }),
   slot({
     id: 'trainer-l2',
@@ -241,8 +241,8 @@ export const TRAINER_PORTRAITS: ImageSlot[] = [
     ratio: '3 / 4',
     fit: 'cover',
     focal: '50% 25%',
-    src: '/img/trainer-l2.jpg',
-    alt: '',
+    src: '/img/trainer-l2-v5.jpg',
+    alt: 'Vyomi Level 2 Trainer',
   }),
   slot({
     id: 'trainer-l3',
@@ -251,8 +251,8 @@ export const TRAINER_PORTRAITS: ImageSlot[] = [
     ratio: '3 / 4',
     fit: 'cover',
     focal: '50% 25%',
-    src: '/img/trainer-l3.jpg',
-    alt: '',
+    src: '/img/trainer-l3-v5.jpg',
+    alt: 'Vyomi Level 3 Trainer',
   }),
 ];
 
@@ -333,6 +333,167 @@ export const WELLNESS_IMAGES: ImageSlot[] = [
   }),
 ];
 
+export const WELLNESS_AMENITY_IMAGES = {
+  steam: {
+    left: slot({
+      id: 'wellness-steam-left',
+      need: 'Aromatherapy eucalyptus steam sanctuary with heated monolithic stone benches',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-steam-left.jpg',
+      alt: 'Vyomi luxury eucalyptus steam sanctuary with ambient lighting',
+    }),
+    right: slot({
+      id: 'wellness-steam-right',
+      need: 'Brushed brass steam nozzle fixture with warm vapor and basalt stone',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-steam-right.jpg',
+      alt: 'Steam nozzle fixture and basalt stone detail',
+    }),
+  },
+  'sauna-bath': {
+    left: slot({
+      id: 'wellness-sauna-left',
+      need: 'Finnish dry cedar sauna sanctuary with tiered floating timber benches',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-sauna-left.jpg',
+      alt: 'Vyomi Finnish dry cedar sauna with ambient bench backlighting',
+    }),
+    right: slot({
+      id: 'wellness-sauna-right',
+      need: 'Volcanic stone heater and handcrafted dark walnut pail with rising steam',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-sauna-right.jpg',
+      alt: 'Volcanic sauna stone heater and water bucket detail',
+    }),
+  },
+  'ice-bath': {
+    left: slot({
+      id: 'wellness-icebath-left',
+      need: 'Sub-zero chilled cold plunge pool with illuminated cyan water and granite basin',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-icebath-left.jpg',
+      alt: 'Vyomi luxury cold plunge ice bath suite with precision water chiller',
+    }),
+    right: slot({
+      id: 'wellness-icebath-right',
+      need: 'Cold plunge tub rim with digital 3.0°C readout and brushed steel basin',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-icebath-right.jpg',
+      alt: 'Chilled ice bath tub rim with 3.0°C temperature display',
+    }),
+  },
+  'red-light': {
+    left: slot({
+      id: 'wellness-redlight-left',
+      need: 'Executive full-body red light therapy chamber with zero-gravity lounger',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-redlight-left.jpg',
+      alt: 'Vyomi Red Light Therapy chamber with medical-grade LED arrays',
+    }),
+    right: slot({
+      id: 'wellness-redlight-right',
+      need: 'High-irradiance ruby-red and near-infrared LED diode array matrix',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-redlight-right.jpg',
+      alt: 'Red light therapy 660nm and 850nm LED diode matrix detail',
+    }),
+  },
+  'salt-bath': {
+    left: slot({
+      id: 'wellness-salt-left',
+      need: 'Salt bath — glowing Himalayan salt brick wall relaxation room',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-salt-left.png',
+      alt: 'Himalayan salt bath room',
+    }),
+    right: slot({
+      id: 'wellness-salt-right',
+      need: 'Salt sanctuary detail with backlit crystal bricks and river stones',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-salt-right.jpg',
+      alt: 'Himalayan salt crystals and river stones',
+    }),
+  },
+  'changing-rooms': {
+    left: slot({
+      id: 'wellness-changing-left',
+      need: 'Executive locker room and changing salon with dark fluted oak',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-changing-left.jpg',
+      alt: 'Executive changing salon and fluted oak lockers',
+    }),
+    right: slot({
+      id: 'wellness-changing-right',
+      need: 'Luxury grooming vanity with circular backlit bronze mirror',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-changing-right.jpg',
+      alt: 'Luxury private grooming vanity',
+    }),
+  },
+  showers: {
+    left: slot({
+      id: 'wellness-showers-left',
+      need: 'Walk-in rainfall shower sanctuary with dark charcoal slate slabs',
+      master: '2048 × 2560',
+      ratio: '4 / 5',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-showers-left.jpg',
+      alt: 'Walk-in dark slate rainfall shower',
+    }),
+    right: slot({
+      id: 'wellness-showers-right',
+      need: 'Folded waffle cotton towels on timber bench with brass fittings',
+      master: '2048 × 2048',
+      ratio: '1 / 1',
+      fit: 'cover',
+      focal: '50% 50%',
+      src: '/img/wellness-showers-right.png',
+      alt: 'Changing and shower details with waffle towels',
+    }),
+  },
+} as const;
+
+export const WELLNESS_AMENITY_SLOTS: ImageSlot[] = Object.values(
+  WELLNESS_AMENITY_IMAGES
+).flatMap((a) => [a.left, a.right]);
+
 /* ------------------------------------------------------------------
    Studio page — one wide plate per chapter
    ------------------------------------------------------------------ */
@@ -395,23 +556,23 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
   }),
   zumbaDetailA: slot({
     id: 'studio-zumba-detail-a',
-    need: 'Studio floor and mirror detail — empty room, reflected lighting',
+    need: 'Zumba dance instructor mid-movement leading energetic studio choreography',
     master: '2400 × 3000',
     ratio: '4 / 5',
     fit: 'cover',
     focal: '50% 50%',
-    src: '/img/studio-zumba-detail-a.png',
-    alt: 'Group studio mirror and floor',
+    src: '/img/studio-zumba-detail-a-v2.jpg',
+    alt: 'Zumba dance fitness instructor leading energetic choreography in the studio',
   }),
   zumbaDetailB: slot({
     id: 'studio-zumba-detail-b',
-    need: 'Sound system or studio lighting detail — close, architectural',
+    need: 'Group dance fitness class in full motion in the Vyomi studio',
     master: '2048 × 2048',
     ratio: '1 / 1',
     fit: 'cover',
     focal: '50% 50%',
-    src: '/img/studio-zumba-detail-b.png',
-    alt: 'Studio sound and lighting detail',
+    src: '/img/studio-zumba-detail-b-v2.jpg',
+    alt: 'Group dance fitness class in full motion in the Vyomi studio',
   }),
 
   /* ---- Pilates (the showpiece chapter) ---- */
@@ -464,14 +625,14 @@ export const STUDIO_IMAGES: Record<string, ImageSlot> = {
    ------------------------------------------------------------------ */
 
 export const SUPPLIED = {
-  /** Client logo, 7 Nov. Transparent PNG, near-square portrait (0.912). */
-  logo: { src: '/logo.png', width: 1198, height: 1313 },
+  /** Client logo. Transparent high-res master PNG, portrait (934 × 1024). */
+  logo: { src: '/img/vyomi-brand-logo.png', width: 934, height: 1024 },
   /**
    * Reception walkthrough, 7 Nov. Source was 1920 × 1080 with black bars baked
    * into the frame; re-encoded from the original at 1834 × 1044 with the bars
    * cropped and the house grade applied. Poster is a frame of this same cut.
    */
-  heroVideo: '/video/hero.mp4',
+  heroVideo: '/video/hero-v2.mp4',
   heroPoster: '/video/hero-poster.jpg',
   heroVideoSize: { width: 1834, height: 1044 },
 } as const;
@@ -483,6 +644,7 @@ export const ALL_SLOTS: ImageSlot[] = [
   ...TRAINER_PORTRAITS,
   ...CLASS_IMAGES,
   ...WELLNESS_IMAGES,
+  ...WELLNESS_AMENITY_SLOTS,
   ...Object.values(STUDIO_IMAGES),
 ];
 

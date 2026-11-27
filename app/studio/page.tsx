@@ -123,7 +123,7 @@ export default function StudioPage() {
           aria-label="Walkthrough of the club"
         >
           <ChapterVideo
-            src="/video/tour-club.mp4"
+            src="/video/tour-club-v2.mp4"
             poster="/video/tour-club-poster.jpg"
             label="Walkthrough of Vyomi Fitness Club: reception, the stone corridor, the lounge, and the cardio hall."
             caption="Render — not club photography"
@@ -170,7 +170,16 @@ export default function StudioPage() {
                   </dl>
 
                   <div className="mt-6">
-                    <Pending label={fitness.pending} />
+                    <a
+                      href="/catalogue"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-line !py-1.5 !px-3.5 font-mono text-xs inline-flex items-center gap-2 border-hairline-2 text-heading hover:bg-hairline"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#B08D57]" aria-hidden="true" />
+                      <span>Fitness Catalogue</span>
+                      <span aria-hidden="true">↗</span>
+                    </a>
                   </div>
                 </Reveal>
               </div>
@@ -179,10 +188,10 @@ export default function StudioPage() {
             <div className="flex flex-col gap-6 lg:col-span-7">
               <Reveal>
                 <ChapterVideo
-                  src="/video/tour-fitness.mp4"
-                  poster="/video/tour-fitness-poster.jpg"
+                  src="/video/fitness.mp4"
+                  poster="/video/fitness-poster.jpg"
                   ratio="16 / 9"
-                  label="The Vyomi training floor: burgundy Panatta machines along the range, members training."
+                  label="The Vyomi training floor: Panatta machines and athletic gym training"
                   caption="Render — not club photography"
                   sizes="(max-width: 1023px) 100vw, 55vw"
                   className="w-full"
@@ -206,24 +215,26 @@ export default function StudioPage() {
           </div>
         </section>
 
-        {/* ---------- 02 · HYROX — full-bleed, heading overlaid ---------- */}
+        {/* ---------- 02 · HYROX — full-bleed video plate, heading overlaid ---------- */}
         <section
           id={hyrox.id}
           className="scroll-mt-0 border-b border-hairline bg-ink"
           aria-labelledby="hyrox-heading"
         >
           <div className="relative">
-            <AssetSlot
-              slot={STUDIO_IMAGES.hyrox}
-              sizes="100vw"
+            <ChapterVideo
+              src="/video/hyrox.mp4"
+              poster="/video/hyrox-poster.jpg"
               ratio="21 / 9"
+              label="HYROX race conditioning lane at Vyomi Fitness Club"
+              sizes="100vw"
               className="w-full"
             />
 
             {/* Legibility wash under the overlaid type */}
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
+              className="pointer-events-none absolute inset-0 z-10"
               style={{
                 background:
                   'linear-gradient(to top, rgba(8,8,8,0.88) 0%, rgba(8,8,8,0.45) 38%, rgba(8,8,8,0.08) 72%)',
@@ -231,7 +242,7 @@ export default function StudioPage() {
             />
 
             <div
-              className={`absolute inset-x-0 bottom-0 pb-[clamp(1.5rem,4vw,3.5rem)] ${GUTTER}`}
+              className={`absolute inset-x-0 bottom-0 pb-[clamp(1.5rem,4vw,3.5rem)] ${GUTTER} z-20`}
             >
               <div className="relative">
                 <GhostNumeral numeral="02" className="-left-3 -top-10 md:-top-14" />
@@ -285,8 +296,11 @@ export default function StudioPage() {
 
             <div className="mt-6 sm:mt-8 grid grid-cols-1 gap-6 sm:grid-cols-12">
               <Reveal className="sm:col-span-7">
-                <AssetSlot
-                  slot={STUDIO_IMAGES.zumba}
+                <ChapterVideo
+                  src="/video/zumba.mp4"
+                  poster="/video/zumba-poster.jpg"
+                  ratio="16 / 9"
+                  label="Zumba dance fitness class mid-movement in the main studio"
                   sizes="(max-width: 639px) 100vw, 56vw"
                   className="w-full"
                 />
@@ -401,10 +415,12 @@ export default function StudioPage() {
           </div>
 
           <Reveal className="mt-4 sm:mt-6 block">
-            <AssetSlot
-              slot={STUDIO_IMAGES.pilates}
-              sizes="100vw"
+            <ChapterVideo
+              src="/video/pilates.mp4"
+              poster="/video/pilates-poster.jpg"
               ratio="21 / 9"
+              label="Dedicated reformer Pilates studio with carriages, footbars and spring resistance at Vyomi Fitness Club"
+              sizes="100vw"
               className="w-full"
             />
           </Reveal>

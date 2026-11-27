@@ -13,6 +13,7 @@ import {
   TRAINER_PORTRAITS,
   CLASS_IMAGES,
   WELLNESS_IMAGES,
+  WELLNESS_AMENITY_IMAGES,
   type ImageSlot,
 } from '@/config/assets';
 
@@ -28,11 +29,11 @@ export interface Area {
 /** The six areas the brief confirms. No invented floor plans. */
 export const AREAS: Area[] = [
   { slot: CLUB_AREAS[0], caption: 'Reception & lounge', offset: 0 },
-  { slot: CLUB_AREAS[1], caption: 'Training floor', offset: 1.75 },
+  { slot: CLUB_AREAS[1], caption: 'Training floor', offset: 0 },
   { slot: CLUB_AREAS[2], caption: 'Studio', offset: 0 },
-  { slot: CLUB_AREAS[3], caption: 'Wellness spaces', offset: 2.25 },
-  { slot: CLUB_AREAS[4], caption: 'Dedicated lift', offset: 0.75 },
-  { slot: CLUB_AREAS[5], caption: 'Parking', offset: 1.5 },
+  { slot: CLUB_AREAS[3], caption: 'Wellness spaces', offset: 0 },
+  { slot: CLUB_AREAS[4], caption: 'Dedicated lift', offset: 0 },
+  { slot: CLUB_AREAS[5], caption: 'Parking', offset: 0 },
 ];
 
 /* ---------------- 2 · Facilities & equipment ---------------- */
@@ -159,14 +160,14 @@ export const CLASSES: ClassEntry[] = [
     label: 'Reformer Pilates',
     href: '/studio#pilates',
     slot: CLASS_IMAGES[1],
-    offset: 2.5,
+    offset: 0,
   },
   {
     id: 'strength',
     label: 'Strength & conditioning',
     href: '/studio#fitness',
     slot: CLASS_IMAGES[2],
-    offset: 1,
+    offset: 0,
   },
 ];
 
@@ -240,8 +241,8 @@ export const DISCIPLINES: Discipline[] = [
     label: 'Wellness',
     title: 'Recovery.',
     blurb:
-      'Spa, salt bath and a full recovery suite, kept separate from the training floor.',
-    pending: 'Spa & salt-bath session details',
+      'Steam, sauna bath, ice bath chiller, red light therapy, and salt sanctuary.',
+    pending: 'Thermal suite & recovery session details',
   },
   {
     id: 'pilates',
@@ -253,13 +254,105 @@ export const DISCIPLINES: Discipline[] = [
   },
 ];
 
-/** Compact amenities list — confirmed offerings only. */
-export const AMENITIES: string[] = [
-  'Spa',
-  'Salt bath',
-  'Recovery suite',
-  'Changing rooms',
-  'Showers',
-  'Dedicated lift',
-  'Parking',
+export interface AmenityDetail {
+  id: string;
+  name: string;
+  left: {
+    slot: ImageSlot;
+    caption: string;
+  };
+  right: {
+    slot: ImageSlot;
+    caption: string;
+  };
+}
+
+export const AMENITY_DETAILS: AmenityDetail[] = [
+  {
+    id: 'steam',
+    name: 'Steam',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES.steam.left,
+      caption: 'Aromatherapy eucalyptus steam sanctuary',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES.steam.right,
+      caption: 'Basalt stone & warm vapor detail',
+    },
+  },
+  {
+    id: 'sauna-bath',
+    name: 'Sauna bath',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['sauna-bath'].left,
+      caption: 'Finnish dry cedar sauna sanctuary',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['sauna-bath'].right,
+      caption: 'Volcanic stone heater & walnut pail',
+    },
+  },
+  {
+    id: 'red-light',
+    name: 'Red light therapy',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['red-light'].left,
+      caption: 'Full-body photobiomodulation suite',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['red-light'].right,
+      caption: 'Medical-grade 660nm & 850nm LED matrix',
+    },
+  },
+  {
+    id: 'ice-bath',
+    name: 'Ice Bath (Chiller)',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['ice-bath'].left,
+      caption: 'Sub-zero chilled cold plunge pool (3°C)',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['ice-bath'].right,
+      caption: 'Granite basin & precision water chiller',
+    },
+  },
+  {
+    id: 'salt-bath',
+    name: 'Salt bath',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['salt-bath'].left,
+      caption: 'Himalayan salt sanctuary',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['salt-bath'].right,
+      caption: 'Salt crystal therapy detail',
+    },
+  },
+  {
+    id: 'changing-rooms',
+    name: 'Changing rooms',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES['changing-rooms'].left,
+      caption: 'Executive changing salon',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES['changing-rooms'].right,
+      caption: 'Private grooming vanity',
+    },
+  },
+  {
+    id: 'showers',
+    name: 'Showers',
+    left: {
+      slot: WELLNESS_AMENITY_IMAGES.showers.left,
+      caption: 'Charcoal slate rainfall shower',
+    },
+    right: {
+      slot: WELLNESS_AMENITY_IMAGES.showers.right,
+      caption: 'Changing & showers detail',
+    },
+  },
 ];
+
+/** Compact amenities list — confirmed offerings only. Parking & dedicated lift removed per brief. */
+export const AMENITIES: string[] = AMENITY_DETAILS.map((a) => a.name);

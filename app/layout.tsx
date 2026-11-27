@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     'Vyomi Fitness Club, Vijayawada. Panatta equipment, HYROX conditioning, reformer Pilates, and a full wellness and recovery suite.',
   applicationName: site.name,
   icons: {
-    icon: [{ url: '/logo.png', type: 'image/png' }],
-    apple: [{ url: '/logo.png' }],
+    icon: [{ url: '/img/vyomi-brand-logo.png', type: 'image/png' }],
+    apple: [{ url: '/img/vyomi-brand-logo.png' }],
   },
   openGraph: {
     type: 'website',
@@ -117,7 +117,7 @@ export default function RootLayout({
         */}
         <link
           rel="stylesheet"
-          href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap"
+          href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500&f[]=boska@500&display=swap"
         />
       </head>
       <body className="bg-ink text-muted antialiased">

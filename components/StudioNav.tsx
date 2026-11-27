@@ -137,6 +137,7 @@ export default function StudioNav() {
                 </li>
               );
             })}
+
           </ul>
         </div>
       </nav>

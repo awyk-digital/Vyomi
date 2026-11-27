@@ -1,0 +1,426 @@
+{
+  "admins": [
+    {
+      "id": "admin-super-01",
+      "name": "Vyomi Super Admin",
+      "email": "admin@vyomi.com",
+      "passwordHash": "c55c1f8203a4e7023184ebce752454edf3f9bb8d7da0b300d09a7f2cddc84a9d",
+      "salt": "vyomi_luxury_salt_2026",
+      "role": "SUPER_ADMIN",
+      "isActive": true,
+      "lastLoginAt": "2026-11-27T04:48:06.688Z",
+      "createdAt": "2026-11-24T07:33:30.009Z"
+    },
+    {
+      "id": "admin-mgr-01",
+      "name": "Club Operations Manager",
+      "email": "manager@vyomi.com",
+      "passwordHash": "d2b9d40c0a5077875c0de9d9c2ca2c55a36c7b51bf260871cde7221032b38a44",
+      "salt": "vyomi_luxury_salt_2026",
+      "role": "MANAGER",
+      "isActive": true,
+      "lastLoginAt": null,
+      "createdAt": "2026-11-24T07:33:30.009Z"
+    },
+    {
+      "id": "admin-front-01",
+      "name": "Front Desk Concierge",
+      "email": "frontdesk@vyomi.com",
+      "passwordHash": "8d3c30160af8339677e3d007f2d2532a2816f893d252f34e46314814aa0f3518",
+      "salt": "vyomi_luxury_salt_2026",
+      "role": "FRONT_DESK",
+      "isActive": true,
+      "lastLoginAt": "2026-11-26T10:26:34.885Z",
+      "createdAt": "2026-11-24T07:33:30.009Z"
+    }
+  ],
+  "packages": [
+    {
+      "id": "pkg-founding-1y",
+      "name": "Founding Membership",
+      "slug": "founding",
+      "durationDays": 365,
+      "pricePaise": 2500000,
+      "joiningFeePaise": 0,
+      "benefits": [
+        "1 Year Full Gym Access",
+        "Italian Panatta Bio-strength Zone",
+        "Complimentary Member Locker & Showers",
+        "Dedicated Onboarding & Movement Screen"
+      ],
+      "isActive": true,
+      "isFeatured": false,
+      "sortOrder": 1,
+      "createdAt": "2026-11-26T00:00:00.000Z",
+      "updatedAt": "2026-11-26T10:01:33.734Z"
+    },
+    {
+      "id": "pkg-vip-1y",
+      "name": "VIP Membership",
+      "slug": "vip",
+      "durationDays": 365,
+      "pricePaise": 5000000,
+      "joiningFeePaise": 0,
+      "benefits": [
+        "1 Year Full Gym Access",
+        "Limited Recovery & Wellness Suite",
+        "Finnish Cedar Sauna & Steam Access",
+        "Bi-monthly Body Composition Telemetry",
+        "Priority Trainer Consultation"
+      ],
+      "isActive": true,
+      "isFeatured": true,
+      "sortOrder": 2,
+      "createdAt": "2026-11-26T00:00:00.000Z",
+      "updatedAt": "2026-11-26T10:01:33.737Z"
+    },
+    {
+      "id": "pkg-vvip-1y",
+      "name": "VVIP Membership",
+      "slug": "vvip",
+      "durationDays": 365,
+      "pricePaise": 6000000,
+      "joiningFeePaise": 0,
+      "benefits": [
+        "1 Year Full Gym Access",
+        "Unlimited Recovery & Wellness Suite",
+        "Zumba & Group Fitness Unlimited",
+        "Official HYROX Training Zone Access",
+        "Hydrotherapy Cold Plunge & Cedar Sauna",
+        "VIP Locker & Welcome Kit"
+      ],
+      "isActive": true,
+      "isFeatured": false,
+      "sortOrder": 3,
+      "createdAt": "2026-11-26T00:00:00.000Z",
+      "updatedAt": "2026-11-26T10:01:33.737Z"
+    }
+  ],
+  "coupons": [
+    {
+      "id": "cpn-newyear10",
+      "code": "NEWYEAR10",
+      "discountType": "PERCENT",
+      "discountValue": 10,
+      "maxUses": 100,
+      "usedCount": 4,
+      "validFrom": "2026-01-01T00:00:00Z",
+      "validUntil": "2026-12-31T23:59:59Z",
+      "isActive": true
+    },
+    {
+      "id": "cpn-vyomi1000",
+      "code": "VYOMI1000",
+      "discountType": "FLAT",
+      "discountValue": 100000,
+      "maxUses": 50,
+      "usedCount": 2,
+      "validFrom": "2026-01-01T00:00:00Z",
+      "validUntil": "2026-12-31T23:59:59Z",
+      "isActive": true
+    },
+    {
+      "id": "cpn-vip15",
+      "code": "PREMIUMVIP",
+      "discountType": "PERCENT",
+      "discountValue": 15,
+      "maxUses": 25,
+      "usedCount": 1,
+      "validFrom": "2026-01-01T00:00:00Z",
+      "validUntil": "2026-12-31T23:59:59Z",
+      "isActive": true
+    }
+  ],
+  "clients": [
+    {
+      "fullName": "Srihari Cherukumalli",
+      "phone": "9876543210",
+      "email": "sriharicherukumalli1@gmail.com",
+      "dateOfBirth": "2026-11-26",
+      "gender": "Male",
+      "address": "Vijayawada",
+      "photoUrl": null,
+      "idProofType": null,
+      "idProofNumber": null,
+      "fitnessGoal": "Weight Loss & Fat Reduction",
+      "medicalNotes": null,
+      "emergencyContactName": "Self",
+      "emergencyContactPhone": "9876543210",
+      "guardianName": null,
+      "id": "cli-e3a95630",
+      "memberCode": "VYO-2026-000110",
+      "createdAt": "2026-11-26T09:33:46.365Z"
+    },
+    {
+      "fullName": "Srihari Test Cash",
+      "phone": "9888877777",
+      "email": "sriharicherukumalli1@gmail.com",
+      "dateOfBirth": "2026-11-26",
+      "gender": "Male",
+      "address": "Vijayawada",
+      "photoUrl": null,
+      "idProofType": null,
+      "idProofNumber": null,
+      "fitnessGoal": "Weight Loss & Fat Reduction",
+      "medicalNotes": null,
+      "emergencyContactName": "Self",
+      "emergencyContactPhone": "9888877777",
+      "guardianName": null,
+      "id": "cli-0d3b9d25",
+      "memberCode": "VYO-2026-000111",
+      "createdAt": "2026-11-26T09:34:23.838Z"
+    },
+    {
+      "fullName": "sri hari",
+      "phone": "9121726977",
+      "email": "sriharicherukumalli1@gmail.com",
+      "dateOfBirth": "2026-11-27",
+      "gender": "Male",
+      "address": "Vijayawada",
+      "photoUrl": null,
+      "idProofType": null,
+      "idProofNumber": null,
+      "fitnessGoal": "Vyomi Annual Membership",
+      "medicalNotes": null,
+      "emergencyContactName": "Self",
+      "emergencyContactPhone": "9121726977",
+      "guardianName": null,
+      "id": "cli-46dfcc27",
+      "memberCode": "VYO-2026-000112",
+      "createdAt": "2026-11-26T09:48:48.280Z"
+    }
+  ],
+  "registrations": [
+    {
+      "id": "reg-47683063",
+      "reference": "REG-20261126-AA5F",
+      "clientId": "cli-46dfcc27",
+      "packageId": "pkg-vip-1y",
+      "couponId": null,
+      "pricePaise": 5000000,
+      "joiningFeePaise": 0,
+      "discountPaise": 0,
+      "gstPaise": 900000,
+      "totalPaise": 5900000,
+      "status": "PENDING",
+      "startDate": "2027-06-22",
+      "endDate": null,
+      "preferredSlot": "06:00 AM – 09:00 AM (Morning Prime)",
+      "referralSource": null,
+      "acceptedTermsAt": "2026-11-26T10:21:58.307Z",
+      "acceptedIp": "127.0.0.1",
+      "notes": null,
+      "createdAt": "2026-11-26T10:21:58.307Z",
+      "updatedAt": "2026-11-26T10:21:58.307Z"
+    },
+    {
+      "id": "reg-6c232930",
+      "reference": "REG-20261126-011E",
+      "clientId": "cli-46dfcc27",
+      "packageId": "pkg-vip-1y",
+      "couponId": null,
+      "pricePaise": 5000000,
+      "joiningFeePaise": 0,
+      "discountPaise": 0,
+      "gstPaise": 900000,
+      "totalPaise": 5900000,
+      "status": "PENDING",
+      "startDate": "2026-11-26",
+      "endDate": null,
+      "preferredSlot": "06:00 AM – 09:00 AM (Morning Prime)",
+      "referralSource": null,
+      "acceptedTermsAt": "2026-11-26T12:52:50.932Z",
+      "acceptedIp": "127.0.0.1",
+      "notes": null,
+      "createdAt": "2026-11-26T12:52:50.932Z",
+      "updatedAt": "2026-11-26T12:52:50.932Z"
+    },
+    {
+      "id": "reg-8370516c",
+      "reference": "REG-20261127-5D33",
+      "clientId": "cli-46dfcc27",
+      "packageId": "pkg-vip-1y",
+      "couponId": null,
+      "pricePaise": 5000000,
+      "joiningFeePaise": 0,
+      "discountPaise": 0,
+      "gstPaise": 900000,
+      "totalPaise": 5900000,
+      "status": "PENDING",
+      "startDate": "2026-11-27",
+      "endDate": null,
+      "preferredSlot": "06:00 AM – 09:00 AM (Morning Prime)",
+      "referralSource": null,
+      "acceptedTermsAt": "2026-11-27T04:43:57.466Z",
+      "acceptedIp": "127.0.0.1",
+      "notes": null,
+      "createdAt": "2026-11-27T04:43:57.466Z",
+      "updatedAt": "2026-11-27T04:43:57.466Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay-eed64078",
+      "registrationId": "reg-47683063",
+      "method": "RAZORPAY",
+      "razorpayOrderId": "order_vyo_REG-20261126-AA5F",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "amountPaise": 5900000,
+      "currency": "INR",
+      "status": "CREATED",
+      "failureReason": null,
+      "refundedPaise": 0,
+      "paidAt": null,
+      "createdAt": "2026-11-26T10:21:58.307Z"
+    },
+    {
+      "id": "pay-9c925c22",
+      "registrationId": "reg-6c232930",
+      "method": "RAZORPAY",
+      "razorpayOrderId": "order_vyo_REG-20261126-011E",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "amountPaise": 5900000,
+      "currency": "INR",
+      "status": "CREATED",
+      "failureReason": null,
+      "refundedPaise": 0,
+      "paidAt": null,
+      "createdAt": "2026-11-26T12:52:50.932Z"
+    },
+    {
+      "id": "pay-0eeaa69f",
+      "registrationId": "reg-8370516c",
+      "method": "RAZORPAY",
+      "razorpayOrderId": "order_vyo_REG-20261127-5D33",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "amountPaise": 5900000,
+      "currency": "INR",
+      "status": "CREATED",
+      "failureReason": null,
+      "refundedPaise": 0,
+      "paidAt": null,
+      "createdAt": "2026-11-27T04:43:57.466Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-super-01",
+      "details": {
+        "staffEmail": "admin@vyomi.com",
+        "assignedRole": "SUPER_ADMIN",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "27 Nov 2026, 10:18:06 am",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-800ec738",
+      "createdAt": "2026-11-27T04:48:06.689Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-super-01",
+      "details": {
+        "staffEmail": "admin@vyomi.com",
+        "assignedRole": "SUPER_ADMIN",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "27 Nov 2026, 10:16:57 am",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-c0019a9d",
+      "createdAt": "2026-11-27T04:46:57.589Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-super-01",
+      "details": {
+        "staffEmail": "admin@vyomi.com",
+        "assignedRole": "SUPER_ADMIN",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "26 Nov 2026, 4:22:24 pm",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-1769d7f7",
+      "createdAt": "2026-11-26T10:52:24.968Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-24704129",
+      "createdAt": "2026-11-26T10:49:08.880Z"
+    },
+    {
+      "adminId": "admin-front-01",
+      "adminName": "Front Desk Concierge",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-front-01",
+      "details": {
+        "email": "frontdesk@vyomi.com",
+        "role": "FRONT_DESK"
+      },
+      "id": "aud-4b87ea5a",
+      "createdAt": "2026-11-26T10:26:34.891Z"
+    },
+    {
+      "adminId": "admin-front-01",
+      "adminName": "Front Desk Concierge",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-front-01",
+      "details": {
+        "email": "frontdesk@vyomi.com",
+        "role": "FRONT_DESK"
+      },
+      "id": "aud-070ddad1",
+      "createdAt": "2026-11-26T10:23:25.971Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-68dd7354",
+      "createdAt": "2026-11-26T09:38:20.521Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "ADMIN_LOGIN",
+      "entityType": "AUTH",
+      "entityId": "admin-super-01",
+      "details": {
+        "email": "admin@vyomi.com",
+        "role": "SUPER_ADMIN"
+      },
+      "id": "aud-d4b25fec",
+      "createdAt": "2026-11-26T09:35:33.086Z"
+    }
+  ],
+  "webhookEvents": [],
+  "memberSequence": 113,
+  "receipts": []
+}

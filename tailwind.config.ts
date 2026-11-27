@@ -70,7 +70,7 @@ const config: Config = {
         editorial: 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
       aspectRatio: {
-        logo: '1198 / 1313',
+        logo: '934 / 1024',
         portrait: '3 / 4',
         card: '4 / 3',
         wide: '16 / 9',

@@ -122,10 +122,10 @@ export function directionsLink(): string | null {
 }
 
 /** Lazy-loaded Google Maps embed URL for the verified location, or null. */
-export function mapEmbedUrl(): string | null {
-  return `https://maps.google.com/maps?q=${encodeURIComponent(
-    'Sonovision, Patamata, Vijayawada'
-  )}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+export function mapEmbedUrl(layer: 'm' | 'k' = 'm'): string | null {
+  const lat = site.coordinates?.lat ?? 16.4975;
+  const lng = site.coordinates?.lng ?? 80.658;
+  return `https://maps.google.com/maps?q=${lat},${lng}&t=${layer}&z=16&ie=UTF8&iwloc=&output=embed`;
 }
 
 /** Formats the confirmed pre-sale date, or null while unconfirmed. */

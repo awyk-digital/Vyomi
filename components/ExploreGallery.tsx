@@ -9,76 +9,128 @@ import { AREAS } from '@/data/club';
 import { prefersReducedMotion } from '@/lib/motion';
 
 /**
- * Horizontal architectural gallery, running continuously in loop mode,
- * with an interactive small navigation bar (right arrow type) for exploration.
+ * Luxury 3D Architectural Rotunda
+ * Clean, focused visual presentation with sculpted chamfered-bezel cards,
+ * 3-second auto-advance rhythm, and buttery compositor-accelerated momentum.
  */
 
-/** Coordinated card geometry — desktop width × height, inside the brief's range. */
-const GEOMETRY = [
-  { w: 440, h: 300 },
-  { w: 360, h: 340 },
-  { w: 420, h: 280 },
-  { w: 330, h: 360 },
-  { w: 350, h: 330 },
-  { w: 400, h: 265 },
-] as const;
-
-/** Constant travel speed in CSS pixels per second. */
-const SPEED = 26;
-/** Step distance when clicking navigation arrows (~average card width + margin). */
-const STEP_DISTANCE = 410;
+const N = AREAS.length; // 6 spaces
+const AUTO_ADVANCE_SECONDS = 3.0; // 3 seconds per image
 
 export default function ExploreGallery() {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [paused, setPaused] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const offsetRef = useRef(0);
-  const targetOffsetRef = useRef(0);
-  const lapRef = useRef(0);
-  const isPausedRef = useRef(false);
-  isPausedRef.current = paused;
+  // Buttery physics state
+  const progressRef = useRef(0);
+  const targetProgressRef = useRef(0);
+  const velocityRef = useRef(0);
 
-  // Measure track and run continuous RAF loop with wrap-around
+  // Interaction tracking
+  const isInteractingRef = useRef(false);
+  const isHoveredRef = useRef(false);
+  const startXRef = useRef(0);
+  const lastXRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const hasDraggedRef = useRef(false);
+  const idleTimerRef = useRef(0);
+
+  // Main buttery 3D render loop
   useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    const measure = () => {
-      // scrollWidth covers both copies; one lap is half of it.
-      lapRef.current = track.scrollWidth / 2;
-    };
-
-    measure();
-
-    let lastTime = performance.now();
     let rId: number;
+    let lastTick = performance.now();
 
     const tick = (now: number) => {
-      const dt = Math.min((now - lastTime) / 1000, 0.1);
-      lastTime = now;
+      const dt = Math.min((now - lastTick) / 1000, 0.05);
+      lastTick = now;
 
-      const lap = lapRef.current;
-      if (lap > 0) {
-        // Continuous auto-glide when not paused and not prefersReducedMotion
-        if (!isPausedRef.current && !prefersReducedMotion()) {
-          targetOffsetRef.current += SPEED * dt;
+      // 3-second auto-advance cycle when idle
+      if (!isInteractingRef.current && !isHoveredRef.current && !prefersReducedMotion()) {
+        idleTimerRef.current += dt;
+        if (idleTimerRef.current >= AUTO_ADVANCE_SECONDS) {
+          targetProgressRef.current = Math.round(targetProgressRef.current) + 1;
+          idleTimerRef.current = 0;
+        }
+      } else {
+        idleTimerRef.current = 0;
+      }
+
+      // Buttery physics: drag vs coasting & magnetic docking
+      if (isInteractingRef.current) {
+        // High-frequency responsive follow during drag
+        const diff = targetProgressRef.current - progressRef.current;
+        progressRef.current += diff * Math.min(dt * 18, 0.45);
+      } else {
+        // Friction decay on momentum velocity
+        velocityRef.current *= Math.pow(0.86, dt * 60);
+        targetProgressRef.current += velocityRef.current * dt;
+
+        // Smooth magnetic pull towards nearest card when velocity slows down
+        const snapTarget = Math.round(targetProgressRef.current);
+        const snapDiff = snapTarget - targetProgressRef.current;
+        if (Math.abs(velocityRef.current) < 1.4) {
+          targetProgressRef.current += snapDiff * Math.min(dt * 7.0, 0.24);
         }
 
-        // Smoothly interpolate towards targetOffset
-        const diff = targetOffsetRef.current - offsetRef.current;
-        offsetRef.current += diff * Math.min(dt * 7, 0.3);
+        // Velvety smooth exponential spring interpolation
+        const diff = targetProgressRef.current - progressRef.current;
+        progressRef.current += diff * Math.min(dt * 8.0, 0.28);
+      }
 
-        // Seamless infinite loop wrap-around
-        while (offsetRef.current >= lap) {
-          offsetRef.current -= lap;
-          targetOffsetRef.current -= lap;
-        }
-        while (offsetRef.current < 0) {
-          offsetRef.current += lap;
-          targetOffsetRef.current += lap;
+      const currentProg = progressRef.current;
+
+      // Active card index
+      const active = Math.round(currentProg) % N;
+      const normalizedActive = (active + N) % N;
+      setActiveIndex(normalizedActive);
+
+      // Measure stage for responsive 3D geometry
+      const stage = stageRef.current;
+      const stageWidth = stage ? stage.offsetWidth : (typeof window !== 'undefined' ? window.innerWidth : 1200);
+      const isMobile = stageWidth < 768;
+
+      // Cylindrical 3D layout parameters
+      const stepAngleDeg = isMobile ? 44 : 36;
+      const stepAngleRad = (stepAngleDeg * Math.PI) / 180;
+      const radius = isMobile ? Math.max(stageWidth * 0.58, 300) : Math.max(stageWidth * 0.48, 540);
+
+      // Project each card onto the 3D rotunda cylinder
+      // Uses ONLY GPU compositor-accelerated properties (transform3d, opacity)
+      for (let i = 0; i < N; i++) {
+        const cardEl = cardRefs.current[i];
+        if (!cardEl) continue;
+
+        // Circular delta relative to progress (-N/2 to +N/2)
+        let delta = (i - currentProg) % N;
+        if (delta > N / 2) delta -= N;
+        if (delta < -N / 2) delta += N;
+
+        const angle = delta * stepAngleRad;
+        const absDelta = Math.abs(delta);
+
+        // Cylindrical coordinates
+        const x = Math.sin(angle) * radius;
+        const z = (Math.cos(angle) - 1) * radius * 0.85;
+        const rotY = -delta * stepAngleDeg * 0.82;
+
+        // Smooth scale: prominent at center, receding gently
+        const scale = Math.max(0.72, 1.05 - absDelta * 0.15);
+
+        // Atmospheric lighting and opacity (no blur filter for locked 120fps)
+        const opacity = Math.max(0.22, 1 - absDelta * 0.34);
+        const zIndex = Math.round(100 - absDelta * 20);
+
+        if (!prefersReducedMotion()) {
+          cardEl.style.transform = `translate3d(calc(-50% + ${x.toFixed(2)}px), 0, ${z.toFixed(2)}px) rotateY(${rotY.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
+          cardEl.style.opacity = opacity.toFixed(3);
+        } else {
+          cardEl.style.transform = `translate3d(calc(-50% + ${(delta * 340).toFixed(2)}px), 0, 0)`;
+          cardEl.style.opacity = (1 - absDelta * 0.4).toFixed(3);
         }
 
-        track.style.transform = `translate3d(-${offsetRef.current.toFixed(2)}px, 0, 0)`;
+        cardEl.style.zIndex = String(zIndex);
       }
 
       rId = requestAnimationFrame(tick);
@@ -86,71 +138,116 @@ export default function ExploreGallery() {
 
     rId = requestAnimationFrame(tick);
 
-    const ro = new ResizeObserver(measure);
-    ro.observe(track);
-
     return () => {
       cancelAnimationFrame(rId);
-      ro.disconnect();
     };
   }, []);
 
+  // Smooth navigation triggers
+  const goToIndex = useCallback((targetIndex: number) => {
+    idleTimerRef.current = 0;
+    velocityRef.current = 0;
+    const current = progressRef.current;
+    let diff = (targetIndex - (current % N)) % N;
+    if (diff > N / 2) diff -= N;
+    if (diff < -N / 2) diff += N;
+    targetProgressRef.current = current + diff;
+  }, []);
+
   const handleNext = useCallback(() => {
-    targetOffsetRef.current += STEP_DISTANCE;
+    idleTimerRef.current = 0;
+    velocityRef.current = 0;
+    targetProgressRef.current = Math.round(targetProgressRef.current) + 1;
   }, []);
 
   const handlePrev = useCallback(() => {
-    targetOffsetRef.current -= STEP_DISTANCE;
+    idleTimerRef.current = 0;
+    velocityRef.current = 0;
+    targetProgressRef.current = Math.round(targetProgressRef.current) - 1;
   }, []);
 
-  const renderCards = (copy: number) =>
-    AREAS.map((area, i) => {
-      const g = GEOMETRY[i % GEOMETRY.length];
-      return (
-        <figure
-          key={`${copy}-${area.slot.id}`}
-          className="mr-6 shrink-0"
-          style={{
-            width: `min(82vw, ${g.w}px)`,
-            marginTop: `${area.offset}rem`,
-          }}
-        >
-          <div
-            className="overflow-hidden"
-            style={{ height: `clamp(220px, 46vw, ${g.h}px)` }}
-          >
-            <AssetSlot
-              slot={area.slot}
-              ratio="auto"
-              className="h-full w-full"
-              sizes="(max-width: 767px) 82vw, 460px"
-              hideConceptualLabel={Boolean(area.slot.src)}
-            />
-          </div>
+  // Buttery pointer drag handlers
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    isInteractingRef.current = true;
+    setIsDragging(true);
+    hasDraggedRef.current = false;
+    startXRef.current = e.clientX;
+    lastXRef.current = e.clientX;
+    lastTimeRef.current = performance.now();
+    velocityRef.current = 0;
+  };
 
-          <figcaption className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="t-label nums text-faint">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <span className="t-small text-heading">{area.caption}</span>
-            {area.slot.conceptual && area.slot.src && (
-              <span className="t-label text-[0.5625rem] text-faint">
-                Representative
-              </span>
-            )}
-          </figcaption>
-        </figure>
-      );
-    });
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isInteractingRef.current) return;
+    const currentX = e.clientX;
+    const dx = currentX - lastXRef.current;
+    const now = performance.now();
+    const dt = Math.max((now - lastTimeRef.current) / 1000, 0.001);
+
+    if (Math.abs(currentX - startXRef.current) > 5) {
+      hasDraggedRef.current = true;
+    }
+
+    // Measure instant velocity for buttery flick release
+    const instantVelocity = -dx / dt / 520;
+    velocityRef.current = velocityRef.current * 0.35 + instantVelocity * 0.65;
+    lastXRef.current = currentX;
+    lastTimeRef.current = now;
+
+    // Direct, silky responsive dragging
+    const stageWidth = stageRef.current?.offsetWidth || 1000;
+    const sensitivity = (stageWidth < 768 ? 2.3 : 1.6) / stageWidth;
+    targetProgressRef.current -= dx * sensitivity;
+  };
+
+  const handlePointerUp = () => {
+    if (!isInteractingRef.current) return;
+    isInteractingRef.current = false;
+    setIsDragging(false);
+
+    // Apply fluid momentum coasting on release
+    const momentum = Math.max(-1.8, Math.min(1.8, velocityRef.current * 0.28));
+    targetProgressRef.current = targetProgressRef.current + momentum;
+
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 120);
+  };
+
+  // Buttery wheel & trackpad scrolling
+  const handleWheel = (e: React.WheelEvent) => {
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (Math.abs(delta) > 3) {
+      idleTimerRef.current = 0;
+      targetProgressRef.current += delta * 0.0025;
+      velocityRef.current = delta * 0.015;
+    }
+  };
+
+  // Click card to glide it directly to center
+  const handleCardClick = (i: number) => {
+    if (hasDraggedRef.current) return;
+    goToIndex(i);
+  };
 
   return (
     <section
       id="explore"
-      className="border-t border-hairline bg-ink py-section-y"
+      className="relative border-t border-hairline bg-ink py-section-y overflow-hidden"
       aria-labelledby="explore-heading"
     >
+      {/* Subtle warm ambient spotlight behind the rotunda */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[420px] w-[800px] rounded-full blur-[130px] opacity-20"
+        style={{
+          background: 'radial-gradient(circle, rgba(176,141,87,0.35) 0%, rgba(140,34,48,0.12) 50%, transparent 70%)',
+        }}
+      />
+
       {/* Header with Navigation Bar */}
-      <div className="mb-10 px-pad-x md:mb-14 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+      <div className="mb-8 px-pad-x md:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
           <SectionHeading
             id="explore-heading"
@@ -159,69 +256,150 @@ export default function ExploreGallery() {
           >
             Explore Vyomi.
           </SectionHeading>
-          <div className="mt-6 max-w-shell">
+          <div className="mt-5 max-w-shell">
             <AccentRule />
           </div>
         </div>
 
-        {/* Small Navigation Bar — Right Arrow Type (Loop Mode) */}
-        <div className="flex items-center gap-2 self-start sm:self-end">
+        {/* Small Navigation Bar — Luxury Rotunda Controls */}
+        <div className="flex items-center gap-3 self-start sm:self-end">
           <button
             type="button"
             onClick={handlePrev}
-            aria-label="Previous image"
-            className="group flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-surface/70 backdrop-blur-md text-muted transition-all duration-300 hover:border-hairline-2 hover:bg-surface hover:text-heading active:scale-95"
+            aria-label="Previous space"
+            className="group flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-charcoal/80 backdrop-blur-md text-muted transition-colors duration-300 hover:border-bronze hover:bg-charcoal hover:text-heading active:scale-95"
           >
-            <span className="text-sm transition-transform duration-300 group-hover:-translate-x-0.5">←</span>
+            <span className="text-base transition-transform duration-300 group-hover:-translate-x-0.5">←</span>
           </button>
 
           <button
             type="button"
             onClick={handleNext}
-            aria-label="Next image"
-            className="group flex h-9 items-center gap-2.5 rounded-full border border-hairline bg-surface/70 px-4 backdrop-blur-md text-muted transition-all duration-300 hover:border-hairline-2 hover:bg-surface hover:text-heading active:scale-95"
+            aria-label="Next space"
+            className="group flex h-10 items-center gap-3 rounded-full border border-hairline bg-charcoal/80 px-5 backdrop-blur-md text-muted transition-colors duration-300 hover:border-bronze hover:bg-charcoal hover:text-heading active:scale-95"
           >
-            <span className="t-label text-[0.625rem] text-faint group-hover:text-muted transition-colors">
+            <span className="t-label text-[0.625rem] tracking-wider uppercase text-bronze font-medium">
               Explore
             </span>
-            <span className="text-sm text-heading transition-transform duration-300 group-hover:translate-x-1">
+            <span className="text-base text-heading transition-transform duration-300 group-hover:translate-x-1">
               →
             </span>
           </button>
         </div>
       </div>
 
-      {/* Running strip in loop mode */}
+      {/* 3D Rotunda Stage */}
       <div
-        className="relative overflow-hidden"
-        onPointerEnter={() => setPaused(true)}
-        onPointerLeave={() => setPaused(false)}
-        onFocusCapture={() => setPaused(true)}
-        onBlurCapture={() => setPaused(false)}
+        ref={stageRef}
+        className={`relative mx-auto w-full max-w-shell select-none touch-pan-y ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+        style={{
+          perspective: '1400px',
+          perspectiveOrigin: '50% 50%',
+          height: 'clamp(330px, 46vw, 440px)',
+        }}
+        onWheel={handleWheel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onPointerEnter={() => {
+          isHoveredRef.current = true;
+        }}
+        onPointerLeave={() => {
+          isHoveredRef.current = false;
+        }}
       >
-        <div
-          ref={trackRef}
-          className="marquee-track flex w-max will-change-transform"
-          style={{ animation: 'none' }}
-          data-paused={paused ? 'true' : 'false'}
-        >
-          <div className="flex">{renderCards(0)}</div>
-          <div className="flex" aria-hidden="true">
-            {renderCards(1)}
-          </div>
-        </div>
+        {AREAS.map((area, i) => {
+          const isCurrent = activeIndex === i;
+          return (
+            <div
+              key={area.slot.id}
+              ref={(el) => {
+                cardRefs.current[i] = el;
+              }}
+              onClick={() => handleCardClick(i)}
+              className="absolute top-0 left-1/2 will-change-transform"
+              style={{
+                width: 'min(82vw, 440px)',
+                transformStyle: 'preserve-3d',
+                backfaceVisibility: 'hidden',
+              }}
+            >
+              {/* Sculpted Luxury Bezel Outer Rim — Smooth Curved Chamfer */}
+              <div
+                className={`group relative aspect-[4/3] w-full p-[1.5px] rounded-[1.35rem] transition-[background,box-shadow] duration-500 ${
+                  isCurrent
+                    ? 'bg-gradient-to-b from-bronze/75 via-hairline-2 to-bronze/35 shadow-[0_25px_60px_-10px_rgba(0,0,0,0.95),0_0_35px_rgba(176,141,87,0.18)] ring-1 ring-bronze/30'
+                    : 'bg-gradient-to-b from-hairline-2/80 via-hairline/60 to-transparent shadow-[0_15px_40px_rgba(0,0,0,0.85)]'
+                }`}
+              >
+                {/* Inner Card Container with Smooth Sculpted Corners */}
+                <div className="relative h-full w-full overflow-hidden rounded-[calc(1.35rem-1.5px)] bg-charcoal">
+                  <AssetSlot
+                    slot={area.slot}
+                    ratio="auto"
+                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    sizes="(max-width: 767px) 82vw, 440px"
+                    hideConceptualLabel={Boolean(area.slot.src)}
+                  />
 
-        {/* Edge fades so cards dissolve into the page rather than being cut */}
+                  {/* Top brushed-gold rim highlight */}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-0 inset-x-8 h-[1.5px] bg-gradient-to-r from-transparent via-bronze to-transparent opacity-85 z-10"
+                  />
+
+                  {/* Subtle photographic lens glare sheen */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08] opacity-80 transition-opacity duration-300 group-hover:opacity-100"
+                  />
+
+                  {/* Soft inner photographic vignette */}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 rounded-[calc(1.35rem-1.5px)] shadow-[inset_0_0_24px_rgba(0,0,0,0.45)]"
+                  />
+                </div>
+              </div>
+
+              {/* Bottom Card Caption */}
+              <figcaption className="mt-4 flex items-baseline justify-between px-2">
+                <div className="flex items-baseline gap-2.5">
+                  <span className="t-label nums font-medium text-bronze">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span
+                    className={`t-small transition-colors duration-300 font-medium ${
+                      isCurrent ? 'text-heading' : 'text-muted group-hover:text-heading'
+                    }`}
+                  >
+                    {area.caption}
+                  </span>
+                </div>
+                {area.slot.conceptual && area.slot.src && (
+                  <span className="t-label text-[0.5625rem] text-faint">
+                    Conceptual
+                  </span>
+                )}
+              </figcaption>
+            </div>
+          );
+        })}
+
+        {/* Ambient atmospheric edge dissolves */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 w-[clamp(2rem,8vw,7rem)]"
+          className="pointer-events-none absolute inset-y-0 left-0 w-[clamp(2rem,7vw,7rem)] z-30"
           style={{
             background: 'linear-gradient(to right, var(--ink) 0%, rgba(8,8,8,0) 100%)',
           }}
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-[clamp(2rem,8vw,7rem)]"
+          className="pointer-events-none absolute inset-y-0 right-0 w-[clamp(2rem,7vw,7rem)] z-30"
           style={{
             background: 'linear-gradient(to left, var(--ink) 0%, rgba(8,8,8,0) 100%)',
           }}
@@ -230,7 +408,7 @@ export default function ExploreGallery() {
 
       <div className="mt-8 px-pad-x flex items-center justify-between">
         <Iridescent className="t-small text-faint">
-          Hover to pause · Click right arrow to explore in loop
+          Hover to pause · Drag or click right arrow to explore in loop
         </Iridescent>
       </div>
     </section>
