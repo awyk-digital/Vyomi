@@ -122,10 +122,28 @@ function RegisterContent() {
     };
   }, []);
 
-  const lockSession = async () => {
+  const logout = async () => {
     await fetch('/api/v1/admin/auth/logout', { method: 'POST' }).catch(() => null);
     window.location.replace('/admin/login?next=/register');
   };
+
+  // Session ended (8h, or logged out in another tab): back to sign-in
+  useEffect(() => {
+    const check = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetch('/api/v1/admin/auth/me', { cache: 'no-store' })
+        .then((r) => {
+          if (r.status === 401) window.location.replace('/admin/login?next=/register');
+        })
+        .catch(() => null);
+    };
+    document.addEventListener('visibilitychange', check);
+    const t = setInterval(check, 120000);
+    return () => {
+      document.removeEventListener('visibilitychange', check);
+      clearInterval(t);
+    };
+  }, []);
 
   // Browser Back stays inside registration: steps 2–3 go back one step,
   // steps 1 and 4 do nothing. Members cannot leave to the public site.
@@ -476,7 +494,7 @@ function RegisterContent() {
       {/* Top Brand Bar - Clean Standalone Portal */}
       <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
         <div className="flex items-center gap-2.5 sm:gap-3 select-none">
-          <div className="relative w-8 h-9 sm:w-9 sm:h-10 flex-shrink-0">
+          <div className="logo-shimmer relative w-11 h-12 sm:w-14 sm:h-[60px] flex-shrink-0">
             <Image
               src={SUPPLIED.logo.src}
               alt="Vyomi Fitness Club"
@@ -486,10 +504,10 @@ function RegisterContent() {
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm sm:text-[15px] font-semibold tracking-[0.28em] text-[#0F172A] uppercase leading-none">
+            <span className="text-base sm:text-lg font-semibold tracking-[0.28em] text-[#0F172A] uppercase leading-none">
               Vyomi
             </span>
-            <span className="text-[10px] font-medium tracking-[0.32em] text-[#1E3A8A] uppercase mt-1 leading-none">
+            <span className="text-[10px] sm:text-[11px] font-medium tracking-[0.32em] text-[#1E3A8A] uppercase mt-1.5 leading-none">
               Fitness Club
             </span>
           </div>
@@ -500,17 +518,25 @@ function RegisterContent() {
               Patamata, Vijayawada
             </span>
             <span className="text-xs text-[#64748B]">
-              {staff ? `Front desk · ${staff.name}` : 'Membership registration'}
+              {staff ? `Signed in as ${staff.name}` : 'Membership registration'}
             </span>
           </div>
+          {staff && staff.role !== 'FRONT_DESK' && (
+            <a
+              href="/admin"
+              className="hidden sm:inline-flex items-center h-9 px-3 rounded-lg text-sm text-[#1E3A8A] bg-white border border-[#C7D4F5] hover:border-[#1E3A8A] transition"
+            >
+              Dashboard
+            </a>
+          )}
           {staff && (
             <button
               type="button"
-              onClick={lockSession}
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium text-[#1E3A8A] bg-white border border-[#C7D4F5] hover:border-[#1E3A8A] transition"
+              onClick={logout}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm text-[#334155] bg-white border border-[#E2E8F0] hover:border-red-300 hover:text-red-700 transition"
             >
-              <svg viewBox="0 0 20 20" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="9" width="12" height="8" rx="2" /><path d="M7 9V6.5a3 3 0 016 0V9" /></svg>
-              Lock
+              <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 4H5a1 1 0 00-1 1v10a1 1 0 001 1h3M13 14l4-4-4-4M17 10H8" /></svg>
+              Log out
             </button>
           )}
         </div>
@@ -706,7 +732,7 @@ function RegisterContent() {
 
               {/* Full name */}
               <div>
-                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
                   Full name <span className="text-red-600">*</span>
                 </label>
                 <input
@@ -719,7 +745,7 @@ function RegisterContent() {
                       setFormErrors((prev) => ({ ...prev, fullName: '' }));
                     }
                   }}
-                  className={`w-full bg-white border border-solid rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 transition ${
+                  className={`w-full bg-white border border-solid rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 transition ${
                     formErrors.fullName ? 'border-red-500 bg-red-50/20' : 'border-[#CBD5E1]'
                   }`}
                 />
@@ -730,7 +756,7 @@ function RegisterContent() {
 
               {/* Mobile Number with Flexbox-Centered +91 (100% Centered Vertically) */}
               <div>
-                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
                   Mobile number <span className="text-red-600">*</span>
                 </label>
                 <div
@@ -740,7 +766,7 @@ function RegisterContent() {
                       : 'border-[#CBD5E1] focus-within:border-[#1E3A8A] focus-within:ring-2 focus-within:ring-[#1E3A8A]/20'
                   }`}
                 >
-                  <div className="flex items-center justify-center px-3.5 py-2 bg-[#F8FAFC] border-r border-[#CBD5E1] text-xs sm:text-sm font-bold text-[#1E293B] select-none flex-shrink-0">
+                  <div className="flex items-center justify-center px-3.5 py-2 bg-[#F8FAFC] border-r border-[#CBD5E1] text-sm font-normal text-[#1E293B] select-none flex-shrink-0">
                     +91
                   </div>
                   <input
@@ -754,7 +780,7 @@ function RegisterContent() {
                         setFormErrors((prev) => ({ ...prev, phone: '' }));
                       }
                     }}
-                    className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none"
+                    className="w-full bg-transparent px-3 py-2 text-sm font-normal text-[#0F172A] placeholder-[#94A3B8] focus:outline-none"
                   />
                 </div>
                 {formErrors.phone && (
@@ -764,7 +790,7 @@ function RegisterContent() {
 
               {/* Email Address with Real-Time Gmail OTP Verification */}
               <div>
-                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
                   Email address <span className="text-red-600">*</span>
                 </label>
                 <div className="flex gap-2">
@@ -779,7 +805,7 @@ function RegisterContent() {
                         setFormErrors((prev) => ({ ...prev, email: '' }));
                       }
                     }}
-                    className={`flex-1 bg-white border border-solid rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 transition ${
+                    className={`flex-1 bg-white border border-solid rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 transition ${
                       emailVerified
                         ? 'border-[#1E3A8A] bg-[#F5F8FF] text-[#0F172A]'
                         : formErrors.email
@@ -849,7 +875,7 @@ function RegisterContent() {
               {/* Preferred Slot & Start Date Side-by-Side */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                  <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
                     Preferred Time Slot <span className="text-red-600">*</span>
                   </label>
                   <select
@@ -866,7 +892,7 @@ function RegisterContent() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                  <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
                     Start Date <span className="text-red-600">*</span>
                   </label>
                   <input
@@ -882,10 +908,10 @@ function RegisterContent() {
               {/* Gender Preference & Terms Agreement */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
                 <div>
-                  <label className="block text-[11px] font-bold text-[#0F172A] mb-1">
+                  <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
                     Gender Preference
                   </label>
-                  <div className="flex gap-3 text-xs font-semibold text-[#1E293B]">
+                  <div className="flex gap-3 text-sm text-[#334155]">
                     {['Male', 'Female', 'Prefer not to say'].map((g) => (
                       <label key={g} className="flex items-center gap-1 cursor-pointer">
                         <input
@@ -895,7 +921,7 @@ function RegisterContent() {
                           onChange={() => setGender(g)}
                           className="accent-[#1E3A8A] w-3.5 h-3.5"
                         />
-                        <span className="text-[11px]">{g}</span>
+                        <span className="text-sm">{g}</span>
                       </label>
                     ))}
                   </div>

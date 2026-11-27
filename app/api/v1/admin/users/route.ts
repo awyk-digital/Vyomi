@@ -1,11 +1,28 @@
 import { NextResponse } from 'next/server';
-import { getAdminSession } from '@/lib/auth';
+import { getAdminSession, SUPER_ADMIN_ONLY } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
-  const session = await getAdminSession();
+  const session = await getAdminSession(SUPER_ADMIN_ONLY);
   if (!session) {
     return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: 'Staff authentication required' } }, { status: 401 });
+  }
+
+  // Last sign-in comes from the activity log (Supabase), which survives deploys.
+  const lastSeen: Record<string, string> = {};
+  try {
+    const { data } = await supabaseAdmin
+      .from('audit_logs')
+      .select('admin_id, created_at')
+      .eq('action', 'SIGNED_IN')
+      .order('created_at', { ascending: false })
+      .limit(500);
+    for (const row of data || []) {
+      if (row.admin_id && !lastSeen[row.admin_id]) lastSeen[row.admin_id] = row.created_at;
+    }
+  } catch {
+    /* fall back to local value */
   }
 
   const admins = db.getAdmins().map((a) => ({
@@ -14,7 +31,7 @@ export async function GET() {
     email: a.email,
     role: a.role,
     isActive: a.isActive,
-    lastLoginAt: a.lastLoginAt,
+    lastLoginAt: lastSeen[a.id] || a.lastLoginAt,
     createdAt: a.createdAt,
   }));
 
@@ -22,7 +39,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await getAdminSession();
+  const session = await getAdminSession(SUPER_ADMIN_ONLY);
   if (!session || session.role !== 'SUPER_ADMIN') {
     return NextResponse.json({ error: { code: 'FORBIDDEN', message: 'Super Admin access required to provision staff' } }, { status: 403 });
   }

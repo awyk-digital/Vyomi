@@ -30,8 +30,10 @@ export default function AdminLoginPage() {
         setError(data.error?.message || 'Invalid credentials. Access denied.');
       } else {
         const next = new URLSearchParams(window.location.search).get('next') || '';
-        // Only same-site paths, never protocol-relative or absolute URLs
-        window.location.href = next.startsWith('/') && !next.startsWith('//') ? next : '/admin';
+        const safeNext = next.startsWith('/') && !next.startsWith('//') && next !== '/admin/login' ? next : '';
+        // Front desk only ever registers members; everyone else goes where they were headed.
+        const dest = data.admin?.role === 'FRONT_DESK' ? '/register' : safeNext || '/admin';
+        window.location.replace(dest);
       }
     } catch {
       setError('Secure connection failure. Please retry.');

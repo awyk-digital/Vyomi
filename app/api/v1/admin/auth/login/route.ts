@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { createSessionToken, AUTH_COOKIE } from '@/lib/auth';
+import { logActivity } from '@/lib/activity';
 
 export async function POST(req: Request) {
   try {
@@ -51,6 +52,16 @@ export async function POST(req: Request) {
         authenticatedAtIST: loginTimeIST,
         sessionType: 'SECURE_WEB_PORTAL',
       },
+    });
+
+    await logActivity({
+      adminId: admin.id,
+      adminName: admin.name,
+      adminRole: admin.role,
+      action: 'SIGNED_IN',
+      entityType: 'STAFF',
+      entityId: admin.email,
+      details: { ip: clientIp },
     });
 
     const token = createSessionToken({

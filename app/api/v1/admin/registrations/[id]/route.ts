@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getAdminSession } from '@/lib/auth';
+import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
+import { logActivity } from '@/lib/activity';
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getAdminSession();
+  const session = await getAdminSession(MANAGEMENT_ROLES);
   if (!session) {
     return NextResponse.json({ error: { code: 'UNAUTHORIZED' } }, { status: 401 });
   }
@@ -121,4 +122,86 @@ export async function GET(
   }
 
   return NextResponse.json({ registration: reg });
+}
+
+async function findRegistrationRow(id: string) {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  const q = supabaseAdmin.from('registrations').select('id, reference, client_id, status');
+  const { data } = await (isUuid ? q.eq('id', id) : q.eq('reference', id)).maybeSingle();
+  return data as { id: string; reference: string; client_id: string; status: string } | null;
+}
+
+/** Edit member details / notes. Saves to Supabase. */
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getAdminSession(MANAGEMENT_ROLES);
+  if (!session) {
+    return NextResponse.json({ error: { code: 'FORBIDDEN', message: 'Not allowed.' } }, { status: 403 });
+  }
+
+  const { id } = await params;
+  const body = await req.json().catch(() => ({}));
+  const reg = await findRegistrationRow(id);
+  if (!reg) {
+    return NextResponse.json({ error: { code: 'NOT_FOUND', message: 'Registration not found.' } }, { status: 404 });
+  }
+
+  const clean = (v: unknown) => String(v ?? '').replace(/<[^>]*>?/gm, '').trim();
+
+  // Member (client) fields
+  const clientUpdate: Record<string, unknown> = {};
+  if (body.fullName !== undefined) {
+    const name = clean(body.fullName);
+    if (name.length < 2) return NextResponse.json({ error: { code: 'INVALID', message: 'Name is too short.' } }, { status: 400 });
+    clientUpdate.full_name = name;
+  }
+  if (body.phone !== undefined) {
+    const phone = clean(body.phone).replace(/\D/g, '');
+    if (phone.length !== 10) return NextResponse.json({ error: { code: 'INVALID', message: 'Mobile number must be 10 digits.' } }, { status: 400 });
+    clientUpdate.phone = phone;
+  }
+  if (body.email !== undefined) {
+    const email = clean(body.email).toLowerCase();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: { code: 'INVALID', message: 'Email address is not valid.' } }, { status: 400 });
+    }
+    clientUpdate.email = email || null;
+  }
+  if (body.gender !== undefined) clientUpdate.gender = clean(body.gender);
+  if (body.fitnessGoal !== undefined) clientUpdate.fitness_goal = clean(body.fitnessGoal);
+
+  // Registration fields
+  const regUpdate: Record<string, unknown> = {};
+  if (body.notes !== undefined) regUpdate.notes = clean(body.notes).slice(0, 2000) || null;
+  if (body.preferredSlot !== undefined) regUpdate.preferred_slot = clean(body.preferredSlot);
+  if (body.startDate) regUpdate.start_date = clean(body.startDate);
+  if (body.endDate) regUpdate.end_date = clean(body.endDate);
+
+  if (Object.keys(clientUpdate).length) {
+    clientUpdate.updated_at = new Date().toISOString();
+    const { error } = await supabaseAdmin.from('clients').update(clientUpdate).eq('id', reg.client_id);
+    if (error) {
+      const msg = error.code === '23505' ? 'Another member already uses this mobile number.' : error.message;
+      return NextResponse.json({ error: { code: 'DB_ERROR', message: msg } }, { status: 400 });
+    }
+  }
+  if (Object.keys(regUpdate).length) {
+    regUpdate.updated_at = new Date().toISOString();
+    const { error } = await supabaseAdmin.from('registrations').update(regUpdate).eq('id', reg.id);
+    if (error) return NextResponse.json({ error: { code: 'DB_ERROR', message: error.message } }, { status: 500 });
+  }
+
+  await logActivity({
+    adminId: session.id,
+    adminName: session.name,
+    adminRole: session.role,
+    action: body.notes !== undefined && Object.keys(body).length === 1 ? 'NOTES_UPDATED' : 'MEMBER_UPDATED',
+    entityType: 'REGISTRATION',
+    entityId: reg.reference,
+    details: { ...clientUpdate, ...regUpdate },
+  });
+
+  return NextResponse.json({ success: true });
 }

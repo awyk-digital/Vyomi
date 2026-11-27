@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
+import { logActivity } from '@/lib/activity';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
 import { sendMembershipReceiptEmail } from '@/lib/email';
@@ -312,6 +313,16 @@ export async function POST(req: Request) {
     } catch (e) {
       console.warn('Local registration mirror failed:', e);
     }
+
+    await logActivity({
+      adminId: staff.id,
+      adminName: staff.name,
+      adminRole: staff.role,
+      action: 'MEMBER_REGISTERED',
+      entityType: 'REGISTRATION',
+      entityId: reference,
+      details: { member: fullName, plan: pkg.name, amountInr: pkg.price_inr, payment: isCash ? 'CASH' : 'UPI' },
+    });
 
     return NextResponse.json({
       success: true,

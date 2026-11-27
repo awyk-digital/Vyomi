@@ -1,13 +1,20 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import {
+  formatINR,
+  formatDate,
+  paymentLabel,
+  StatusBadge,
+  isCashDue,
+  markCashPaid,
+  Toast,
+} from '@/components/admin/ui';
 
 interface RegistrationDetail {
   id: string;
   reference: string;
-  pricePaise: number;
   totalPaise: number;
   status: string;
   startDate: string;
@@ -15,326 +22,260 @@ interface RegistrationDetail {
   preferredSlot: string | null;
   notes: string | null;
   createdAt: string;
-  client?: {
-    id: string;
-    fullName: string;
-    phone: string;
-    email: string;
-    dateOfBirth?: string;
-    gender?: string;
-    address?: string;
-    memberCode: string | null;
-  };
-  package?: {
-    id: string;
-    name: string;
-    durationDays: number;
-    pricePaise: number;
-  };
-  payment?: {
-    id: string;
-    method: string;
-    status: string;
-    amountPaise: number;
-    paidAt: string | null;
-    createdAt: string;
-  };
+  client?: { id: string; fullName: string; phone: string; email: string; gender?: string; memberCode: string | null; fitnessGoal?: string };
+  package?: { id: string; name: string; durationDays: number };
+  payment?: { method: string; status: string; paidAt: string | null };
 }
 
-function formatINR(paise: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(paise / 100);
+function Field({ label, value, mono }: { label: string; value?: React.ReactNode; mono?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs text-[#64748B]">{label}</dt>
+      <dd className={`mt-0.5 text-sm text-[#0F172A] break-words ${mono ? 'font-mono tracking-wide' : ''}`}>{value || '—'}</dd>
+    </div>
+  );
 }
 
-function formatPaymentMethod(method?: string): string {
-  const m = (method || '').toUpperCase();
-  if (m === 'CASH' || m === 'OFFLINE' || m === 'POS') {
-    return 'Front Desk Settlement (Cash)';
-  }
-  return 'Instant UPI Settlement (QR)';
-}
-
-export default function RegistrationDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function RegistrationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
   const [reg, setReg] = useState<RegistrationDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
-  const [notesSaved, setNotesSaved] = useState(false);
+  const [busy, setBusy] = useState<'' | 'paid' | 'cancel' | 'receipt'>('');
+  const [role, setRole] = useState('');
+  const [toast, setToast] = useState<{ msg: string; tone: 'ok' | 'error' } | null>(null);
 
-  useEffect(() => {
-    fetch(`/api/v1/admin/registrations/${id}`)
-      .then((res) => res.json())
+  const load = useCallback(() => {
+    fetch(`/api/v1/admin/registrations/${encodeURIComponent(id)}`, { cache: 'no-store' })
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.replace(`/admin/login?next=/admin/registrations/${id}`);
+          return null;
+        }
+        if (res.status === 404) {
+          setNotFound(true);
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
-        if (data.registration) {
+        if (data?.registration) {
           setReg(data.registration);
           setNotes(data.registration.notes || '');
         }
       })
-      .catch((err) => console.error(err))
+      .catch(() => setToast({ msg: 'Could not load this member. Check the connection.', tone: 'error' }))
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleSaveNotes = async () => {
+  useEffect(() => {
+    load();
+    fetch('/api/v1/admin/auth/me', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setRole(d?.admin?.role || ''))
+      .catch(() => null);
+  }, [load]);
+
+  const saveNotes = async () => {
     setSavingNotes(true);
-    setNotesSaved(false);
     try {
-      const res = await fetch(`/api/v1/admin/registrations/${id}`, {
+      const res = await fetch(`/api/v1/admin/registrations/${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes }),
       });
-      if (res.ok) {
-        setNotesSaved(true);
-        setTimeout(() => setNotesSaved(false), 3000);
-      }
+      const d = await res.json().catch(() => ({}));
+      setToast(res.ok ? { msg: 'Notes saved.', tone: 'ok' } : { msg: d.error?.message || 'Could not save notes.', tone: 'error' });
     } catch {
-      alert('Failed to save notes');
+      setToast({ msg: 'Network error. Notes not saved.', tone: 'error' });
     } finally {
       setSavingNotes(false);
     }
   };
 
-  const handleMarkPaid = async () => {
-    if (!confirm('Mark offline cash collected and dispatch Digital VIP Card to member Gmail?')) return;
-    try {
-      const res = await fetch(`/api/v1/admin/registrations/${id}/mark-paid`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'CASH' }),
-      });
-      if (res.ok) {
-        alert('Payment confirmed! Digital VIP Card and receipt sent to member Gmail.');
-        router.refresh();
-      }
-    } catch {
-      alert('Failed to update status');
+  const markPaid = async () => {
+    if (!reg) return;
+    setBusy('paid');
+    const err = await markCashPaid(reg.reference, reg.client?.fullName, formatINR(reg.totalPaise));
+    setBusy('');
+    if (err === 'cancelled') return;
+    if (err) setToast({ msg: err, tone: 'error' });
+    else {
+      setToast({ msg: 'Marked as paid. Membership is active and the receipt was emailed.', tone: 'ok' });
+      load();
     }
   };
 
-  const handleRefund = async () => {
-    const reason = prompt('Enter refund justification reason:');
-    if (!reason) return;
+  const cancelMembership = async () => {
+    if (!reg) return;
+    const reason = window.prompt(`Cancel ${reg.client?.fullName || 'this'} membership?\n\nType the reason (required):`);
+    if (!reason?.trim()) return;
+    setBusy('cancel');
     try {
-      const res = await fetch(`/api/v1/admin/registrations/${reg?.id}/refund`, {
+      const res = await fetch(`/api/v1/admin/registrations/${encodeURIComponent(reg.reference)}/refund`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason }),
       });
+      const d = await res.json().catch(() => ({}));
       if (res.ok) {
-        alert('Refund processed.');
-        router.refresh();
-      } else {
-        const d = await res.json();
-        alert(d.error?.message || 'Refund failed');
-      }
+        setToast({ msg: 'Membership cancelled.', tone: 'ok' });
+        load();
+      } else setToast({ msg: d.error?.message || 'Could not cancel.', tone: 'error' });
     } catch {
-      alert('Failed to process refund');
+      setToast({ msg: 'Network error. Nothing was changed.', tone: 'error' });
+    } finally {
+      setBusy('');
     }
   };
 
-  if (loading) {
-    return <div className="py-12 text-center text-xs text-[#64748B] font-semibold">Loading client record...</div>;
+  const resendReceipt = async () => {
+    if (!reg) return;
+    setBusy('receipt');
+    try {
+      const res = await fetch(`/api/v1/registrations/${encodeURIComponent(reg.reference)}/send-receipt`, { method: 'POST' });
+      const d = await res.json().catch(() => ({}));
+      setToast(
+        res.ok
+          ? { msg: `Receipt emailed to ${d.emailedTo || reg.client?.email}.`, tone: 'ok' }
+          : { msg: d.error?.message || 'Could not send the receipt.', tone: 'error' }
+      );
+    } catch {
+      setToast({ msg: 'Network error. Receipt not sent.', tone: 'error' });
+    } finally {
+      setBusy('');
+    }
+  };
+
+  if (loading) return <p className="py-16 text-center text-sm text-[#64748B]">Loading member…</p>;
+  if (notFound || !reg) {
+    return (
+      <div className="py-16 text-center space-y-3">
+        <p className="text-sm text-[#0F172A]">This registration could not be found.</p>
+        <Link href="/admin/registrations" className="text-sm text-[#1E3A8A] underline">Back to members</Link>
+      </div>
+    );
   }
 
-  if (!reg) {
-    return <div className="py-12 text-center text-xs text-red-600 font-bold">Registration record not found.</div>;
-  }
+  const due = isCashDue(reg.status);
+  const cancelled = reg.status === 'CANCELLED';
 
   return (
-    <div className="space-y-6">
-      {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/admin/registrations"
-              className="text-xs font-bold text-[#64748B] hover:text-[#0F172A]"
-            >
-              ← Registrations
-            </Link>
-            <span className="text-[#CBD5E1]">/</span>
-            <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider">
-              Client Dossier
-            </span>
-          </div>
-          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-1 tracking-tight">
-            {reg.client?.fullName || 'Client'} · {reg.reference}
-          </h1>
-        </div>
+    <div className="space-y-5 max-w-4xl">
+      <Link href="/admin/registrations" className="text-sm text-[#64748B] hover:text-[#1E3A8A]">← Members</Link>
 
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl font-semibold tracking-tight text-[#0F172A]">{reg.client?.fullName || 'Member'}</h1>
+            <StatusBadge status={reg.status} />
+          </div>
+          <p className="text-sm text-[#64748B] mt-1">
+            {reg.client?.memberCode || 'No member ID yet'} · Registered {formatDate(reg.createdAt)}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {due && (
+            <button
+              type="button"
+              onClick={markPaid}
+              disabled={!!busy}
+              className="h-10 px-4 rounded-xl text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#172F73] disabled:opacity-60 transition"
+            >
+              {busy === 'paid' ? 'Saving…' : `Mark paid · ${formatINR(reg.totalPaise)}`}
+            </button>
+          )}
+          {!cancelled && (
+            <button
+              type="button"
+              onClick={resendReceipt}
+              disabled={!!busy}
+              className="h-10 px-4 rounded-xl text-sm font-medium text-[#1E3A8A] bg-white ring-1 ring-[#C7D4F5] hover:ring-[#1E3A8A] disabled:opacity-60 transition"
+            >
+              {busy === 'receipt' ? 'Sending…' : 'Email receipt'}
+            </button>
+          )}
+          <Link
+            href={`/admin/registrations/${reg.reference}/edit`}
+            className="h-10 px-4 inline-flex items-center rounded-xl text-sm font-medium text-[#334155] bg-white ring-1 ring-[#E2E8F0] hover:ring-[#94A3B8] transition"
+          >
+            Edit details
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <section className="rounded-2xl bg-white ring-1 ring-[#E3E8F2] p-5">
+          <h2 className="text-sm font-semibold text-[#0F172A] mb-4">Member</h2>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
+            <Field label="Phone" value={reg.client?.phone ? `+91 ${reg.client.phone}` : undefined} />
+            <Field label="Email" value={reg.client?.email} />
+            <Field label="Member ID" value={reg.client?.memberCode} mono />
+            <Field label="Gender" value={reg.client?.gender} />
+          </dl>
+        </section>
+
+        <section className="rounded-2xl bg-white ring-1 ring-[#E3E8F2] p-5">
+          <h2 className="text-sm font-semibold text-[#0F172A] mb-4">Membership</h2>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
+            <Field label="Plan" value={reg.package?.name} />
+            <Field label="Amount" value={formatINR(reg.totalPaise)} />
+            <Field label="Starts" value={formatDate(reg.startDate)} />
+            <Field label="Ends" value={formatDate(reg.endDate)} />
+            <Field label="Time slot" value={reg.preferredSlot} />
+            <Field
+              label="Payment"
+              value={`${paymentLabel(reg.payment?.method)}${reg.payment?.paidAt ? ` · paid ${formatDate(reg.payment.paidAt)}` : ''}`}
+            />
+          </dl>
+          <p className="mt-4 text-xs text-[#94A3B8] font-mono">{reg.reference}</p>
+        </section>
+      </div>
+
+      <section className="rounded-2xl bg-white ring-1 ring-[#E3E8F2] p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-[#0F172A]">Desk notes</h2>
+          <span className="text-xs text-[#94A3B8]">Only staff can see these</span>
+        </div>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={3}
+          placeholder="e.g. Locker 14 assigned, trainer session booked for Monday"
+          className="w-full rounded-xl bg-white ring-1 ring-[#E3E8F2] px-3.5 py-2.5 text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30"
+        />
+        <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => window.print()}
-            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] text-[#0F172A] rounded-lg text-xs font-bold transition shadow-sm"
+            onClick={saveNotes}
+            disabled={savingNotes || notes === (reg.notes || '')}
+            className="h-9 px-4 rounded-lg text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#172F73] disabled:opacity-40 transition"
           >
-            🖨️ Print Invoice
+            {savingNotes ? 'Saving…' : 'Save notes'}
           </button>
-          {(reg.status === 'PENDING' || reg.status === 'PENDING_CASH_COLLECTION') && (
-            <button
-              type="button"
-              onClick={handleMarkPaid}
-              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm"
-            >
-              ✓ Mark Paid (Offline Cash)
-            </button>
-          )}
-          {reg.status === 'CONFIRMED' && (
-            <button
-              type="button"
-              onClick={handleRefund}
-              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition"
-            >
-              Issue Refund
-            </button>
-          )}
         </div>
-      </div>
+      </section>
 
-      {/* 2-Column Dossier Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Client Identity & Health */}
-        <div className="lg:col-span-7 space-y-6">
-          {/* Card: Client Profile */}
-          <div className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
-              <div>
-                <h3 className="text-sm font-extrabold text-[#0F172A]">
-                  Personal Particulars
-                </h3>
-                <span className="text-xs text-[#64748B] font-medium">
-                  Registered {new Date(reg.createdAt).toLocaleDateString('en-GB')}
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-[11px] font-extrabold text-[#64748B] uppercase block tracking-wider">
-                  Member ID
-                </span>
-                <span className="font-mono text-base font-black text-[#1E3A8A]">
-                  {reg.client?.memberCode || 'Unassigned'}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div>
-                <span className="text-[#64748B] font-bold block uppercase text-[11px]">Full Legal Name</span>
-                <span className="font-bold text-[#0F172A]">{reg.client?.fullName}</span>
-              </div>
-              <div>
-                <span className="text-[#64748B] font-bold block uppercase text-[11px]">Mobile Number</span>
-                <a href={`tel:${reg.client?.phone}`} className="font-bold text-[#0F172A] hover:underline">
-                  +91 {reg.client?.phone}
-                </a>
-              </div>
-              <div>
-                <span className="text-[#64748B] font-bold block uppercase text-[11px]">Email Address</span>
-                <a href={`mailto:${reg.client?.email}`} className="font-bold text-[#0F172A] hover:underline">
-                  {reg.client?.email}
-                </a>
-              </div>
-              <div>
-                <span className="text-[#64748B] font-bold block uppercase text-[11px]">Preferred Training Slot</span>
-                <span className="font-bold text-[#0F172A]">{reg.preferredSlot || '06:00 – 09:00 AM'}</span>
-              </div>
-            </div>
+      {role === 'SUPER_ADMIN' && !cancelled && (
+        <section className="rounded-2xl bg-white ring-1 ring-red-200 p-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-red-800">Cancel membership</h2>
+            <p className="text-sm text-[#64748B]">Marks the membership cancelled and the payment refunded. Super Admin only.</p>
           </div>
+          <button
+            type="button"
+            onClick={cancelMembership}
+            disabled={!!busy}
+            className="h-9 px-4 rounded-lg text-sm font-medium text-red-700 bg-white ring-1 ring-red-300 hover:bg-red-50 disabled:opacity-60 transition"
+          >
+            {busy === 'cancel' ? 'Cancelling…' : 'Cancel membership'}
+          </button>
+        </section>
+      )}
 
-          {/* Internal Staff Notes */}
-          <div className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-extrabold text-[#0F172A]">Internal Concierge Notes</h3>
-              {notesSaved && <span className="text-xs text-emerald-600 font-bold">✓ Notes Saved</span>}
-            </div>
-            <textarea
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add concierge notes, locker allocation, trainer notes..."
-              className="w-full bg-white border border-[#CBD5E1] rounded-lg p-2.5 text-xs font-medium text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
-            />
-            <div className="flex justify-end">
-              <button
-                type="button"
-                disabled={savingNotes}
-                onClick={handleSaveNotes}
-                className="px-3.5 py-1.5 text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_8px_20px_-8px_rgba(30,58,138,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] active:translate-y-px rounded-xl text-xs font-medium transition"
-              >
-                {savingNotes ? 'Saving...' : 'Save Notes'}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Membership & Payment Timeline */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Membership Tier & Status */}
-          <div className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
-              <h3 className="text-sm font-extrabold text-[#0F172A]">Tier & Validity</h3>
-              <span
-                className={`px-2 py-0.5 rounded text-[11px] font-extrabold uppercase tracking-wider border ${
-                  reg.status === 'CONFIRMED'
-                    ? 'border-emerald-300 text-emerald-900 bg-emerald-100'
-                    : 'border-amber-300 text-amber-900 bg-amber-100'
-                }`}
-              >
-                {reg.status === 'CONFIRMED' ? 'PAID & ACTIVATED' : 'PENDING CASH'}
-              </span>
-            </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-[#64748B] font-medium">Package</span>
-                <span className="font-bold text-[#0F172A]">{reg.package?.name} (1 Year)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#64748B] font-medium">Duration</span>
-                <span className="font-bold text-[#0F172A]">365 Days</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#64748B] font-medium">Start Date</span>
-                <span className="font-bold text-[#0F172A]">{reg.startDate}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#64748B] font-medium">Expiration Date</span>
-                <span className="font-mono font-bold text-[#1E3A8A]">{reg.endDate || 'Pending Confirmation'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment & Invoice Breakdown */}
-          <div className="bg-white border border-[#CBD5E1] p-5 rounded-xl shadow-sm space-y-4">
-            <h3 className="text-sm font-extrabold text-[#0F172A] border-b border-[#E2E8F0] pb-3">
-              Billing Ledger
-            </h3>
-
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-[#64748B] font-medium">Total Invoiced</span>
-                <span className="font-black text-sm text-[#0F172A]">{formatINR(reg.totalPaise)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#64748B] font-medium">Payment Mode</span>
-                <span className="font-bold text-[#0F172A]">{formatPaymentMethod(reg.payment?.method)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#64748B] font-medium">Payment Status</span>
-                <span className="font-bold text-[#0F172A]">{reg.payment?.status || 'CREATED'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {toast && <Toast message={toast.msg} tone={toast.tone} onClose={() => setToast(null)} />}
     </div>
   );
 }

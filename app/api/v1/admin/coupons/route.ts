@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getAdminSession } from '@/lib/auth';
+import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
 import { db } from '@/lib/db';
 
 export async function GET() {
-  const session = await getAdminSession();
+  const session = await getAdminSession(MANAGEMENT_ROLES);
   if (!session) {
     return NextResponse.json({ error: { code: 'UNAUTHORIZED' } }, { status: 401 });
   }
@@ -13,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await getAdminSession();
+  const session = await getAdminSession(MANAGEMENT_ROLES);
   if (!session || (session.role !== 'SUPER_ADMIN' && session.role !== 'MANAGER')) {
     return NextResponse.json({ error: { code: 'FORBIDDEN' } }, { status: 403 });
   }

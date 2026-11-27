@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getAdminSession } from '@/lib/auth';
+import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db, PayMethod } from '@/lib/db';
 import { sendMembershipReceiptEmail } from '@/lib/email';
 import { generatePdfReceipt } from '@/lib/pdfReceipt';
+import { logActivity } from '@/lib/activity';
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getAdminSession();
+  const session = await getAdminSession(MANAGEMENT_ROLES);
   if (!session || (session.role !== 'SUPER_ADMIN' && session.role !== 'MANAGER')) {
     return NextResponse.json({ error: { code: 'FORBIDDEN' } }, { status: 403 });
   }
@@ -39,14 +40,43 @@ export async function POST(
       }
 
       if (reg) {
+        if (reg.status === 'CONFIRMED') {
+          return NextResponse.json(
+            { error: { code: 'ALREADY_PAID', message: 'This membership is already marked as paid.' } },
+            { status: 400 }
+          );
+        }
+        if (reg.status === 'CANCELLED') {
+          return NextResponse.json(
+            { error: { code: 'CANCELLED', message: 'This membership was cancelled.' } },
+            { status: 400 }
+          );
+        }
+
         // Update registration status
-        await supabaseAdmin
+        const { error: regUpdErr } = await supabaseAdmin
           .from('registrations')
           .update({
             status: 'CONFIRMED',
             updated_at: new Date().toISOString(),
           })
           .eq('id', reg.id);
+        if (regUpdErr) {
+          return NextResponse.json(
+            { error: { code: 'DB_ERROR', message: `Could not mark as paid: ${regUpdErr.message}` } },
+            { status: 500 }
+          );
+        }
+
+        await logActivity({
+          adminId: session.id,
+          adminName: session.name,
+          adminRole: session.role,
+          action: 'CASH_COLLECTED',
+          entityType: 'REGISTRATION',
+          entityId: reg.reference,
+          details: { amountInr: Number(reg.amount_inr || 0), method: method || 'CASH' },
+        });
 
         // Update payment status
         await supabaseAdmin

@@ -1,74 +1,78 @@
 import { NextResponse } from 'next/server';
-import { getAdminSession } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
+import { supabaseAdmin } from '@/lib/supabase';
+import { logActivity } from '@/lib/activity';
 
 export async function GET(req: Request) {
-  const session = await getAdminSession();
-  if (!session || (session.role !== 'SUPER_ADMIN' && session.role !== 'MANAGER')) {
+  const session = await getAdminSession(MANAGEMENT_ROLES);
+  if (!session) {
     return NextResponse.json({ error: { code: 'FORBIDDEN' } }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);
-  const q = searchParams.get('q') || undefined;
-  const status = searchParams.get('status') || undefined;
-  const packageId = searchParams.get('packageId') || undefined;
-  const from = searchParams.get('from') || undefined;
-  const to = searchParams.get('to') || undefined;
+  const q = (searchParams.get('q') || '').trim().toLowerCase();
+  const status = searchParams.get('status') || '';
 
-  const result = db.queryRegistrations({ q, status, packageId, from, to, page: 1, pageSize: 5000 });
+  let query = supabaseAdmin
+    .from('registrations')
+    .select(
+      'reference, status, amount_inr, preferred_slot, start_date, end_date, created_at, notes, ' +
+        'clients(full_name, phone, email, member_code), packages(name), payments(method, status, paid_at, utr_number)'
+    )
+    .order('created_at', { ascending: false })
+    .limit(5000);
+  if (status === 'PENDING') query = query.in('status', ['PENDING', 'PENDING_CASH_COLLECTION']);
+  else if (status && status !== 'ALL') query = query.eq('status', status);
 
-  db.logAudit({
+  const { data, error } = await query;
+  if (error) {
+    return NextResponse.json({ error: { code: 'DB_ERROR', message: error.message } }, { status: 500 });
+  }
+
+  const one = <T,>(v: T | T[] | null | undefined): T | undefined => (Array.isArray(v) ? v[0] : v ?? undefined);
+  type Row = {
+    reference: string; status: string; amount_inr: number | string; preferred_slot: string | null;
+    start_date: string | null; end_date: string | null; created_at: string; notes: string | null;
+    clients: unknown; packages: unknown; payments: unknown;
+  };
+  let rows = ((data || []) as unknown as Row[]).map((r) => {
+    const c = one(r.clients as { full_name?: string; phone?: string; email?: string; member_code?: string });
+    const p = one(r.packages as { name?: string });
+    const pay = one(r.payments as { method?: string; status?: string; paid_at?: string; utr_number?: string });
+    return { r, c, p, pay };
+  });
+  if (q) {
+    rows = rows.filter(({ r, c }) =>
+      [r.reference, c?.full_name, c?.phone, c?.email, c?.member_code].some((v) => (v || '').toLowerCase().includes(q))
+    );
+  }
+
+  const esc = (val: unknown) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+  const header = ['Reference', 'Member ID', 'Name', 'Phone', 'Email', 'Plan', 'Amount (INR)', 'Status', 'Payment', 'Payment status', 'Paid on', 'UTR', 'Time slot', 'Start date', 'End date', 'Registered on', 'Notes'];
+  const lines = rows.map(({ r, c, p, pay }) =>
+    [
+      r.reference, c?.member_code, c?.full_name, c?.phone, c?.email, p?.name,
+      Number(r.amount_inr || 0).toFixed(2), r.status, pay?.method, pay?.status, pay?.paid_at?.slice(0, 10),
+      pay?.utr_number, r.preferred_slot, r.start_date, r.end_date, r.created_at?.slice(0, 10), r.notes,
+    ].map(esc).join(',')
+  );
+  const csv = '﻿' + [header.map(esc).join(','), ...lines].join('\r\n');
+
+  await logActivity({
     adminId: session.id,
     adminName: session.name,
-    action: 'EXPORT_REGISTRATIONS_CSV',
+    adminRole: session.role,
+    action: 'EXPORTED_CSV',
     entityType: 'REGISTRATION',
     entityId: 'export',
-    details: { count: result.items.length },
+    details: { count: rows.length, status: status || 'ALL' },
   });
 
-  const headers = [
-    'Reference',
-    'Member Code',
-    'Client Name',
-    'Phone',
-    'Email',
-    'Package',
-    'Amount (INR)',
-    'Status',
-    'Payment Status',
-    'Payment Method',
-    'Start Date',
-    'End Date',
-    'Created At',
-  ];
-
-  const escapeCsv = (val: unknown) => {
-    const s = String(val ?? '');
-    return `"${s.replace(/"/g, '""')}"`;
-  };
-
-  const rows = result.items.map((r) => [
-    escapeCsv(r.reference),
-    escapeCsv(r.client?.memberCode || 'N/A'),
-    escapeCsv(r.client?.fullName || 'N/A'),
-    escapeCsv(r.client?.phone || 'N/A'),
-    escapeCsv(r.client?.email || 'N/A'),
-    escapeCsv(r.package?.name || 'N/A'),
-    escapeCsv((r.totalPaise / 100).toFixed(2)),
-    escapeCsv(r.status),
-    escapeCsv(r.payment?.status || 'N/A'),
-    escapeCsv(r.payment?.method || 'N/A'),
-    escapeCsv(r.startDate || 'N/A'),
-    escapeCsv(r.endDate || 'N/A'),
-    escapeCsv(r.createdAt),
-  ]);
-
-  const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
-
-  return new NextResponse(csvContent, {
+  const stamp = new Date().toISOString().slice(0, 10);
+  return new NextResponse(csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="vyomi_registrations_${new Date().toISOString().slice(0, 10)}.csv"`,
+      'Content-Disposition': `attachment; filename="vyomi-members-${stamp}.csv"`,
     },
   });
 }

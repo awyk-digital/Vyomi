@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getAdminSession } from '@/lib/auth';
+import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
 
 export async function GET(req: Request) {
-  const session = await getAdminSession();
+  const session = await getAdminSession(MANAGEMENT_ROLES);
   if (!session) {
     return NextResponse.json({ error: { code: 'UNAUTHORIZED' } }, { status: 401 });
   }
@@ -46,13 +46,15 @@ export async function GET(req: Request) {
 
     query = query.order('created_at', { ascending: false });
 
+    // Searching: filter the whole list, then paginate. Otherwise paginate in the DB.
+    const searching = !!(q && q.trim());
     const fromIdx = (page - 1) * pageSize;
     const toIdx = fromIdx + pageSize - 1;
-    query = query.range(fromIdx, toIdx);
+    if (!searching) query = query.range(fromIdx, toIdx);
 
     const { data: supaRows, count, error } = await query;
 
-    if (!error && supaRows && supaRows.length > 0) {
+    if (!error && supaRows) {
       let filtered = supaRows;
       if (q && q.trim()) {
         const queryTerm = q.trim().toLowerCase();
@@ -67,6 +69,9 @@ export async function GET(req: Request) {
           );
         });
       }
+
+      const matchCount = searching ? filtered.length : count || filtered.length;
+      if (searching) filtered = filtered.slice(fromIdx, toIdx + 1);
 
       const items = filtered.map((row: any) => {
         const clientData = Array.isArray(row.clients) ? row.clients[0] : row.clients;
@@ -108,10 +113,10 @@ export async function GET(req: Request) {
 
       return NextResponse.json({
         items,
-        total: count || items.length,
+        total: matchCount,
         page,
         pageSize,
-        totalPages: Math.ceil((count || items.length) / pageSize),
+        totalPages: Math.max(1, Math.ceil(matchCount / pageSize)),
       });
     }
   } catch (err) {

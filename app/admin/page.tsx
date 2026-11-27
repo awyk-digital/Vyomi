@@ -1,7 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import {
+  formatINR,
+  formatDate,
+  paymentLabel,
+  StatusBadge,
+  isCashDue,
+  markCashPaid,
+  useAutoRefresh,
+  PageHeader,
+  Toast,
+} from '@/components/admin/ui';
+
+interface RecentReg {
+  id: string;
+  reference: string;
+  totalPaise: number;
+  status: string;
+  createdAt: string;
+  client?: { fullName: string; phone: string; memberCode: string | null };
+  package?: { name: string; durationDays: number };
+  payment?: { method: string; status: string };
+}
 
 interface DashboardStats {
   newToday: number;
@@ -11,329 +33,223 @@ interface DashboardStats {
   activeMembers: number;
   pendingCount: number;
   expiringSoon: number;
-  recent: Array<{
-    id: string;
-    reference: string;
-    totalPaise: number;
-    status: string;
-    createdAt: string;
-    preferredSlot?: string;
-    client?: { fullName: string; phone: string; memberCode: string | null };
-    package?: { name: string; durationDays: number };
-    payment?: { method: string; status: string };
-  }>;
+  recent: RecentReg[];
 }
 
-function formatINR(paise: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(paise / 100);
-}
-
-function formatPaymentMethod(method?: string): string {
-  const m = (method || '').toUpperCase();
-  if (m === 'CASH' || m === 'OFFLINE' || m === 'POS') {
-    return 'Front Desk Settlement (Cash)';
-  }
-  return 'Instant UPI Settlement (QR)';
+function Stat({ label, value, hint, tone }: { label: string; value: string | number; hint?: string; tone?: 'due' }) {
+  return (
+    <div className="rounded-2xl bg-white ring-1 ring-[#E3E8F2] p-5">
+      <p className="text-sm text-[#64748B]">{label}</p>
+      <p className={`mt-2 text-[28px] leading-none font-semibold tracking-tight ${tone === 'due' ? 'text-amber-700' : 'text-[#0F172A]'}`}>
+        {value}
+      </p>
+      {hint && <p className="mt-2 text-xs text-[#94A3B8]">{hint}</p>}
+    </div>
+  );
 }
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [busyRef, setBusyRef] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; tone: 'ok' | 'error' } | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<string>('');
 
-  const fetchStats = () => {
-    fetch('/api/v1/admin/dashboard/stats')
+  const fetchStats = useCallback(() => {
+    fetch('/api/v1/admin/dashboard/stats', { cache: 'no-store' })
       .then((res) => {
         if (res.status === 401) {
-          window.location.href = '/admin/login';
+          window.location.replace('/admin/login?next=/admin');
           return null;
         }
-        return res.json();
+        return res.ok ? res.json() : null;
       })
       .then((data) => {
-        if (data?.stats) setStats(data.stats);
+        if (data?.stats) {
+          setStats(data.stats);
+          setFailed(false);
+          setUpdatedAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }));
+        } else if (data !== null) {
+          setFailed(true);
+        }
       })
-      .catch((err) => console.error('Dashboard error:', err))
+      .catch(() => setFailed(true))
       .finally(() => setLoading(false));
-  };
+  }, []);
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [fetchStats]);
+  useAutoRefresh(fetchStats, 20000);
 
-  const handleMarkPaid = async (ref: string) => {
-    if (!confirm(`Confirm front desk cash clearance for registration ${ref}? This will activate membership and dispatch the official Digital VIP Card to member's Gmail.`)) return;
-    try {
-      const res = await fetch(`/api/v1/admin/registrations/${ref}/mark-paid`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'CASH' }),
-      });
-      if (res.ok) {
-        alert('Front desk payment settled, membership activated, and Digital VIP Card sent to member Gmail!');
-        fetchStats();
-      }
-    } catch {
-      alert('Error updating payment');
+  const handleMarkPaid = async (r: RecentReg) => {
+    setBusyRef(r.reference);
+    const err = await markCashPaid(r.reference, r.client?.fullName, formatINR(r.totalPaise));
+    setBusyRef(null);
+    if (err === 'cancelled') return;
+    if (err) setToast({ msg: err, tone: 'error' });
+    else {
+      setToast({ msg: `Marked as paid. Receipt emailed to ${r.client?.fullName || 'the member'}.`, tone: 'ok' });
+      fetchStats();
     }
   };
 
   if (loading) {
+    return <div className="py-16 text-center text-sm text-[#64748B]">Loading dashboard…</div>;
+  }
+  if (!stats) {
     return (
-      <div className="py-12 flex items-center justify-center">
-        <span className="text-xs text-[#64748B] font-semibold">Loading dashboard…</span>
+      <div className="py-16 text-center space-y-3">
+        <p className="text-sm text-red-700">Could not load the dashboard.</p>
+        <button onClick={fetchStats} className="text-sm text-[#1E3A8A] underline">Try again</button>
       </div>
     );
   }
 
-  if (!stats) {
-    return (
-      <div className="py-12 text-center text-xs text-red-600 font-bold">
-        Could not load the dashboard. Please refresh.
-      </div>
-    );
-  }
+  const cashDue = stats.recent.filter((r) => isCashDue(r.status));
 
   return (
     <div className="space-y-6">
-      {/* Top Header - Refined Font Size */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
-        <div>
-          <span className="text-[11px] font-extrabold tracking-widest text-[#1E3A8A] uppercase block">
-            Overview
-          </span>
-          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
-            Club Performance & Member Intake
-          </h1>
-        </div>
+      <PageHeader
+        title="Dashboard"
+        subtitle={updatedAt ? `Updates automatically · last updated ${updatedAt}` : undefined}
+        action={
+          <div className="flex gap-2">
+            <a
+              href="/api/v1/admin/registrations/export"
+              className="h-10 px-4 inline-flex items-center rounded-xl text-sm font-medium text-[#1E3A8A] bg-white ring-1 ring-[#C7D4F5] hover:ring-[#1E3A8A] transition"
+            >
+              Download CSV
+            </a>
+            <Link
+              href="/admin/registrations/new"
+              className="h-10 px-4 inline-flex items-center rounded-xl text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#172F73] transition"
+            >
+              + New walk-in
+            </Link>
+          </div>
+        }
+      />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <a
-            href="/api/v1/admin/registrations/export"
-            download
-            className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded-lg text-xs font-bold text-[#0F172A] transition shadow-sm"
-          >
-            📥 Export Registry CSV
-          </a>
-          <Link
-            href="/register"
-            target="_blank"
-            className="px-3.5 py-1.5 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded-lg text-xs font-bold transition shadow-sm"
-          >
-            + New Member Enrollment
-          </Link>
+      {failed && (
+        <div className="rounded-xl bg-amber-50 ring-1 ring-amber-200 px-4 py-2.5 text-sm text-amber-800">
+          Couldn&apos;t refresh just now. Showing the last loaded numbers.
         </div>
+      )}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Stat label="Revenue this month" value={formatINR(stats.revenueMonthPaise)} hint={`Today: ${formatINR(stats.revenueTodayPaise)}`} />
+        <Stat label="Active members" value={stats.activeMembers} hint={stats.expiringSoon ? `${stats.expiringSoon} expiring in 7 days` : 'None expiring this week'} />
+        <Stat label="New this month" value={stats.newMonth} hint={`Today: ${stats.newToday}`} />
+        <Stat label="Cash to collect" value={stats.pendingCount} hint="Waiting at front desk" tone={stats.pendingCount ? 'due' : undefined} />
       </div>
 
-      {/* 4 Essential KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Verified Monthly Revenue */}
-        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
-              Monthly Settled Revenue
-            </span>
-            <span className="text-[11px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold px-1.5 py-0.5 rounded">
-              Verified
-            </span>
+      {cashDue.length > 0 && (
+        <section className="rounded-2xl bg-white ring-1 ring-amber-200 overflow-hidden">
+          <div className="px-5 py-4 flex items-center justify-between border-b border-amber-100 bg-amber-50/50">
+            <div>
+              <h2 className="text-base font-semibold text-[#0F172A]">Cash to collect</h2>
+              <p className="text-sm text-[#64748B]">Take the cash, then mark it paid to activate the membership.</p>
+            </div>
+            <Link href="/admin/registrations?status=PENDING_CASH_COLLECTION" className="text-sm text-[#1E3A8A] hover:underline whitespace-nowrap">
+              See all →
+            </Link>
           </div>
-          <div className="text-2xl font-black text-[#0F172A]">
-            {formatINR(stats.revenueMonthPaise)}
-          </div>
-          <span className="text-xs font-medium text-[#475569] block">
-            Today: <strong className="text-[#0F172A] font-bold">{formatINR(stats.revenueTodayPaise)}</strong>
-          </span>
-        </div>
+          <ul className="divide-y divide-[#EEF1F6]">
+            {cashDue.map((r) => (
+              <li key={r.id} className="px-5 py-3.5 flex flex-wrap items-center gap-x-6 gap-y-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-[#0F172A] truncate">{r.client?.fullName || 'Member'}</p>
+                  <p className="text-xs text-[#64748B]">{r.package?.name} · {r.client?.memberCode || r.reference}</p>
+                </div>
+                <p className="text-sm font-semibold text-[#0F172A] w-24 text-right">{formatINR(r.totalPaise)}</p>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/admin/registrations/${r.reference}`}
+                    className="h-9 px-3 inline-flex items-center rounded-lg text-sm text-[#334155] ring-1 ring-[#E2E8F0] hover:ring-[#94A3B8] transition"
+                  >
+                    View
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={busyRef === r.reference}
+                    onClick={() => handleMarkPaid(r)}
+                    className="h-9 px-3.5 inline-flex items-center rounded-lg text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#172F73] disabled:opacity-60 transition"
+                  >
+                    {busyRef === r.reference ? 'Saving…' : 'Mark paid'}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
-        {/* Card 2: Active Memberships */}
-        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
-              Active Memberships
-            </span>
-            <span className="text-[11px] bg-sky-100 text-sky-900 border border-sky-300 font-extrabold px-1.5 py-0.5 rounded">
-              Valid
-            </span>
-          </div>
-          <div className="text-2xl font-black text-[#0F172A]">
-            {stats.activeMembers}
-          </div>
-          <span className="text-xs font-medium text-[#475569] block">
-            Certified active access privileges
-          </span>
-        </div>
-
-        {/* Card 3: New Enrollees */}
-        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
-              New Enrollees
-            </span>
-            <span className="text-[11px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
-              MTD
-            </span>
-          </div>
-          <div className="text-2xl font-black text-[#0F172A]">
-            {stats.newMonth}
-          </div>
-          <span className="text-xs font-medium text-[#475569] block">
-            Today: <strong className="text-[#0F172A] font-bold">+{stats.newToday}</strong> enrollees
-          </span>
-        </div>
-
-        {/* Card 4: Action Required */}
-        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl shadow-sm space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold text-[#334155] uppercase tracking-wider">
-              Front Desk Settlements
-            </span>
-            <span className="text-[11px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
-              Action
-            </span>
-          </div>
-          <div className="text-2xl font-black text-[#1E3A8A]">
-            {stats.pendingCount}
-          </div>
-          <span className="text-xs font-medium text-[#475569] block">
-            Awaiting desk cash clearance
-          </span>
-        </div>
-      </div>
-
-      {/* Quick Action Bar for Staff */}
-      <div className="bg-white border border-[#CBD5E1] p-3.5 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-bold text-[#0F172A]">Reception Terminal Active</span>
-          <span className="text-[#64748B]">· Sonovision Plaza, Patamata</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/admin/registrations?status=PENDING_CASH_COLLECTION"
-            className="px-3 py-1.5 bg-[#F5F8FF] border border-[#C7D4F5] text-[#1E3A8A] font-bold rounded-lg hover:bg-[#E8EEFC] transition"
-          >
-            Review Pending Cash ({stats.pendingCount}) →
-          </Link>
-          <Link
-            href="/admin/payments"
-            className="px-3 py-1.5 bg-[#F8FAFC] border border-[#CBD5E1] text-[#334155] font-bold rounded-lg hover:bg-[#F1F5F9] transition"
-          >
-            Settlement Ledger →
-          </Link>
-        </div>
-      </div>
-
-      {/* Recent Registrations Table */}
-      <div className="bg-white border border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between">
-          <div>
-            <h2 className="text-xs font-extrabold text-[#0F172A] uppercase tracking-wider">
-              Recent Member Intakes
-            </h2>
-            <p className="text-xs text-[#475569] font-medium mt-0.5">
-              Latest registrations
-            </p>
-          </div>
-          <Link
-            href="/admin/registrations"
-            className="text-xs font-bold text-[#1E3A8A] hover:underline"
-          >
-            View Full Registry →
+      <section className="rounded-2xl bg-white ring-1 ring-[#E3E8F2] overflow-hidden">
+        <div className="px-5 py-4 flex items-center justify-between border-b border-[#EEF1F6]">
+          <h2 className="text-base font-semibold text-[#0F172A]">Recent members</h2>
+          <Link href="/admin/registrations" className="text-sm text-[#1E3A8A] hover:underline">
+            All members →
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-[#F1F5F9] border-b border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
-                <th className="py-3 px-4 font-black w-32 whitespace-nowrap">Reference ID</th>
-                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Member Code</th>
-                <th className="py-3 px-4 font-black min-w-[140px]">Member Name</th>
-                <th className="py-3 px-4 font-black w-36 whitespace-nowrap">Contact</th>
-                <th className="py-3 px-4 font-black w-40 whitespace-nowrap">Membership Tier</th>
-                <th className="py-3 px-4 font-black w-32 whitespace-nowrap">Amount</th>
-                <th className="py-3 px-4 font-black min-w-[180px]">Settlement Channel</th>
-                <th className="py-3 px-4 font-black min-w-[160px]">Clearance Status</th>
-                <th className="py-3 px-4 font-black w-44 text-center whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
-              {stats.recent.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-[#0F172A] font-bold">
-                    No client records yet.
-                  </td>
+        {stats.recent.length === 0 ? (
+          <p className="px-5 py-10 text-center text-sm text-[#64748B]">No registrations yet.</p>
+        ) : (
+          <>
+            {/* Desktop table: fits without sideways scrolling */}
+            <table className="hidden md:table w-full text-sm table-fixed">
+              <thead>
+                <tr className="text-left text-xs text-[#64748B] border-b border-[#EEF1F6]">
+                  <th className="py-3 pl-5 pr-3 font-medium w-[30%]">Member</th>
+                  <th className="py-3 px-3 font-medium">Plan</th>
+                  <th className="py-3 px-3 font-medium w-[12%]">Amount</th>
+                  <th className="py-3 px-3 font-medium w-[10%]">Payment</th>
+                  <th className="py-3 px-3 font-medium w-[13%]">Status</th>
+                  <th className="py-3 pl-3 pr-5 font-medium w-[12%] text-right">Joined</th>
                 </tr>
-              ) : (
-                stats.recent.map((r) => (
-                  <tr key={r.id} className="hover:bg-[#F8FAFC] transition">
-                    <td className="py-3 px-4 font-mono font-bold text-[#0F172A] w-32 whitespace-nowrap">
-                      <Link href={`/admin/registrations/${r.reference}`} className="hover:underline text-[#0F172A]">
-                        {r.reference}
+              </thead>
+              <tbody className="divide-y divide-[#EEF1F6]">
+                {stats.recent.map((r) => (
+                  <tr key={r.id} className="hover:bg-[#F8FAFE] transition-colors">
+                    <td className="py-3 pl-5 pr-3">
+                      <Link href={`/admin/registrations/${r.reference}`} className="block min-w-0 group">
+                        <span className="block font-medium text-[#0F172A] truncate group-hover:text-[#1E3A8A]">{r.client?.fullName || 'Member'}</span>
+                        <span className="block text-xs text-[#64748B] truncate">
+                          {r.client?.memberCode || r.reference} · +91 {r.client?.phone}
+                        </span>
                       </Link>
                     </td>
-                    <td className="py-3 px-4 font-mono font-black text-[#1E3A8A] w-36 whitespace-nowrap">
-                      {r.client?.memberCode || (
-                        <span className="text-[#334155] font-semibold">Pending</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 font-extrabold text-[#0F172A] min-w-[140px]">
-                      {r.client?.fullName || 'Valued Member'}
-                    </td>
-                    <td className="py-3 px-4 text-[#0F172A] font-bold w-36 whitespace-nowrap">
-                      +91 {r.client?.phone}
-                    </td>
-                    <td className="py-3 px-4 font-extrabold text-[#0F172A] w-40 whitespace-nowrap">
-                      {r.package?.name || 'Membership'}
-                    </td>
-                    <td className="py-3 px-4 font-black text-[#0F172A] w-32 whitespace-nowrap">
-                      {formatINR(r.totalPaise)}
-                    </td>
-                    <td className="py-3 px-4 min-w-[180px]">
-                      <span className="font-extrabold text-[#0F172A] block">
-                        {formatPaymentMethod(r.payment?.method)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 min-w-[160px]">
-                      <span
-                        className={`px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider border ${
-                          r.status === 'CONFIRMED'
-                            ? 'border-emerald-300 bg-emerald-100 text-emerald-900'
-                            : 'border-amber-300 bg-amber-100 text-amber-900'
-                        }`}
-                      >
-                        {r.status === 'CONFIRMED' ? 'SETTLED & ACTIVE' : 'AWAITING CASH'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-center w-44 whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-2">
-                        <Link
-                          href={`/admin/registrations/${r.reference}`}
-                          className="px-3 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded text-xs font-extrabold text-[#0F172A] shadow-sm transition"
-                        >
-                          Dossier
-                        </Link>
-                        {r.status !== 'CONFIRMED' && (
-                          <button
-                            type="button"
-                            onClick={() => handleMarkPaid(r.reference)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-extrabold shadow-sm whitespace-nowrap transition"
-                          >
-                            Clear Cash ✓
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                    <td className="py-3 px-3 text-[#334155] truncate">{r.package?.name || '—'}</td>
+                    <td className="py-3 px-3 font-medium text-[#0F172A]">{formatINR(r.totalPaise)}</td>
+                    <td className="py-3 px-3 text-[#334155]">{paymentLabel(r.payment?.method)}</td>
+                    <td className="py-3 px-3"><StatusBadge status={r.status} /></td>
+                    <td className="py-3 pl-3 pr-5 text-right text-[#64748B] whitespace-nowrap">{formatDate(r.createdAt)}</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Mobile list */}
+            <ul className="md:hidden divide-y divide-[#EEF1F6]">
+              {stats.recent.map((r) => (
+                <li key={r.id}>
+                  <Link href={`/admin/registrations/${r.reference}`} className="px-4 py-3 flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-[#0F172A] truncate">{r.client?.fullName || 'Member'}</p>
+                      <p className="text-xs text-[#64748B] truncate">{r.package?.name} · {formatINR(r.totalPaise)} · {paymentLabel(r.payment?.method)}</p>
+                    </div>
+                    <StatusBadge status={r.status} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+
+      {toast && <Toast message={toast.msg} tone={toast.tone} onClose={() => setToast(null)} />}
     </div>
   );
 }

@@ -657,3 +657,28 @@
   border-top: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 -8px 32px rgba(0, 0, 0, 0.6);
 }
+
+
+/* Registration logo: one soft light sweep every 60 seconds */
+.logo-shimmer {
+  overflow: hidden;
+  border-radius: 10px;
+}
+.logo-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: -20% auto -20% -60%;
+  width: 45%;
+  background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.75) 50%, transparent 100%);
+  transform: translateX(0) skewX(-12deg);
+  animation: logo-shimmer 60s ease-in-out 2s infinite;
+  pointer-events: none;
+}
+@keyframes logo-shimmer {
+  0% { transform: translateX(0) skewX(-12deg); }
+  2.5% { transform: translateX(420%) skewX(-12deg); }
+  100% { transform: translateX(420%) skewX(-12deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-shimmer::after { animation: none; display: none; }
+}

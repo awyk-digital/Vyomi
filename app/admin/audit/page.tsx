@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { formatINR, PageHeader, useAutoRefresh } from '@/components/admin/ui';
 
 interface AuditLogItem {
   id: string;
-  adminId: string | null;
   adminName: string;
+  adminRole?: string | null;
   action: string;
   entityType: string;
   entityId: string;
@@ -13,112 +14,87 @@ interface AuditLogItem {
   createdAt: string;
 }
 
+const str = (v: unknown) => (v === undefined || v === null ? '' : String(v));
+const money = (v: unknown) => (v === undefined || v === null || v === '' ? '' : formatINR(Number(v) * 100));
+
+/** Turn a raw log entry into one plain sentence. */
+function describe(l: AuditLogItem): string {
+  const d = l.details || {};
+  switch (l.action) {
+    case 'SIGNED_IN':
+      return 'Signed in';
+    case 'SIGNED_OUT':
+      return 'Signed out';
+    case 'MEMBER_REGISTERED':
+      return `Registered ${str(d.member)} · ${str(d.plan)} · ${money(d.amountInr)} (${str(d.payment) === 'CASH' ? 'cash due' : 'UPI'})`;
+    case 'CASH_COLLECTED':
+      return `Collected cash ${money(d.amountInr)} · ${l.entityId}`;
+    case 'MEMBERSHIP_CANCELLED':
+      return `Cancelled membership ${l.entityId}${d.reason ? ` · “${str(d.reason)}”` : ''}`;
+    case 'MEMBER_UPDATED':
+      return `Edited member details · ${l.entityId}`;
+    case 'NOTES_UPDATED':
+      return `Updated desk notes · ${l.entityId}`;
+    case 'PLAN_UPDATED':
+      return `Changed plan “${str(d.plan)}”${d.price_inr ? ` · price ${money(d.price_inr)}` : ''}${d.is_active === false ? ' · hidden' : d.is_active === true ? ' · shown' : ''}`;
+    case 'EXPORTED_CSV':
+      return `Downloaded CSV (${str(d.count)} rows)`;
+    default:
+      return `${l.action.replace(/_/g, ' ').toLowerCase()}${l.entityId ? ` · ${l.entityId}` : ''}`;
+  }
+}
+
+const ROLE: Record<string, string> = { SUPER_ADMIN: 'Super Admin', MANAGER: 'Manager', FRONT_DESK: 'Front desk' };
+
 export default function AdminAuditPage() {
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchLogs = () => {
-    setLoading(true);
-    fetch('/api/v1/admin/audit-logs')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.logs) setLogs(data.logs);
-      })
+  const load = useCallback(() => {
+    fetch('/api/v1/admin/audit-logs', { cache: 'no-store' })
+      .then((r) => (r.status === 401 ? (window.location.replace('/admin/login?next=/admin/audit'), null) : r.json()))
+      .then((d) => d?.logs && setLogs(d.logs))
+      .catch(() => null)
       .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    fetchLogs();
   }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+  useAutoRefresh(load, 30000);
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
-        <div>
-          <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider block">
-            Compliance & Access Security
-          </span>
-          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-0.5 tracking-tight">
-            Security Operations & Access Audit Trail ({logs.length})
-          </h1>
-        </div>
+    <div className="space-y-5">
+      <PageHeader title="Activity log" subtitle="Who did what, newest first. Updates automatically." />
 
-        <button
-          type="button"
-          onClick={fetchLogs}
-          className="px-3.5 py-1.5 bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] rounded-lg text-xs font-bold text-[#0F172A] transition shadow-sm"
-        >
-          🔄 Refresh Activity
-        </button>
-      </div>
-
-      <div className="bg-white border border-[#CBD5E1] rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-[#F1F5F9] border-b border-[#CBD5E1] text-[#0F172A] uppercase tracking-wider text-xs">
-                <th className="py-3 px-4 font-black w-48 whitespace-nowrap">Timestamp (IST)</th>
-                <th className="py-3 px-4 font-black w-44 whitespace-nowrap">Authorized Personnel</th>
-                <th className="py-3 px-4 font-black w-44 whitespace-nowrap">Security Event</th>
-                <th className="py-3 px-4 font-black w-40 whitespace-nowrap">Scope / Entity</th>
-                <th className="py-3 px-4 font-black min-w-[200px]">Operational Event Details</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-[#0F172A] font-bold">
-                    Loading security event trail...
-                  </td>
-                </tr>
-              ) : logs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-[#0F172A] font-bold">
-                    No activity recorded in security ledger.
-                  </td>
-                </tr>
-              ) : (
-                logs.map((l) => (
-                  <tr key={l.id} className="hover:bg-[#F8FAFC] transition">
-                    <td className="py-3.5 px-4 text-[#0F172A] whitespace-nowrap font-mono text-xs font-bold w-48">
-                      {new Date(l.createdAt).toLocaleString('en-IN', {
-                        timeZone: 'Asia/Kolkata',
-                        dateStyle: 'medium',
-                        timeStyle: 'medium',
-                      })}
-                    </td>
-                    <td className="py-3.5 px-4 font-extrabold text-[#0F172A] w-44 whitespace-nowrap">
-                      {l.adminName}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono font-black text-[#1E3A8A] text-xs w-44 whitespace-nowrap">
-                      {l.action}
-                    </td>
-                    <td className="py-3.5 px-4 uppercase text-xs font-black text-[#0F172A] w-40 whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded bg-[#F1F5F9] border border-[#CBD5E1]">
-                        {l.entityType}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-xs text-[#0F172A] font-bold min-w-[200px]">
-                      {l.details ? (
-                        <div className="space-y-0.5">
-                          {Object.entries(l.details).map(([key, value]) => (
-                            <span key={key} className="inline-block mr-3">
-                              <span className="text-[#334155] font-extrabold">{key}:</span>{' '}
-                              <span className="text-[#0F172A] font-black">{String(value)}</span>
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <section className="rounded-2xl bg-white ring-1 ring-[#E3E8F2] overflow-hidden">
+        {loading ? (
+          <p className="px-5 py-12 text-center text-sm text-[#64748B]">Loading activity…</p>
+        ) : logs.length === 0 ? (
+          <p className="px-5 py-12 text-center text-sm text-[#64748B]">No activity recorded yet.</p>
+        ) : (
+          <ul className="divide-y divide-[#EEF1F6]">
+            {logs.map((l) => (
+              <li key={l.id} className="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
+                <span className="text-sm text-[#64748B] sm:w-44 shrink-0 whitespace-nowrap">
+                  {new Date(l.createdAt).toLocaleString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Asia/Kolkata',
+                  })}
+                </span>
+                <span className="sm:w-48 shrink-0">
+                  <span className="text-sm font-medium text-[#0F172A]">{l.adminName}</span>
+                  {l.adminRole && <span className="text-xs text-[#94A3B8]"> · {ROLE[l.adminRole] || l.adminRole}</span>}
+                </span>
+                <span className="text-sm text-[#334155] min-w-0 break-words">{describe(l)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

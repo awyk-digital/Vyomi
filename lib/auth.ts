@@ -39,7 +39,16 @@ export function verifySessionToken(token: string): TokenPayload | null {
   }
 }
 
-export async function getAdminSession(): Promise<TokenPayload | null> {
+/** Roles that may use the admin dashboard. Front desk only registers members. */
+export const MANAGEMENT_ROLES: AdminRole[] = ['SUPER_ADMIN', 'MANAGER'];
+/** Staff accounts and the activity log are Super Admin only. */
+export const SUPER_ADMIN_ONLY: AdminRole[] = ['SUPER_ADMIN'];
+
+/**
+ * Returns the signed-in staff session, or null. When `allowed` is given,
+ * also returns null if the staff member's role is not in that list.
+ */
+export async function getAdminSession(allowed?: AdminRole[]): Promise<TokenPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(AUTH_COOKIE)?.value;
   if (!token) return null;
@@ -50,6 +59,7 @@ export async function getAdminSession(): Promise<TokenPayload | null> {
   // Verify admin is still active in DB
   const admin = db.findAdminById(session.id);
   if (!admin || !admin.isActive) return null;
+  if (allowed && !allowed.includes(session.role)) return null;
 
   return session;
 }

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getAdminSession } from '@/lib/auth';
+import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
 
 export async function GET() {
-  const session = await getAdminSession();
+  const session = await getAdminSession(MANAGEMENT_ROLES);
   if (!session) {
     return NextResponse.json({ error: { code: 'UNAUTHORIZED' } }, { status: 401 });
   }
@@ -38,7 +38,7 @@ export async function GET() {
       `)
       .order('created_at', { ascending: false });
 
-    if (!error && supaPayments && supaPayments.length > 0) {
+    if (!error && supaPayments) {
       const payments = supaPayments.map((p: any) => {
         const reg = Array.isArray(p.registrations) ? p.registrations[0] : p.registrations;
         const client = reg ? (Array.isArray(reg.clients) ? reg.clients[0] : reg.clients) : null;

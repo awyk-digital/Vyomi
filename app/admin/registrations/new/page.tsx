@@ -50,25 +50,51 @@ export default function NewWalkinRegistrationPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/v1/admin/registrations', {
+      // 1. Create the membership (same endpoint the front desk uses)
+      const res = await fetch('/api/v1/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          client: { fullName, phone, email },
+          fullName,
+          phone,
+          email,
           packageId: selectedPkgId,
           paymentMethod,
           startDate,
-          notes,
-          markPaid,
+          acceptedTerms: true,
         }),
       });
-
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error?.message || 'Registration failed');
-      } else {
-        router.push(`/admin/registrations/${data.registrationRef}`);
+        setError(data.error?.message || 'Registration failed. Please check the details.');
+        return;
       }
+      const ref = data.reference as string;
+
+      // 2. Cash received now -> mark paid immediately
+      if (paymentMethod === 'CASH' && markPaid) {
+        const paid = await fetch(`/api/v1/admin/registrations/${ref}/mark-paid`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ method: 'CASH' }),
+        });
+        if (!paid.ok) {
+          const d = await paid.json().catch(() => ({}));
+          setError(`Member registered (${ref}) but could not mark as paid: ${d.error?.message || 'please retry from the member page.'}`);
+          return;
+        }
+      }
+
+      // 3. Optional desk notes
+      if (notes.trim()) {
+        await fetch(`/api/v1/admin/registrations/${ref}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes }),
+        }).catch(() => null);
+      }
+
+      router.push(`/admin/registrations/${ref}`);
     } catch {
       setError('Connection failure');
     } finally {
@@ -84,13 +110,13 @@ export default function NewWalkinRegistrationPage() {
         <div>
           <div className="flex items-center gap-2">
             <Link href="/admin/registrations" className="text-xs font-bold text-[#64748B] hover:text-[#0F172A]">
-              ← Registrations
+              ← Members
             </Link>
             <span className="text-[#CBD5E1]">/</span>
-            <span className="text-[11px] font-extrabold text-[#1E3A8A] uppercase tracking-wider">Concierge Desk</span>
+            <span className="text-sm text-[#64748B]">Front desk</span>
           </div>
-          <h1 className="text-base sm:text-lg font-extrabold text-[#0F172A] mt-1 tracking-tight">
-            New Walk-in Registration
+          <h1 className="text-2xl font-semibold text-[#0F172A] mt-1 tracking-tight">
+            New walk-in
           </h1>
         </div>
       </div>
@@ -104,8 +130,8 @@ export default function NewWalkinRegistrationPage() {
       <form onSubmit={handleSubmit} className="bg-white border border-[#CBD5E1] p-6 sm:p-8 rounded-xl shadow-sm space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-              Client Full Legal Name *
+            <label className="block text-sm text-[#334155] mb-1.5">
+              Full name *
             </label>
             <input
               type="text"
@@ -113,13 +139,13 @@ export default function NewWalkinRegistrationPage() {
               placeholder="e.g. Ramesh Chandra"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-              Mobile Number (+91) *
+            <label className="block text-sm text-[#334155] mb-1.5">
+              Mobile number *
             </label>
             <input
               type="tel"
@@ -127,31 +153,32 @@ export default function NewWalkinRegistrationPage() {
               placeholder="e.g. 9876543210"
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-              Email Address (Receipt & Digital Pass)
+            <label className="block text-sm text-[#334155] mb-1.5">
+              Email (for the receipt) *
             </label>
             <input
               type="email"
+              required
               placeholder="e.g. ramesh.chandra@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-              Selected Package Tier *
+            <label className="block text-sm text-[#334155] mb-1.5">
+              Plan *
             </label>
             <select
               value={selectedPkgId}
               onChange={(e) => setSelectedPkgId(e.target.value)}
-              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             >
               {packages.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -162,14 +189,14 @@ export default function NewWalkinRegistrationPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-              Activation Start Date
+            <label className="block text-sm text-[#334155] mb-1.5">
+              Start date
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
+              className="w-full bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A]"
             />
           </div>
         </div>
@@ -183,12 +210,12 @@ export default function NewWalkinRegistrationPage() {
               onChange={(e) => setMarkPaid(e.target.checked)}
               className="w-4 h-4 rounded text-[#1E3A8A]"
             />
-            <span>Payment received now at front desk (Activate immediately)</span>
+            <span>Cash received now (activate immediately)</span>
           </label>
 
           {markPaid && (
             <div>
-              <label className="block text-xs font-bold text-[#475569] mb-1.5 uppercase tracking-wider">
+              <label className="block text-sm text-[#334155] mb-1.5">
                 Payment Channel
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -220,8 +247,8 @@ export default function NewWalkinRegistrationPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-            Concierge Notes / Locker Allocation
+          <label className="block text-sm text-[#334155] mb-1.5">
+            Desk notes (optional)
           </label>
           <textarea
             rows={2}
@@ -234,7 +261,7 @@ export default function NewWalkinRegistrationPage() {
 
         {selectedPkg && (
           <div className="flex justify-between items-center text-xs p-3 border-t border-[#E2E8F0] font-bold">
-            <span className="text-[#475569]">All-Inclusive Annual Fee:</span>
+            <span className="text-[#475569]">Total</span>
             <span className="text-base font-black text-[#0F172A]">
               {formatINR(selectedPkg.pricePaise)}
             </span>
@@ -253,7 +280,7 @@ export default function NewWalkinRegistrationPage() {
             disabled={loading}
             className="px-5 py-2 bg-[#1E3A8A] hover:bg-[#172F73] text-white rounded-lg text-xs font-bold transition shadow-sm"
           >
-            {loading ? 'Creating...' : 'Enroll Walk-in Member →'}
+            {loading ? 'Saving…' : 'Register member'}
           </button>
         </div>
       </form>

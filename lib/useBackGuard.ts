@@ -32,10 +32,13 @@ export function useBackGuard(options: {
     const onPop = () => {
       const { onBack, allowPath, onEscape } = opts.current;
       const path = window.location.pathname;
-      if (allowPath && !allowPath(path)) {
-        onEscape?.();
+      if (allowPath) {
+        // Section with real pages (admin): Back moves between them normally,
+        // and only an attempt to leave the section is bounced back in.
+        if (!allowPath(path)) onEscape?.();
         return;
       }
+      // Single-page flow (registration): Back never leaves; caller steps back.
       arm();
       onBack?.();
     };

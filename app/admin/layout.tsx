@@ -23,6 +23,8 @@ function istTime(): string {
   }).format(new Date());
 }
 
+const SUPER_ONLY_PATHS = ['/admin/staff', '/admin/audit', '/admin/coupons'];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -41,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (pathname?.startsWith('/admin')) lastAdminPath.current = pathname;
   }, [pathname]);
   useBackGuard({
-    allowPath: (path) => path.startsWith('/admin'),
+    allowPath: (path) => path.startsWith('/admin') && path !== '/admin/login',
     onEscape: () => router.replace(lastAdminPath.current || '/admin'),
   });
 
@@ -57,24 +59,44 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    fetch('/api/v1/admin/auth/me')
-      .then((res) => {
-        if (!res.ok) {
-          window.location.replace('/admin/login');
-          return null;
-        }
-        return res.json();
-      })
+    const here = window.location.pathname;
+    const toLogin = () => window.location.replace(`/admin/login?next=${encodeURIComponent(here)}`);
+
+    fetch('/api/v1/admin/auth/me', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data?.admin) {
-          setAdmin(data.admin);
-        } else {
-          window.location.replace('/admin/login');
+        const a = data?.admin as AdminUser | undefined;
+        if (!a) return toLogin();
+        // Front desk only registers members: never show the admin area.
+        if (a.role === 'FRONT_DESK') return window.location.replace('/register');
+        // Staff accounts + activity log are Super Admin only.
+        if (a.role !== 'SUPER_ADMIN' && SUPER_ONLY_PATHS.some((p) => here.startsWith(p))) {
+          router.replace('/admin');
         }
+        setAdmin(a);
       })
-      .catch(() => window.location.replace('/admin/login'))
+      .catch(toLogin)
       .finally(() => setLoading(false));
   }, [pathname, isLoginPage]);
+
+  // Session expired in another tab / after 8h: send back to sign-in
+  useEffect(() => {
+    if (isLoginPage) return;
+    const check = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetch('/api/v1/admin/auth/me', { cache: 'no-store' }).then((r) => {
+        if (r.status === 401) {
+          window.location.replace(`/admin/login?next=${encodeURIComponent(window.location.pathname)}`);
+        }
+      }).catch(() => null);
+    };
+    document.addEventListener('visibilitychange', check);
+    const t = setInterval(check, 120000);
+    return () => {
+      document.removeEventListener('visibilitychange', check);
+      clearInterval(t);
+    };
+  }, [isLoginPage]);
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -82,8 +104,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [pathname]);
 
   const handleLogout = async () => {
-    await fetch('/api/v1/admin/auth/logout', { method: 'POST' });
-    window.location.href = '/admin/login';
+    await fetch('/api/v1/admin/auth/logout', { method: 'POST' }).catch(() => null);
+    window.location.replace('/admin/login');
   };
 
   if (isLoginPage) {
@@ -93,9 +115,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-xs text-[#0F172A] font-bold">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A] animate-ping" />
-          <span>Authenticating Vyomi Admin Portal...</span>
+        <div className="flex items-center gap-3 text-sm text-[#64748B]">
+          <span className="w-2 h-2 rounded-full bg-[#1E3A8A] animate-pulse" />
+          <span>Loading…</span>
         </div>
       </div>
     );
@@ -125,15 +147,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  const isSuper = admin.role === 'SUPER_ADMIN';
   const navLinks = [
-    { label: 'Dashboard', href: '/admin', icon: '📊' },
-    { label: 'Registrations', href: '/admin/registrations', icon: '📋' },
-    { label: 'Payments', href: '/admin/payments', icon: '💳' },
-    { label: 'Packages', href: '/admin/packages', icon: '🏷️' },
-    { label: 'Coupons', href: '/admin/coupons', icon: '🎟️' },
-    { label: 'Staff Accounts', href: '/admin/staff', icon: '👥' },
-    { label: 'Audit Log', href: '/admin/audit', icon: '📜' },
+    { label: 'Dashboard', href: '/admin', icon: 'M3 12l9-8 9 8M5 10v10h14V10' },
+    { label: 'Members', href: '/admin/registrations', icon: 'M16 19v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1M9.5 10a3 3 0 100-6 3 3 0 000 6M21 19v-1a4 4 0 00-3-3.87M16 4.13a3 3 0 010 5.74' },
+    { label: 'Payments', href: '/admin/payments', icon: 'M3 7h18v10H3zM3 11h18' },
+    { label: 'Plans', href: '/admin/packages', icon: 'M20 12l-8 8-9-9V3h8l9 9zM7.5 7.5h.01' },
+    ...(isSuper
+      ? [
+          { label: 'Staff', href: '/admin/staff', icon: 'M12 11a4 4 0 100-8 4 4 0 000 8M4 21v-1a6 6 0 0112 0v1M18 8v6M21 11h-6' },
+          { label: 'Activity log', href: '/admin/audit', icon: 'M12 8v4l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0' },
+        ]
+      : []),
   ];
+  const isActive = (href: string) =>
+    href === '/admin' ? pathname === '/admin' : pathname === href || pathname.startsWith(href + '/');
+  const roleLabel = admin.role === 'SUPER_ADMIN' ? 'Super Admin' : admin.role === 'MANAGER' ? 'Manager' : 'Front desk';
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans flex flex-col antialiased">
@@ -181,24 +210,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Navigation Links */}
           <nav className="p-3 space-y-1">
             {navLinks.map((item) => {
-              const active = pathname === item.href;
+              const active = isActive(item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
                     active
-                      ? 'bg-[#F5F8FF] text-[#1E3A8A] border border-[#C7D4F5] shadow-sm font-extrabold'
-                      : 'text-[#334155] font-semibold hover:text-[#0F172A] hover:bg-[#F8FAFC]'
+                      ? 'bg-[#EEF2FF] text-[#1E3A8A] font-medium'
+                      : 'text-[#475569] hover:text-[#0F172A] hover:bg-[#F4F6FB]'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-sm">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </div>
-                  {active && (
-                    <span className="w-1.5 h-3.5 rounded-full bg-[#1E3A8A]" />
-                  )}
+                  <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={item.icon} /></svg>
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -209,12 +233,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-3 border-t border-[#E2E8F0] bg-white">
           <div className="p-2.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] mb-2 flex items-center justify-between text-xs">
             <div className="truncate pr-2">
-              <span className="font-extrabold text-[#0F172A] block truncate">
+              <span className="font-medium text-sm text-[#0F172A] block truncate">
                 {admin?.name || 'Administrator'}
               </span>
-              <span className="text-[11px] uppercase tracking-wider text-[#1E3A8A] font-extrabold">
-                {admin?.role || 'SUPER_ADMIN'}
-              </span>
+              <span className="text-xs text-[#64748B]">{roleLabel}</span>
             </div>
             <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
           </div>
@@ -222,17 +244,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-2">
             <Link
               href="/register"
-              target="_blank"
-              className="w-1/2 py-1.5 text-center text-[11px] font-bold bg-[#F1F5F9] border border-[#CBD5E1] hover:bg-[#E2E8F0] text-[#0F172A] rounded-lg transition"
+              className="flex-1 h-9 inline-flex items-center justify-center text-xs font-medium bg-white border border-[#E2E8F0] hover:border-[#1E3A8A] text-[#1E3A8A] rounded-lg transition"
             >
-              Member Intake ↗
+              Register member
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="w-1/2 py-1.5 text-center text-[11px] font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition"
+              className="flex-1 h-9 inline-flex items-center justify-center text-xs font-medium text-red-700 bg-white hover:bg-red-50 border border-red-200 rounded-lg transition"
             >
-              Sign Out
+              Log out
             </button>
           </div>
         </div>
@@ -253,8 +274,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               ☰
             </button>
 
-            <span className="text-xs uppercase tracking-wider font-extrabold text-[#0F172A]">
-              {navLinks.find((l) => l.href === pathname)?.label || 'Administration'}
+            <span className="text-sm font-semibold text-[#0F172A]">
+              {pathname === '/admin/registrations/new'
+                ? 'New walk-in'
+                : navLinks.find((l) => isActive(l.href))?.label || 'Admin'}
             </span>
             <span className="hidden sm:inline text-[#94A3B8]">/</span>
             <span className="hidden sm:inline text-xs font-semibold text-[#334155]">
@@ -274,8 +297,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="bg-[#1E3A8A] hover:bg-[#172F73] text-white text-xs font-bold py-1.5 px-3 rounded-lg transition flex items-center gap-1.5 shadow-sm"
             >
               <span>+</span>
-              <span className="hidden xs:inline">Walk-in Reg</span>
-              <span className="xs:hidden">Reg</span>
+              <span>New walk-in</span>
             </Link>
           </div>
         </header>
@@ -306,7 +328,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           }`}
         >
           <span className="text-base">📋</span>
-          <span>Registry</span>
+          <span>Members</span>
         </Link>
         <Link
           href="/admin/registrations/new"
