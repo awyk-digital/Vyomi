@@ -23,7 +23,7 @@ interface RegistrationItem {
   startDate: string;
   endDate: string | null;
   createdAt: string;
-  client?: { fullName: string; phone: string; email: string; memberCode: string | null };
+  client?: { fullName: string; phone: string; email: string; memberCode: string | null; photoUrl?: string | null };
   package?: { name: string; durationDays: number };
   payment?: { method: string; status: string };
 }
@@ -177,8 +177,23 @@ function MembersInner() {
                 {items.map((r) => (
                   <tr key={r.id} className="hover:bg-[#F8FAFE] transition-colors">
                     <td className="py-3 pl-5 pr-3">
-                      <span className="block font-medium text-[#0F172A] truncate">{r.client?.fullName || 'Member'}</span>
-                      <span className="block text-xs text-[#64748B] truncate">{r.client?.memberCode || r.reference} · +91 {r.client?.phone}</span>
+                      <div className="flex items-center gap-3">
+                        {r.client?.photoUrl ? (
+                          <img
+                            src={r.client.photoUrl}
+                            alt={r.client.fullName}
+                            className="w-9 h-9 rounded-xl object-cover ring-1 ring-[#CBD5E1] flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-xl bg-[#EEF2FF] text-[#1E3A8A] text-xs font-semibold flex items-center justify-center flex-shrink-0 border border-[#C7D4F5]">
+                            {r.client?.fullName ? r.client.fullName.charAt(0).toUpperCase() : 'M'}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <span className="block font-medium text-[#0F172A] truncate">{r.client?.fullName || 'Member'}</span>
+                          <span className="block text-xs text-[#64748B] truncate">{r.client?.memberCode || r.reference} · +91 {r.client?.phone}</span>
+                        </div>
+                      </div>
                     </td>
                     <td className="py-3 px-3 text-[#334155] truncate">{r.package?.name || '—'}</td>
                     <td className="py-3 px-3 font-medium text-[#0F172A]">{formatINR(r.totalPaise)}</td>

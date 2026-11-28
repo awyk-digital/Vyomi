@@ -153,6 +153,46 @@ export async function POST(req: Request) {
     const reference = `REG-${new Date().toISOString().replace(/\D/g, '').slice(0, 8)}-${refSuffix}`;
     const receiptNumber = receiptNumberFor(reference);
 
+    // 3b. Process Member Live Capture Photo if provided
+    let photoUrl: string | null = null;
+    const rawPhoto = body.photoBase64 || body.photo;
+    if (rawPhoto && typeof rawPhoto === 'string' && rawPhoto.startsWith('data:image')) {
+      try {
+        const cleanBase64 = rawPhoto.replace(/^data:image\/\w+;base64,/, '');
+        const photoBuffer = Buffer.from(cleanBase64, 'base64');
+        const photoFileName = `${memberCode}.jpg`;
+
+        let { error: uploadError } = await supabaseAdmin.storage
+          .from('member-photos')
+          .upload(photoFileName, photoBuffer, {
+            contentType: 'image/jpeg',
+            upsert: true,
+          });
+
+        if (uploadError && (uploadError as { message?: string }).message?.includes('not found')) {
+          await supabaseAdmin.storage.createBucket('member-photos', { public: true });
+          const retry = await supabaseAdmin.storage
+            .from('member-photos')
+            .upload(photoFileName, photoBuffer, {
+              contentType: 'image/jpeg',
+              upsert: true,
+            });
+          uploadError = retry.error;
+        }
+
+        if (!uploadError) {
+          const { data: pubData } = supabaseAdmin.storage
+            .from('member-photos')
+            .getPublicUrl(photoFileName);
+          photoUrl = pubData?.publicUrl || null;
+        } else {
+          console.warn('Supabase member photo upload failed:', uploadError);
+        }
+      } catch (photoErr) {
+        console.warn('Member photo processing error:', photoErr);
+      }
+    }
+
     // End Date (365 days from startDate)
     const startObj = new Date(startDate);
     const endObj = new Date(startObj);
@@ -197,6 +237,13 @@ export async function POST(req: Request) {
 
     // 5. Insert Registration in Supabase
     let registrationId: string | null = null;
+    const finalNotes = [
+      priceNote,
+      photoUrl ? `[PHOTO_URL]: ${photoUrl}` : null,
+      fitnessGoal ? `Goal: ${fitnessGoal}` : null,
+    ]
+      .filter(Boolean)
+      .join(' | ') || null;
 
     if (clientId) {
       try {
@@ -212,7 +259,7 @@ export async function POST(req: Request) {
             preferred_slot: slot,
             start_date: startDate,
             end_date: endDate,
-            notes: priceNote || null,
+            notes: finalNotes,
           })
           .select('id')
           .single();
@@ -261,6 +308,7 @@ export async function POST(req: Request) {
             paymentMethod: isCash ? 'CASH' : 'UPI',
             paymentStatus: payStatus,
             utrNumber: utr,
+            photoUrl: photoUrl || null,
           },
           is_emailed: false,
         });
@@ -333,7 +381,7 @@ export async function POST(req: Request) {
         dateOfBirth: startDate,
         gender,
         address: 'Vijayawada',
-        photoUrl: null,
+        photoUrl: photoUrl || null,
         idProofType: null,
         idProofNumber: null,
         fitnessGoal,
@@ -367,13 +415,14 @@ export async function POST(req: Request) {
       action: 'MEMBER_REGISTERED',
       entityType: 'REGISTRATION',
       entityId: reference,
-      details: { member: fullName, plan: pkg.name, amountInr, planPriceInr, payment: isCash ? 'CASH' : 'UPI' },
+      details: { member: fullName, plan: pkg.name, amountInr, planPriceInr, payment: isCash ? 'CASH' : 'UPI', hasPhoto: !!photoUrl },
     });
 
     return NextResponse.json({
       success: true,
       reference,
       memberCode,
+      photoUrl,
       status: regStatus,
       receiptNumber,
       client: {
@@ -382,6 +431,7 @@ export async function POST(req: Request) {
         email,
         memberCode,
         fitnessGoal,
+        photoUrl,
       },
       package: {
         id: pkg.id,

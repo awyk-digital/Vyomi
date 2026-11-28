@@ -82,6 +82,7 @@ export async function GET(req: Request) {
 
         const amountNum = Number(row.amount_inr || 0);
         const rawMethod = paymentData?.method || (row.status === 'PENDING_CASH_COLLECTION' ? 'CASH' : 'UPI');
+        const photoUrl = row.notes?.match(/\[PHOTO_URL\]:\s*([^\s|]+)/)?.[1] || null;
 
         return {
           id: row.id,
@@ -98,6 +99,7 @@ export async function GET(req: Request) {
             email: clientData?.email || '',
             memberCode: clientData?.member_code || null,
             fitnessGoal,
+            photoUrl,
           },
           package: {
             name: packageData?.name || row.package_name || 'VIP Membership',

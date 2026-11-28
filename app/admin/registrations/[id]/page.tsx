@@ -22,7 +22,7 @@ interface RegistrationDetail {
   preferredSlot: string | null;
   notes: string | null;
   createdAt: string;
-  client?: { id: string; fullName: string; phone: string; email: string; gender?: string; memberCode: string | null; fitnessGoal?: string };
+  client?: { id: string; fullName: string; phone: string; email: string; gender?: string; memberCode: string | null; fitnessGoal?: string; photoUrl?: string | null };
   package?: { id: string; name: string; durationDays: number };
   payment?: { method: string; status: string; paidAt: string | null };
 }
@@ -208,7 +208,35 @@ export default function RegistrationDetailPage({ params }: { params: Promise<{ i
 
       <div className="grid md:grid-cols-2 gap-4">
         <section className="rounded-2xl bg-white ring-1 ring-[#E3E8F2] p-5">
-          <h2 className="text-sm font-semibold text-[#0F172A] mb-4">Member</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-[#0F172A]">Member Profile</h2>
+            {reg.client?.photoUrl && (
+              <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                ✓ Photo on record
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3.5 mb-4 pb-4 border-b border-[#F1F5F9]">
+            {reg.client?.photoUrl ? (
+              <img
+                src={reg.client.photoUrl}
+                alt={reg.client.fullName}
+                className="w-14 h-14 rounded-xl object-cover ring-2 ring-[#1E3A8A] border border-[#CBD5E1] shadow-xs flex-shrink-0"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-xl bg-[#EEF2FF] border border-[#C7D4F5] flex flex-col items-center justify-center text-[#1E3A8A] flex-shrink-0">
+                <svg viewBox="0 0 20 20" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-7 9a7 7 0 1 1 14 0H3z" />
+                </svg>
+                <span className="text-[8px] font-bold mt-0.5 uppercase tracking-wide">No Photo</span>
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base font-semibold text-[#0F172A] truncate">{reg.client?.fullName}</h3>
+              <p className="text-xs font-mono font-medium text-[#1E3A8A] mt-0.5">{reg.client?.memberCode || 'Member'}</p>
+              <p className="text-xs text-[#64748B] mt-0.5 truncate">{reg.client?.fitnessGoal || 'General Fitness & Conditioning'}</p>
+            </div>
+          </div>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
             <Field label="Phone" value={reg.client?.phone ? `+91 ${reg.client.phone}` : undefined} />
             <Field label="Email" value={reg.client?.email} />

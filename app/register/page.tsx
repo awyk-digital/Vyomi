@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -163,7 +163,7 @@ function RegisterContent() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('Prefer not to say');
-  const [preferredSlot, setPreferredSlot] = useState(TIME_SLOTS[0]);
+  const [preferredSlot] = useState('All Hours Access');
   const [startDate, setStartDate] = useState(
     () => new Date().toISOString().split('T')[0]
   );
@@ -192,6 +192,18 @@ function RegisterContent() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState('');
 
+  // Member Photo State & Camera (Multi-device, USB Webcam & Tablet/Phone Flip)
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user');
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+  const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const currentStreamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   // Confirmed Registration Details
   const [confirmationData, setConfirmationData] = useState<{
     reference: string;
@@ -209,6 +221,7 @@ function RegisterContent() {
     paymentMethod: 'UPI' | 'CASH';
     paymentStatus: string;
     utrNumber?: string;
+    photoUrl?: string | null;
   } | null>(null);
 
   const [emailSending, setEmailSending] = useState(false);
@@ -282,6 +295,302 @@ function RegisterContent() {
       generateQrDataUrl(upiUri).then(setQrDataUrl);
     }
   }, [currentStep, paymentOption, selectedPackage, chargePaise]);
+
+  // Member Live Camera Capture, Multi-Device (USB Webcams, USB Phones & Mobile/Tablet Flip)
+  const detectCameras = async () => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return [];
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter((d) => d.kind === 'videoinput');
+      setAvailableCameras(videoDevices);
+      return videoDevices;
+    } catch (e) {
+      console.warn('Detect cameras error:', e);
+      return [];
+    }
+  };
+
+  const startCameraWith = async (deviceId?: string, facing?: 'user' | 'environment') => {
+    setCameraError(null);
+    setIsSwitchingCamera(true);
+
+    // Stop existing camera stream before requesting next one so Windows UVC driver releases hardware lock
+    if (currentStreamRef.current) {
+      try {
+        currentStreamRef.current.getTracks().forEach((t) => {
+          try { t.stop(); } catch {}
+        });
+      } catch {}
+      currentStreamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    // Windows UVC driver release delay (120ms avoids NotReadableError / Device in use)
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    const targetFacing = facing || cameraFacingMode;
+    const targetDeviceId = deviceId || selectedCameraId;
+
+    try {
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraError('Camera access is not supported on this browser. Please use the Upload button.');
+        setIsCameraOpen(false);
+        setIsSwitchingCamera(false);
+        return;
+      }
+
+      let stream: MediaStream | null = null;
+
+      // 1. If user chose a specific camera (USB webcam / phone / external)
+      if (targetDeviceId) {
+        // Attempt 1A: Exact deviceId with standard 720p/480p ideal resolution
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              deviceId: { exact: targetDeviceId },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          });
+        } catch (e1) {
+          console.warn('Exact deviceId constraint failed, attempting loose deviceId:', e1);
+          // Attempt 1B: deviceId without resolution constraints (maximum hardware compatibility for phones/UVC)
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                deviceId: targetDeviceId,
+              },
+              audio: false,
+            });
+          } catch (e2) {
+            console.warn('Loose deviceId constraint failed:', e2);
+            // Attempt 1C: deviceId as ideal
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                  deviceId: { ideal: targetDeviceId },
+                },
+                audio: false,
+              });
+            } catch (e3) {
+              console.warn('Ideal deviceId failed:', e3);
+              stream = null;
+            }
+          }
+        }
+
+        // If targetDeviceId was specifically chosen and failed
+        if (!stream) {
+          const chosenCam = availableCameras.find((c) => c.deviceId === targetDeviceId);
+          const camLabel = chosenCam?.label || 'selected USB webcam';
+          setCameraError(
+            `Could not start video stream from "${camLabel}". Please check the USB connection and ensure no other program (e.g. Windows Camera or Zoom) is using it.`
+          );
+          setIsSwitchingCamera(false);
+          return;
+        }
+      }
+
+      // 2. If no specific device requested (first time camera start)
+      if (!stream) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: targetFacing },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          });
+        } catch {
+          // 3. Universal fallback: accepts any video feed without constraints
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        }
+      }
+
+      currentStreamRef.current = stream;
+      setIsCameraOpen(true);
+
+      // Connect stream to video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        try {
+          await videoRef.current.play();
+        } catch (playErr) {
+          console.warn('Video play error:', playErr);
+        }
+      }
+
+      // Read active track metadata
+      const activeTrack = stream.getVideoTracks()[0];
+      if (activeTrack) {
+        activeTrack.onended = () => {
+          setCameraError('Webcam disconnected. Please check USB cable.');
+        };
+
+        const activeSettings = activeTrack.getSettings ? activeTrack.getSettings() : null;
+        if (activeSettings?.deviceId) {
+          setSelectedCameraId(activeSettings.deviceId);
+        } else if (targetDeviceId) {
+          setSelectedCameraId(targetDeviceId);
+        }
+
+        const trackLabel = activeTrack.label || '';
+        if (/back|rear|environment/i.test(trackLabel)) {
+          setCameraFacingMode('environment');
+        } else if (/front|user/i.test(trackLabel)) {
+          setCameraFacingMode('user');
+        } else {
+          // USB webcams / desk cams: un-mirrored by default so text/clothing is natural
+          setCameraFacingMode('environment');
+        }
+      }
+
+      // Refresh devices list so actual names appear now that permission is active
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter((d) => d.kind === 'videoinput');
+        setAvailableCameras(videoDevices);
+      } catch {}
+
+    } catch (err: unknown) {
+      const errorObj = err as { name?: string; message?: string };
+      console.warn('Camera access error:', err);
+      if (errorObj?.name === 'NotAllowedError' || errorObj?.name === 'PermissionDeniedError') {
+        setCameraError('Camera permission was denied. Please allow camera permissions in your browser or click Upload File.');
+      } else if (errorObj?.name === 'NotReadableError' || errorObj?.name === 'TrackStartError') {
+        setCameraError('Webcam is busy or in use by another program (e.g. Windows Camera or Zoom). Close other programs and try again.');
+      } else {
+        setCameraError('Could not start webcam. Please ensure your USB webcam is plugged in, or click Upload File.');
+      }
+      setIsCameraOpen(false);
+    } finally {
+      setIsSwitchingCamera(false);
+    }
+  };
+
+  const startCamera = async () => {
+    const devices = await detectCameras();
+    const initialId = selectedCameraId || (devices.length > 0 ? devices[0].deviceId : undefined);
+    await startCameraWith(initialId, cameraFacingMode);
+  };
+
+  const switchCamera = async () => {
+    if (availableCameras.length > 1) {
+      const currentIndex = availableCameras.findIndex((c) => c.deviceId === selectedCameraId);
+      const nextIndex = (currentIndex + 1) % availableCameras.length;
+      const nextCam = availableCameras[nextIndex];
+      setSelectedCameraId(nextCam.deviceId);
+      const isBack = /back|rear|environment/i.test(nextCam.label);
+      const newFacing = isBack ? 'environment' : 'user';
+      setCameraFacingMode(newFacing);
+      await startCameraWith(nextCam.deviceId, newFacing);
+    } else {
+      const newFacing = cameraFacingMode === 'user' ? 'environment' : 'user';
+      setCameraFacingMode(newFacing);
+      await startCameraWith(undefined, newFacing);
+    }
+  };
+
+  const stopCamera = () => {
+    if (currentStreamRef.current) {
+      try {
+        currentStreamRef.current.getTracks().forEach((track) => {
+          try { track.stop(); } catch {}
+        });
+      } catch {}
+      currentStreamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraOpen(false);
+    setIsSwitchingCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    try {
+      const video = videoRef.current;
+      const canvas = document.createElement('canvas');
+      const vWidth = video.videoWidth || 640;
+      const vHeight = video.videoHeight || 480;
+      const size = Math.min(vWidth, vHeight);
+      canvas.width = 480;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Only mirror if using front/user-facing camera; keep natural for back camera or USB camera
+        if (cameraFacingMode === 'user') {
+          ctx.translate(480, 0);
+          ctx.scale(-1, 1);
+        }
+        const sx = (vWidth - size) / 2;
+        const sy = (vHeight - size) / 2;
+        ctx.drawImage(video, sx, sy, size, size, 0, 0, 480, 480);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        setPhotoBase64(dataUrl);
+      }
+    } catch (e) {
+      console.warn('Photo capture error:', e);
+    } finally {
+      stopCamera();
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setCameraError('Please select a valid image file (JPEG or PNG).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const size = Math.min(img.width, img.height);
+        canvas.width = 480;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          const sx = (img.width - size) / 2;
+          const sy = (img.height - size) / 2;
+          ctx.drawImage(img, sx, sy, size, size, 0, 0, 480, 480);
+          setPhotoBase64(canvas.toDataURL('image/jpeg', 0.85));
+          setCameraError(null);
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices) return;
+    const handleDeviceChange = async () => {
+      try {
+        const refreshed = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = refreshed.filter((d) => d.kind === 'videoinput');
+        setAvailableCameras(videoDevices);
+      } catch (e) {
+        console.warn('Device change error:', e);
+      }
+    };
+    navigator.mediaDevices.addEventListener?.('devicechange', handleDeviceChange);
+    return () => {
+      navigator.mediaDevices.removeEventListener?.('devicechange', handleDeviceChange);
+      stopCamera();
+    };
+  }, []);
 
   // Phone OTP: send a 6-digit code to the member's mobile (only when switched on)
   const handleSendPhoneOtp = async () => {
@@ -409,6 +718,7 @@ function RegisterContent() {
           fitnessGoal: 'Vyomi Annual Membership',
           startDate,
           gender,
+          photoBase64: photoBase64 || undefined,
           paymentMethod: paymentOption,
           utrNumber: paymentOption === 'UPI' ? utrNumber.trim() : undefined,
           customAmountInr: isCustomPrice ? customRupees : undefined,
@@ -439,6 +749,7 @@ function RegisterContent() {
         paymentMethod: paymentOption,
         paymentStatus: paymentOption === 'UPI' ? 'PAID' : 'PENDING_CASH_COLLECTION',
         utrNumber: paymentOption === 'UPI' ? utrNumber.trim() : undefined,
+        photoUrl: data.photoUrl || photoBase64 || null,
       };
 
       setConfirmationData(conf);
@@ -973,37 +1284,250 @@ function RegisterContent() {
                 )}
               </div>
 
-              {/* Preferred Slot & Start Date Side-by-Side */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
-                    Preferred Time Slot <span className="text-red-600">*</span>
+              {/* Member Photo Capture (Live Webcam & Biometric ID) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[13px] font-medium text-[#334155]">
+                    Member Photo
+                    <span className="font-normal text-[#64748B]"> · biometric entry & ID card</span>
                   </label>
-                  <select
-                    value={preferredSlot}
-                    onChange={(e) => setPreferredSlot(e.target.value)}
-                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
-                  >
-                    {TIME_SLOTS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                  {photoBase64 && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.2 3L13 4.5" /></svg>
+                      Photo captured
+                    </span>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
-                    Start Date <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
-                  />
-                </div>
+                {isCameraOpen ? (
+                  <div className="rounded-xl border border-[#CBD5E1] bg-[#0F172A] p-3 text-center space-y-3">
+                    <div className="relative mx-auto w-44 h-44 sm:w-52 sm:h-52 rounded-xl overflow-hidden bg-black ring-2 ring-[#1E3A8A] shadow-inner">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className={`w-full h-full object-cover ${cameraFacingMode === 'user' ? 'transform -scale-x-100' : ''}`}
+                      />
+                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                        <div className="w-32 h-40 rounded-[50%] border-2 border-dashed border-white/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+                      </div>
+
+                      {/* Connecting / Switching Spinner */}
+                      {isSwitchingCamera && (
+                        <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-[2px] flex flex-col items-center justify-center p-3 text-center">
+                          <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mb-2" />
+                          <span className="text-xs text-white font-medium">Connecting camera...</span>
+                        </div>
+                      )}
+
+                      {/* Flip Camera button (for Tablets, Phones & Multi-Camera systems) */}
+                      <button
+                        type="button"
+                        disabled={isSwitchingCamera}
+                        onClick={switchCamera}
+                        title="Flip Camera (Front / Back / USB Webcam)"
+                        className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-medium text-white bg-black/60 hover:bg-black/80 backdrop-blur-xs border border-white/20 transition shadow-sm disabled:opacity-50"
+                      >
+                        <svg viewBox="0 0 20 20" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Flip</span>
+                      </button>
+
+                      {/* Active Camera Mode Tag */}
+                      <span className="absolute bottom-2 left-2 z-10 text-[10px] font-medium text-white/90 bg-black/60 px-2 py-0.5 rounded backdrop-blur-xs">
+                        {cameraFacingMode === 'user' ? 'Front camera' : 'Back / USB'}
+                      </span>
+                    </div>
+
+                    {/* Camera selector if multiple cameras are connected (e.g. USB webcam + built-in) */}
+                    {availableCameras.length > 1 && (
+                      <div className="flex items-center justify-center gap-1.5 text-xs text-[#94A3B8]">
+                        <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[#CBD5E1]" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <path d="M2.5 5.5h2l1-1.5h5l1 1.5h2a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z" />
+                        </svg>
+                        <select
+                          value={selectedCameraId}
+                          disabled={isSwitchingCamera}
+                          onChange={(e) => {
+                            const devId = e.target.value;
+                            setSelectedCameraId(devId);
+                            const cam = availableCameras.find((c) => c.deviceId === devId);
+                            const isBack = cam && /back|rear|environment/i.test(cam.label);
+                            const facing = isBack ? 'environment' : 'user';
+                            setCameraFacingMode(facing);
+                            startCameraWith(devId, facing);
+                          }}
+                          className="bg-[#1E293B] border border-white/20 text-[#E2E8F0] text-xs rounded-lg px-2.5 py-1 focus:outline-none max-w-[220px] truncate disabled:opacity-50"
+                        >
+                          {availableCameras.map((cam, idx) => (
+                            <option key={cam.deviceId || idx} value={cam.deviceId}>
+                              {cam.label || `Webcam ${idx + 1}`}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          disabled={isSwitchingCamera}
+                          onClick={async () => {
+                            const devs = await detectCameras();
+                            if (devs.length > 0) {
+                              setCameraError(null);
+                            }
+                          }}
+                          title="Re-scan connected USB webcams"
+                          className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[10px] font-medium text-slate-200 hover:text-white bg-white/10 hover:bg-white/20 transition disabled:opacity-50"
+                        >
+                          <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M2 8a6 6 0 1 1 10.2 4.2M14 8h-4m0 0V4" />
+                          </svg>
+                          <span>Re-scan</span>
+                        </button>
+                      </div>
+                    )}
+
+                    <p className="text-[11px] text-[#94A3B8]">
+                      Center member&apos;s face in the oval frame and click Snap Photo.
+                    </p>
+
+                    <div className="flex items-center justify-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={isSwitchingCamera}
+                        onClick={capturePhoto}
+                        className="inline-flex items-center gap-2 h-9 px-4 rounded-xl text-xs sm:text-sm font-medium text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-[0_4px_12px_-4px_rgba(30,58,138,0.65)] active:translate-y-px transition disabled:opacity-50"
+                      >
+                        <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="10" cy="10" r="6" />
+                          <circle cx="10" cy="10" r="2" fill="currentColor" />
+                        </svg>
+                        <span>Snap Photo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={stopCamera}
+                        className="h-9 px-3.5 rounded-xl text-xs sm:text-sm font-medium text-[#E2E8F0] hover:text-white bg-white/10 hover:bg-white/20 transition"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : photoBase64 ? (
+                  <div className="flex items-center gap-3.5 p-3 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC]">
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden ring-2 ring-[#1E3A8A] border border-[#CBD5E1] flex-shrink-0 bg-white">
+                      <img
+                        src={photoBase64}
+                        alt="Captured member"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-[13px] font-medium text-[#0F172A] truncate">
+                        {fullName ? `${fullName}'s Photo` : 'Member Profile Photo'}
+                      </p>
+                      <p className="text-[11px] text-[#64748B] mt-0.5">
+                        Saved for biometric verification & membership profile.
+                      </p>
+                      <div className="flex items-center gap-3 mt-2">
+                        <button
+                          type="button"
+                          onClick={startCamera}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#1E3A8A] hover:underline"
+                        >
+                          <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M2 8a6 6 0 1 1 10.2 4.2M14 8h-4m0 0V4" />
+                          </svg>
+                          <span>Retake photo</span>
+                        </button>
+                        <span className="text-[#CBD5E1]">·</span>
+                        <button
+                          type="button"
+                          onClick={() => setPhotoBase64(null)}
+                          className="text-xs font-medium text-red-600 hover:text-red-700 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#EEF2FF] text-[#1E3A8A] flex items-center justify-center flex-shrink-0 border border-[#C7D4F5]">
+                        <svg viewBox="0 0 20 20" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 7h2.5l1.5-2h4l1.5 2H16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
+                          <circle cx="10" cy="12" r="3" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs sm:text-[13px] font-medium text-[#0F172A]">
+                          Live Member Photo Capture
+                        </p>
+                        <p className="text-[11px] text-[#64748B]">
+                          Supports USB webcams & built-in cameras · Instant KYC snap
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                      <button
+                        type="button"
+                        onClick={startCamera}
+                        className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-medium text-white bg-gradient-to-b from-[#2A4FC4] to-[#1E3A8A] hover:to-[#172F73] shadow-xs active:translate-y-px transition whitespace-nowrap"
+                      >
+                        <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="8" cy="8" r="3" />
+                          <path d="M2.5 5.5h2l1-1.5h5l1 1.5h2a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z" />
+                        </svg>
+                        <span>Open Camera</span>
+                      </button>
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 h-8 px-3 rounded-lg text-xs font-medium text-[#334155] bg-white border border-[#CBD5E1] hover:border-[#1E3A8A] hover:bg-[#F5F8FF] transition whitespace-nowrap"
+                      >
+                        <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2 11l3-3 3 3 5-5 1 1" />
+                          <rect x="2" y="2" width="12" height="12" rx="2" />
+                        </svg>
+                        <span>Upload File</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {cameraError && (
+                  <div className="text-[11px] text-amber-900 bg-amber-50 border border-amber-300 rounded-lg p-2.5 mt-2 font-medium whitespace-pre-line leading-relaxed shadow-xs flex items-start gap-2">
+                    <svg viewBox="0 0 16 16" className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="8" cy="8" r="7" />
+                      <path d="M8 4.5v4m0 3h.01" />
+                    </svg>
+                    <div className="flex-1">{cameraError}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Start Date */}
+              <div>
+                <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
+                  Start Date <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
+                />
               </div>
 
               {/* Gender Preference & Terms Agreement */}
@@ -1087,7 +1611,12 @@ function RegisterContent() {
                   <span className="text-[11px] font-medium text-[#64748B] uppercase tracking-[0.14em]">
                     Card preview
                   </span>
-                  
+                  {photoBase64 && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      Photo attached
+                    </span>
+                  )}
                 </div>
                 <VipMembershipCard
                   clientName={fullName}
@@ -1325,10 +1854,26 @@ function RegisterContent() {
                   <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.2 3L13 4.5" /></svg>
                   {confirmationData.paymentMethod === 'UPI' ? 'Membership active' : 'Reserved · pay at front desk'}
                 </span>
-                <h2 className="text-2xl sm:text-[28px] font-semibold text-[#0F172A] mt-3 tracking-tight">
-                  Welcome to Vyomi, {String(confirmationData.fullName || '').split(' ')[0]}.
-                </h2>
-                <p className="text-sm text-[#64748B] mt-1.5 max-w-md mx-auto lg:mx-0">
+
+                <div className="flex items-center gap-3.5 mt-3 justify-center lg:justify-start">
+                  {(confirmationData.photoUrl || photoBase64) && (
+                    <img
+                      src={confirmationData.photoUrl || photoBase64 || ''}
+                      alt={confirmationData.fullName}
+                      className="w-14 h-14 rounded-2xl object-cover ring-2 ring-[#1E3A8A] border-2 border-white shadow-sm flex-shrink-0"
+                    />
+                  )}
+                  <div className="text-left">
+                    <h2 className="text-2xl sm:text-[28px] font-semibold text-[#0F172A] tracking-tight">
+                      Welcome to Vyomi, {String(confirmationData.fullName || '').split(' ')[0]}.
+                    </h2>
+                    <p className="text-xs font-mono font-medium text-[#1E3A8A]">
+                      {confirmationData.memberCode}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-[#64748B] mt-2 max-w-md mx-auto lg:mx-0">
                   {confirmationData.paymentMethod === 'UPI'
                     ? 'Your membership is confirmed. Show your member ID at the front desk to collect your access band.'
                     : `Your spot is reserved. Pay ${formatINR(confirmationData.totalAmount * 100)} in cash at the front desk to activate it.`}
@@ -1342,7 +1887,8 @@ function RegisterContent() {
                   ['Amount', formatINR(confirmationData.totalAmount * 100), false],
                   ['Valid until', confirmationData.endDate || '1 year from start', false],
                   ['Phone', `+91 ${confirmationData.phone}`, false],
-                  ['Time slot', confirmationData.preferredSlot, false],
+                  ['Access', 'All Hours Access', false],
+                  ['Biometrics', (confirmationData.photoUrl || photoBase64) ? '✓ Photo on record' : 'Pending at front desk', false],
                 ].map(([label, value, mono]) => (
                   <div key={String(label)} className="min-w-0">
                     <dt className="text-[11px] text-[#64748B]">{label}</dt>
@@ -1382,6 +1928,8 @@ function RegisterContent() {
                   setFullName('');
                   setPhone('');
                   setEmail('');
+                  setPhotoBase64(null);
+                  stopCamera();
                   setEmailVerified(false);
                   setPhoneVerified(false);
                   setOtpSent(false);

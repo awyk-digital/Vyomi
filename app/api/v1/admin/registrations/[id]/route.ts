@@ -84,6 +84,7 @@ export async function GET(
           address: 'Patamata, Vijayawada',
           memberCode: clientData?.member_code,
           fitnessGoal: clientData?.fitness_goal || 'Luxury Wellness & Conditioning',
+          photoUrl: row.notes?.match(/\[PHOTO_URL\]:\s*([^\s|]+)/)?.[1] || null,
           medicalNotes: null,
           emergencyContactName: 'Self',
           emergencyContactPhone: clientData?.phone || '',

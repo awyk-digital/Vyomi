@@ -8,7 +8,7 @@
       "salt": "vyomi_luxury_salt_2026",
       "role": "SUPER_ADMIN",
       "isActive": true,
-      "lastLoginAt": "2026-11-27T04:48:06.688Z",
+      "lastLoginAt": "2026-11-28T09:23:28.705Z",
       "createdAt": "2026-11-24T07:33:30.009Z"
     },
     {
@@ -19,7 +19,7 @@
       "salt": "vyomi_luxury_salt_2026",
       "role": "MANAGER",
       "isActive": true,
-      "lastLoginAt": null,
+      "lastLoginAt": "2026-11-28T08:28:53.249Z",
       "createdAt": "2026-11-24T07:33:30.009Z"
     },
     {
@@ -30,7 +30,7 @@
       "salt": "vyomi_luxury_salt_2026",
       "role": "FRONT_DESK",
       "isActive": true,
-      "lastLoginAt": "2026-11-26T10:26:34.885Z",
+      "lastLoginAt": "2026-11-28T05:25:55.503Z",
       "createdAt": "2026-11-24T07:33:30.009Z"
     }
   ],
@@ -306,6 +306,86 @@
     }
   ],
   "auditLogs": [
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-super-01",
+      "details": {
+        "staffEmail": "admin@vyomi.com",
+        "assignedRole": "SUPER_ADMIN",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "28 Nov 2026, 2:53:28 pm",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-9bd1eeff",
+      "createdAt": "2026-11-28T09:23:28.712Z"
+    },
+    {
+      "adminId": "admin-super-01",
+      "adminName": "Vyomi Super Admin",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-super-01",
+      "details": {
+        "staffEmail": "admin@vyomi.com",
+        "assignedRole": "SUPER_ADMIN",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "28 Nov 2026, 2:19:07 pm",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-2704342e",
+      "createdAt": "2026-11-28T08:49:07.791Z"
+    },
+    {
+      "adminId": "admin-mgr-01",
+      "adminName": "Club Operations Manager",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-mgr-01",
+      "details": {
+        "staffEmail": "manager@vyomi.com",
+        "assignedRole": "MANAGER",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "28 Nov 2026, 1:58:53 pm",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-0b4b7e96",
+      "createdAt": "2026-11-28T08:28:53.251Z"
+    },
+    {
+      "adminId": "admin-mgr-01",
+      "adminName": "Club Operations Manager",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-mgr-01",
+      "details": {
+        "staffEmail": "manager@vyomi.com",
+        "assignedRole": "MANAGER",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "28 Nov 2026, 10:58:27 am",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-3cb59ed2",
+      "createdAt": "2026-11-28T05:28:27.307Z"
+    },
+    {
+      "adminId": "admin-front-01",
+      "adminName": "Front Desk Concierge",
+      "action": "STAFF_AUTHENTICATION",
+      "entityType": "SECURITY_ACCESS",
+      "entityId": "admin-front-01",
+      "details": {
+        "staffEmail": "frontdesk@vyomi.com",
+        "assignedRole": "FRONT_DESK",
+        "terminalIp": "::1",
+        "authenticatedAtIST": "28 Nov 2026, 10:55:55 am",
+        "sessionType": "SECURE_WEB_PORTAL"
+      },
+      "id": "aud-6b32e6fe",
+      "createdAt": "2026-11-28T05:25:55.522Z"
+    },
     {
       "adminId": "admin-super-01",
       "adminName": "Vyomi Super Admin",
