@@ -3,6 +3,7 @@ import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
 import { logActivity } from '@/lib/activity';
+import { signedPhotoUrls } from '@/lib/memberPhoto';
 
 export async function GET(
   _req: Request,
@@ -29,7 +30,8 @@ export async function GET(
       'amount_inr',
       'notes',
       'created_at',
-      'clients(id, full_name, phone, email, gender, member_code, fitness_goal, created_at)',
+      'photo_path',
+      'clients(id, full_name, phone, email, gender, member_code, fitness_goal, created_at, photo_path)',
       'packages(id, name, duration_days, price_inr)',
       'payments(id, method, status, utr_number, paid_at, amount_inr, created_at)'
     ].join(', ');
@@ -109,7 +111,9 @@ export async function GET(
         },
       };
 
-      return NextResponse.json({ registration: mappedReg });
+      const photoPath = row.photo_path || clientData?.photo_path || null;
+      const urls = await signedPhotoUrls([photoPath]);
+      return NextResponse.json({ registration: { ...mappedReg, photoUrl: photoPath ? urls[photoPath] || null : null } });
     }
   } catch (err) {
     console.warn('Supabase fetch failed, falling back to local DB:', err);

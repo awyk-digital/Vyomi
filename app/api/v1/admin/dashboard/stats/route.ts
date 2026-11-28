@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
+import { signedPhotoUrls } from '@/lib/memberPhoto';
 
 export async function GET() {
   const session = await getAdminSession(MANAGEMENT_ROLES);
@@ -17,6 +18,7 @@ export async function GET() {
         id,
         reference,
         status,
+        photo_path,
         amount_inr,
         preferred_slot,
         start_date,
@@ -26,7 +28,8 @@ export async function GET() {
           id,
           full_name,
           phone,
-          member_code
+          member_code,
+          photo_path
         ),
         packages (
           name,
@@ -112,6 +115,16 @@ export async function GET() {
           },
         };
       });
+
+      const urls = await signedPhotoUrls(
+        supaRegs.slice(0, 8).map((r: any) => r.photo_path || (Array.isArray(r.clients) ? r.clients[0] : r.clients)?.photo_path)
+      );
+      for (const item of recent as any[]) {
+        const raw: any = supaRegs.find((r: any) => r.id === item.id);
+        const c: any = raw ? (Array.isArray(raw.clients) ? raw.clients[0] : raw.clients) : null;
+        const path = raw?.photo_path || c?.photo_path;
+        item.photoUrl = path ? urls[path] || null : null;
+      }
 
       return NextResponse.json({
         stats: {

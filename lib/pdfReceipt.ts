@@ -174,10 +174,9 @@ export function generatePdfReceipt(data: ReceiptData): jsPDF {
   row(colR, y, 'Duration', `${data.durationDays} days`);
   y += 7;
   row(L, y, 'Mobile', `+91 ${data.phone}`);
-  row(colR, y, 'Time slot', (data.timeSlot || '').replace(/\s*\(.*\)\s*$/, ''));
+  row(colR, y, 'Valid', `${niceDate(data.startDate)} – ${niceDate(data.endDate)}`);
   y += 7;
   row(L, y, 'Email', data.email);
-  row(colR, y, 'Valid', `${niceDate(data.startDate)} – ${niceDate(data.endDate)}`);
 
   // ---------- Charges table ----------
   y += 14;

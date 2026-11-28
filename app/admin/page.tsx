@@ -12,6 +12,7 @@ import {
   useAutoRefresh,
   PageHeader,
   Toast,
+  MemberAvatar,
 } from '@/components/admin/ui';
 
 interface RecentReg {
@@ -20,6 +21,7 @@ interface RecentReg {
   totalPaise: number;
   status: string;
   createdAt: string;
+  photoUrl?: string | null;
   client?: { fullName: string; phone: string; memberCode: string | null };
   package?: { name: string; durationDays: number };
   payment?: { method: string; status: string };
@@ -159,6 +161,7 @@ export default function AdminDashboardPage() {
           <ul className="divide-y divide-[#EEF1F6]">
             {cashDue.map((r) => (
               <li key={r.id} className="px-5 py-3.5 flex flex-wrap items-center gap-x-6 gap-y-2">
+                <MemberAvatar url={r.photoUrl} name={r.client?.fullName} size={40} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-[#0F172A] truncate">{r.client?.fullName || 'Member'}</p>
                   <p className="text-xs text-[#64748B]">{r.package?.name} · {r.client?.memberCode || r.reference}</p>
@@ -214,10 +217,13 @@ export default function AdminDashboardPage() {
                 {stats.recent.map((r) => (
                   <tr key={r.id} className="hover:bg-[#F8FAFE] transition-colors">
                     <td className="py-3 pl-5 pr-3">
-                      <Link href={`/admin/registrations/${r.reference}`} className="block min-w-0 group">
-                        <span className="block font-medium text-[#0F172A] truncate group-hover:text-[#1E3A8A]">{r.client?.fullName || 'Member'}</span>
-                        <span className="block text-xs text-[#64748B] truncate">
-                          {r.client?.memberCode || r.reference} · +91 {r.client?.phone}
+                      <Link href={`/admin/registrations/${r.reference}`} className="flex items-center gap-3 min-w-0 group">
+                        <MemberAvatar url={r.photoUrl} name={r.client?.fullName} />
+                        <span className="min-w-0">
+                          <span className="block font-medium text-[#0F172A] truncate group-hover:text-[#1E3A8A]">{r.client?.fullName || 'Member'}</span>
+                          <span className="block text-xs text-[#64748B] truncate">
+                            {r.client?.memberCode || r.reference} · +91 {r.client?.phone}
+                          </span>
                         </span>
                       </Link>
                     </td>
@@ -236,6 +242,7 @@ export default function AdminDashboardPage() {
               {stats.recent.map((r) => (
                 <li key={r.id}>
                   <Link href={`/admin/registrations/${r.reference}`} className="px-4 py-3 flex items-center gap-3">
+                    <MemberAvatar url={r.photoUrl} name={r.client?.fullName} />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-[#0F172A] truncate">{r.client?.fullName || 'Member'}</p>
                       <p className="text-xs text-[#64748B] truncate">{r.package?.name} · {formatINR(r.totalPaise)} · {paymentLabel(r.payment?.method)}</p>

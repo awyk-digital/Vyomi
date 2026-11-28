@@ -22,6 +22,7 @@ interface RegistrationDetail {
   preferredSlot: string | null;
   notes: string | null;
   createdAt: string;
+  photoUrl?: string | null;
   client?: { id: string; fullName: string; phone: string; email: string; gender?: string; memberCode: string | null; fitnessGoal?: string };
   package?: { id: string; name: string; durationDays: number };
   payment?: { method: string; status: string; paidAt: string | null };
@@ -46,6 +47,7 @@ export default function RegistrationDetailPage({ params }: { params: Promise<{ i
   const [busy, setBusy] = useState<'' | 'paid' | 'cancel' | 'receipt'>('');
   const [role, setRole] = useState('');
   const [toast, setToast] = useState<{ msg: string; tone: 'ok' | 'error' } | null>(null);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   const load = useCallback(() => {
     fetch(`/api/v1/admin/registrations/${encodeURIComponent(id)}`, { cache: 'no-store' })
@@ -167,6 +169,23 @@ export default function RegistrationDetailPage({ params }: { params: Promise<{ i
       <Link href="/admin/registrations" className="text-sm text-[#64748B] hover:text-[#1E3A8A]">← Members</Link>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          {reg.photoUrl ? (
+            <button
+              type="button"
+              onClick={() => setPhotoOpen(true)}
+              className="shrink-0 rounded-2xl overflow-hidden ring-1 ring-[#E3E8F2] hover:ring-[#1E3A8A] transition"
+              aria-label="View photo larger"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={reg.photoUrl} alt={`Photo of ${reg.client?.fullName || 'member'}`} className="w-20 h-24 object-cover" />
+            </button>
+          ) : (
+            <div className="shrink-0 w-20 h-24 rounded-2xl bg-[#F4F6FB] ring-1 ring-[#E3E8F2] flex flex-col items-center justify-center text-[#94A3B8]">
+              <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a7 7 0 0114 0v1" /></svg>
+              <span className="text-[10px] mt-1">No photo</span>
+            </div>
+          )}
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-semibold tracking-tight text-[#0F172A]">{reg.client?.fullName || 'Member'}</h1>
@@ -175,6 +194,7 @@ export default function RegistrationDetailPage({ params }: { params: Promise<{ i
           <p className="text-sm text-[#64748B] mt-1">
             {reg.client?.memberCode || 'No member ID yet'} · Registered {formatDate(reg.createdAt)}
           </p>
+        </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {due && (
@@ -224,7 +244,6 @@ export default function RegistrationDetailPage({ params }: { params: Promise<{ i
             <Field label="Amount" value={formatINR(reg.totalPaise)} />
             <Field label="Starts" value={formatDate(reg.startDate)} />
             <Field label="Ends" value={formatDate(reg.endDate)} />
-            <Field label="Time slot" value={reg.preferredSlot} />
             <Field
               label="Payment"
               value={`${paymentLabel(reg.payment?.method)}${reg.payment?.paidAt ? ` · paid ${formatDate(reg.payment.paidAt)}` : ''}`}
@@ -273,6 +292,24 @@ export default function RegistrationDetailPage({ params }: { params: Promise<{ i
             {busy === 'cancel' ? 'Cancelling…' : 'Cancel membership'}
           </button>
         </section>
+      )}
+
+      {photoOpen && reg.photoUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Member photo"
+          onClick={() => setPhotoOpen(false)}
+          onKeyDown={(e) => e.key === 'Escape' && setPhotoOpen(false)}
+          tabIndex={-1}
+          className="fixed inset-0 z-[70] bg-[#0F172A]/80 backdrop-blur-sm flex items-center justify-center p-6"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={reg.photoUrl} alt={`Photo of ${reg.client?.fullName || 'member'}`} className="max-h-[85vh] max-w-full rounded-2xl shadow-2xl" />
+          <button type="button" onClick={() => setPhotoOpen(false)} className="absolute top-4 right-4 h-10 px-4 rounded-xl bg-white text-sm text-[#0F172A]">
+            Close
+          </button>
+        </div>
       )}
 
       {toast && <Toast message={toast.msg} tone={toast.tone} onClose={() => setToast(null)} />}

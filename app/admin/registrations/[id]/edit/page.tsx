@@ -4,13 +4,6 @@ import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-const SLOTS = [
-  '06:00 AM – 09:00 AM (Morning Prime)',
-  '09:00 AM – 12:00 PM (Midday)',
-  '12:00 PM – 04:00 PM (Afternoon Quiet)',
-  '04:00 PM – 08:00 PM (Evening Prime)',
-  '08:00 PM – 10:30 PM (Night Sessions)',
-];
 
 const input =
   'w-full h-11 rounded-xl ring-1 ring-[#E3E8F2] bg-white px-3.5 text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30';
@@ -31,7 +24,6 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
     phone: '',
     email: '',
     gender: 'Prefer not to say',
-    preferredSlot: SLOTS[0],
     startDate: '',
     endDate: '',
   });
@@ -48,7 +40,6 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
           phone: r.client?.phone || '',
           email: r.client?.email || '',
           gender: r.client?.gender || 'Prefer not to say',
-          preferredSlot: r.preferredSlot || SLOTS[0],
           startDate: r.startDate || '',
           endDate: r.endDate || '',
         });
@@ -125,12 +116,6 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
             <Label>Gender</Label>
             <select className={input} value={form.gender} onChange={set('gender')}>
               {['Male', 'Female', 'Prefer not to say'].map((g) => <option key={g}>{g}</option>)}
-            </select>
-          </div>
-          <div>
-            <Label>Time slot</Label>
-            <select className={input} value={form.preferredSlot} onChange={set('preferredSlot')}>
-              {[...new Set([form.preferredSlot, ...SLOTS])].map((s) => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>

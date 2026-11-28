@@ -138,3 +138,33 @@ export function Toast({ message, tone = 'ok', onClose }: { message: string; tone
     </div>
   );
 }
+
+/** Member photo thumbnail; falls back to initials when there is no photo. */
+export function MemberAvatar({ url, name, size = 36 }: { url?: string | null; name?: string; size?: number }) {
+  const initials = String(name || '?')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join('');
+  return url ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={name ? `Photo of ${name}` : 'Member photo'}
+      width={size}
+      height={size}
+      loading="lazy"
+      className="shrink-0 rounded-full object-cover ring-1 ring-[#E3E8F2] bg-[#F4F6FB]"
+      style={{ width: size, height: size }}
+    />
+  ) : (
+    <span
+      aria-hidden="true"
+      className="shrink-0 rounded-full bg-[#EEF2FF] text-[#1E3A8A] font-medium flex items-center justify-center ring-1 ring-[#C7D4F5]"
+      style={{ width: size, height: size, fontSize: Math.round(size * 0.36) }}
+    >
+      {initials}
+    </span>
+  );
+}

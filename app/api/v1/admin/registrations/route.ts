@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAdminSession, MANAGEMENT_ROLES } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
+import { signedPhotoUrls } from '@/lib/memberPhoto';
 
 export async function GET(req: Request) {
   const session = await getAdminSession(MANAGEMENT_ROLES);
@@ -27,7 +28,8 @@ export async function GET(req: Request) {
       'amount_inr',
       'notes',
       'created_at',
-      'clients(id, full_name, phone, email, member_code, fitness_goal)',
+      'photo_path',
+      'clients(id, full_name, phone, email, member_code, fitness_goal, photo_path)',
       'packages(name, duration_days)',
       'payments(id, method, status, amount_inr, utr_number, paid_at)'
     ].join(', ');
@@ -110,6 +112,16 @@ export async function GET(req: Request) {
           },
         };
       });
+
+      const urls = await signedPhotoUrls(
+        filtered.map((row: any) => row.photo_path || (Array.isArray(row.clients) ? row.clients[0] : row.clients)?.photo_path)
+      );
+      for (let i = 0; i < items.length; i++) {
+        const row: any = filtered[i];
+        const c: any = Array.isArray(row.clients) ? row.clients[0] : row.clients;
+        const path = row.photo_path || c?.photo_path;
+        (items[i] as any).photoUrl = path ? urls[path] || null : null;
+      }
 
       return NextResponse.json({
         items,

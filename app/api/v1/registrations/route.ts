@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
 import { logActivity } from '@/lib/activity';
 import { phoneOtpEnabled } from '@/lib/minimoth';
+import { parsePhotoDataUrl, uploadMemberPhoto } from '@/lib/memberPhoto';
 import { supabaseAdmin } from '@/lib/supabase';
 import { db } from '@/lib/db';
 import { sendMembershipReceiptEmail } from '@/lib/email';
@@ -39,7 +40,17 @@ export async function POST(req: Request) {
     const fullName = sanitize(rawFullName || client?.fullName || '');
     const phone = sanitize(rawPhone || client?.phone || '').replace(/\D/g, '');
     const email = sanitize(rawEmail || client?.email || '').toLowerCase();
-    const slot = sanitize(preferredSlot || client?.preferredSlot || '06:00 – 09:00 AM (Morning Prime)');
+    // Time slot is no longer collected; kept only if an older client still sends it
+    const slot = sanitize(preferredSlot || client?.preferredSlot || '') || null;
+
+    // Member photo (live capture at the front desk)
+    const photo = parsePhotoDataUrl(body.photoDataUrl);
+    if (photo && 'error' in photo) {
+      return NextResponse.json({ error: { code: 'INVALID_PHOTO', message: photo.error } }, { status: 400 });
+    }
+    if (!photo && staff.role === 'FRONT_DESK') {
+      return NextResponse.json({ error: { code: 'PHOTO_REQUIRED', message: "Please take the member's photo." } }, { status: 400 });
+    }
     const fitnessGoal = sanitize(rawFitnessGoal || body.fitnessGoal || client?.fitnessGoal || 'Weight Loss & Fat Reduction');
     const startDate = sanitize(rawStartDate || client?.startDate || new Date().toISOString().split('T')[0]);
     const utr = sanitize(rawUtr || body.utrNumber || body.transactionRef || '');
@@ -225,6 +236,19 @@ export async function POST(req: Request) {
       }
     }
 
+    // 5b. Store the photo privately and link it to the member + this registration
+    let photoSaved = false;
+    if (photo && !('error' in photo) && clientId && registrationId) {
+      const path = await uploadMemberPhoto(clientId, reference, photo);
+      if (path) {
+        photoSaved = true;
+        await Promise.all([
+          supabaseAdmin.from('registrations').update({ photo_path: path }).eq('id', registrationId),
+          supabaseAdmin.from('clients').update({ photo_path: path }).eq('id', clientId),
+        ]);
+      }
+    }
+
     // 6. Insert Payment in Supabase
     if (registrationId) {
       try {
@@ -254,7 +278,7 @@ export async function POST(req: Request) {
             clientName: fullName,
             packageName: pkg.name,
             amountInr: amountInr,
-            timeSlot: slot,
+            timeSlot: '',
             fitnessGoal,
             startDate,
             endDate,
@@ -278,7 +302,7 @@ export async function POST(req: Request) {
             email,
             packageName: pkg.name,
             durationDays: pkg.duration_days,
-            timeSlot: slot,
+            timeSlot: '',
             fitnessGoal,
             startDate,
             endDate,
@@ -299,7 +323,7 @@ export async function POST(req: Request) {
             reference,
             packageName: pkg.name,
             amountInr: amountInr,
-            timeSlot: slot,
+            timeSlot: '',
             fitnessGoal,
             startDate,
             endDate,
@@ -350,7 +374,7 @@ export async function POST(req: Request) {
         clientData,
         packageId: pkg.id,
         startDate,
-        preferredSlot: slot,
+        preferredSlot: slot || undefined,
         acceptedIp: '127.0.0.1',
         reference,
         paid: !isCash,
@@ -372,6 +396,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
+      photoSaved,
       reference,
       memberCode,
       status: regStatus,

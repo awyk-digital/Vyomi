@@ -8,6 +8,12 @@ import { SUPPLIED } from '@/config/assets';
 import { generateUpiString, generateQrDataUrl } from '@/lib/qr';
 import { generatePdfReceipt, receiptNumberFor } from '@/lib/pdfReceipt';
 import { useBackGuard } from '@/lib/useBackGuard';
+import dynamic from 'next/dynamic';
+
+const PhotoCapture = dynamic(() => import('@/components/PhotoCapture'), {
+  ssr: false,
+  loading: () => <div className="h-[130px] rounded-xl bg-[#F4F6FB]" />,
+});
 import {
   SilverTierBadge,
   GoldTierBadge,
@@ -79,13 +85,6 @@ const OFFICIAL_PACKAGES: PackageItem[] = [
   },
 ];
 
-const TIME_SLOTS = [
-  '06:00 AM – 09:00 AM (Morning Prime)',
-  '09:00 AM – 12:00 PM (Midday)',
-  '12:00 PM – 04:00 PM (Afternoon Quiet)',
-  '04:00 PM – 08:00 PM (Evening Prime)',
-  '08:00 PM – 10:30 PM (Night Sessions)',
-];
 
 function formatINR(paise: number): string {
   return new Intl.NumberFormat('en-IN', {
@@ -163,7 +162,7 @@ function RegisterContent() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('Prefer not to say');
-  const [preferredSlot, setPreferredSlot] = useState(TIME_SLOTS[0]);
+  const [photo, setPhoto] = useState<string | null>(null);
   const [startDate, setStartDate] = useState(
     () => new Date().toISOString().split('T')[0]
   );
@@ -201,7 +200,6 @@ function RegisterContent() {
     email: string;
     packageName: string;
     durationDays: number;
-    preferredSlot: string;
     startDate: string;
     endDate: string;
     totalAmount: number;
@@ -374,6 +372,10 @@ function RegisterContent() {
       errors.email = 'Please enter a valid email address. The receipt is sent there.';
     }
 
+    if (!photo) {
+      errors.photo = 'Please take the member\'s photo.';
+    }
+
     if (!acceptedTerms) {
       errors.terms = 'You must agree to the club membership terms.';
     }
@@ -405,7 +407,7 @@ function RegisterContent() {
           fullName: fullName.trim(),
           phone: phone.replace(/\D/g, ''),
           email: email.trim().toLowerCase(),
-          preferredSlot,
+          photoDataUrl: photo,
           fitnessGoal: 'Vyomi Annual Membership',
           startDate,
           gender,
@@ -431,7 +433,6 @@ function RegisterContent() {
         email: email.trim().toLowerCase(),
         packageName: selectedPackage.name,
         durationDays: selectedPackage.durationDays,
-        preferredSlot,
         startDate,
         endDate: data.endDate || new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
         totalAmount: chargePaise / 100,
@@ -477,7 +478,7 @@ function RegisterContent() {
       email: confirmationData.email,
       packageName: confirmationData.packageName,
       durationDays: confirmationData.durationDays,
-      timeSlot: confirmationData.preferredSlot,
+      timeSlot: '',
       startDate: confirmationData.startDate,
       endDate: confirmationData.endDate,
       amountInr: confirmationData.totalAmount,
@@ -542,7 +543,7 @@ function RegisterContent() {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <div className="text-right hidden sm:block">
             <span className="text-[11px] font-medium tracking-[0.18em] text-[#1E3A8A] uppercase block">
               Patamata, Vijayawada
@@ -554,9 +555,11 @@ function RegisterContent() {
           {staff && staff.role !== 'FRONT_DESK' && (
             <a
               href="/admin"
-              className="hidden sm:inline-flex items-center h-9 px-3 rounded-lg text-sm text-[#1E3A8A] bg-white border border-[#C7D4F5] hover:border-[#1E3A8A] transition"
+              aria-label="Dashboard"
+              className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-lg text-sm text-[#1E3A8A] bg-white border border-[#C7D4F5] hover:border-[#1E3A8A] transition"
             >
-              Dashboard
+              <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="6" height="6" rx="1.2" /><rect x="11" y="3" width="6" height="6" rx="1.2" /><rect x="3" y="11" width="6" height="6" rx="1.2" /><rect x="11" y="11" width="6" height="6" rx="1.2" /></svg>
+              <span className="hidden sm:inline">Dashboard</span>
             </a>
           )}
           {staff && (
@@ -566,7 +569,7 @@ function RegisterContent() {
               className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm text-[#334155] bg-white border border-[#E2E8F0] hover:border-red-300 hover:text-red-700 transition"
             >
               <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 4H5a1 1 0 00-1 1v10a1 1 0 001 1h3M13 14l4-4-4-4M17 10H8" /></svg>
-              Log out
+              <span>Log out</span>
             </button>
           )}
         </div>
@@ -973,37 +976,33 @@ function RegisterContent() {
                 )}
               </div>
 
-              {/* Preferred Slot & Start Date Side-by-Side */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
-                    Preferred Time Slot <span className="text-red-600">*</span>
-                  </label>
-                  <select
-                    value={preferredSlot}
-                    onChange={(e) => setPreferredSlot(e.target.value)}
-                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
-                  >
-                    {TIME_SLOTS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Member photo (live capture) */}
+              <div>
+                <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
+                  Member photo <span className="text-red-600">*</span>
+                </label>
+                <PhotoCapture
+                  value={photo}
+                  onChange={(v) => {
+                    setPhoto(v);
+                    if (v && formErrors.photo) setFormErrors((prev) => ({ ...prev, photo: '' }));
+                  }}
+                  error={formErrors.photo}
+                />
+              </div>
 
-                <div>
-                  <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
-                    Start Date <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
-                  />
-                </div>
+              {/* Start date */}
+              <div className="sm:max-w-[50%]">
+                <label className="block text-[13px] font-medium text-[#334155] mb-1.5">
+                  Start Date <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-white border border-solid border-[#CBD5E1] rounded-lg px-3 py-2 text-sm font-normal text-[#0F172A] focus:outline-none focus:border-[#1E3A8A] transition"
+                />
               </div>
 
               {/* Gender Preference & Terms Agreement */}
@@ -1342,7 +1341,6 @@ function RegisterContent() {
                   ['Amount', formatINR(confirmationData.totalAmount * 100), false],
                   ['Valid until', confirmationData.endDate || '1 year from start', false],
                   ['Phone', `+91 ${confirmationData.phone}`, false],
-                  ['Time slot', confirmationData.preferredSlot, false],
                 ].map(([label, value, mono]) => (
                   <div key={String(label)} className="min-w-0">
                     <dt className="text-[11px] text-[#64748B]">{label}</dt>
@@ -1384,6 +1382,7 @@ function RegisterContent() {
                   setEmail('');
                   setEmailVerified(false);
                   setPhoneVerified(false);
+                  setPhoto(null);
                   setOtpSent(false);
                   setOtpCode('');
                   setUtrNumber('');

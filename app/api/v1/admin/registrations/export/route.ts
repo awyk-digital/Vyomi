@@ -48,12 +48,12 @@ export async function GET(req: Request) {
   }
 
   const esc = (val: unknown) => `"${String(val ?? '').replace(/"/g, '""')}"`;
-  const header = ['Reference', 'Member ID', 'Name', 'Phone', 'Email', 'Plan', 'Amount (INR)', 'Status', 'Payment', 'Payment status', 'Paid on', 'UTR', 'Time slot', 'Start date', 'End date', 'Registered on', 'Notes'];
+  const header = ['Reference', 'Member ID', 'Name', 'Phone', 'Email', 'Plan', 'Amount (INR)', 'Status', 'Payment', 'Payment status', 'Paid on', 'UTR', 'Start date', 'End date', 'Registered on', 'Notes'];
   const lines = rows.map(({ r, c, p, pay }) =>
     [
       r.reference, c?.member_code, c?.full_name, c?.phone, c?.email, p?.name,
       Number(r.amount_inr || 0).toFixed(2), r.status, pay?.method, pay?.status, pay?.paid_at?.slice(0, 10),
-      pay?.utr_number, r.preferred_slot, r.start_date, r.end_date, r.created_at?.slice(0, 10), r.notes,
+      pay?.utr_number, r.start_date, r.end_date, r.created_at?.slice(0, 10), r.notes,
     ].map(esc).join(',')
   );
   const csv = '﻿' + [header.map(esc).join(','), ...lines].join('\r\n');
