@@ -5,11 +5,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 /**
  * Live member photo for front desk registration.
  * - Camera starts only when staff tap "Take photo" (nothing loads before that).
- * - Photo is resized in the browser to max 640px and saved as JPEG (~40-70 KB).
+ * - Photo is resized in the browser to max 800px and saved as JPEG (~60-100 KB).
  * - Falls back to the device camera/file picker when live camera isn't available.
  */
-const MAX_SIDE = 640;
-const QUALITY = 0.82;
+const MAX_SIDE = 800;
+const QUALITY = 0.86;
 
 function toJpeg(source: CanvasImageSource, w: number, h: number, mirror: boolean): string {
   // Centre-crop to 4:5 portrait, then scale down
@@ -94,7 +94,8 @@ export default function PhotoCapture({
   const capture = () => {
     const v = videoRef.current;
     if (!v || !v.videoWidth) return;
-    const data = toJpeg(v, v.videoWidth, v.videoHeight, facing === 'user');
+    // Saved photo is the true (un-mirrored) view, like an ID photo
+    const data = toJpeg(v, v.videoWidth, v.videoHeight, false);
     if (data) onChange(data);
     stop();
   };
